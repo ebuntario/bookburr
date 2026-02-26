@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Input } from "@heroui/react";
+import { Button, Input, Label } from "@heroui/react";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 
@@ -27,20 +27,24 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">
-      <Input
-        type="email"
-        label="Email"
-        placeholder="lu@email.com"
-        value={email}
-        onValueChange={setEmail}
-        isRequired
-      />
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="lu@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          fullWidth
+        />
+      </div>
       <Button
         type="submit"
-        color="primary"
         size="lg"
         className="bg-gold font-semibold text-white"
         isDisabled={!email}
+        fullWidth
       >
         Masuk pake Email
       </Button>

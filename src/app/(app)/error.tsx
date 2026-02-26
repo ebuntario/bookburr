@@ -12,7 +12,7 @@ export default function AppError({
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
       <h2 className="text-2xl font-semibold">Yah error nih</h2>
       <p className="text-foreground/60">Something went wrong, coba lagi ya</p>
-      <Button color="primary" className="bg-gold text-white" onPress={reset}>
+      <Button className="bg-gold text-white" onPress={reset}>
         Coba Lagi
       </Button>
     </div>
