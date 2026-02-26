@@ -5,6 +5,7 @@ import { db } from "./db";
 import { users, accounts, verificationTokens } from "./db/schema";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  debug: process.env.NODE_ENV === "development",
   trustHost: true,
   adapter: DrizzleAdapter(db, {
     usersTable: users,
@@ -20,5 +21,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/login",
     verifyRequest: "/login/verify",
+    error: "/login",
   },
 });
