@@ -42,27 +42,35 @@ Organizing iftar gatherings (bukber) with friends or coworkers during Ramadan is
 ## 4. Design Principles
 
 ### 4.1 Typeform-Style Onboarding
+
 The attendee onboarding flow presents **one question at a time**, full-screen, with smooth transitions between steps. The core flow is stripped to the absolute minimum — only what's needed to generate recommendations. Everything else is optional and can be added later via progressive disclosure.
 
 ### 4.2 Progressive Disclosure & Smart Nudging
+
 Advanced preferences (marital status, dietary restrictions, cuisine mood, favorite venues) live in optional profile/session settings. The system uses smart nudging — waiting until enough people join, then prompting: "Oke 12 orang udah join! Sebelum gue suggest tempat, ada yang punya preference ga?" This mirrors the natural WhatsApp group dynamic.
 
 ### 4.3 Dual Entry Points
+
 Users can join sessions via the web app (link/QR code) OR via a WhatsApp bot (invite code). Both funnels collect the same core data through conversational flows.
 
 ### 4.4 Multi-Session First
+
 Users can participate in multiple active sessions simultaneously. The app's home screen is a session list with cross-session conflict detection, not a single session view.
 
 ### 4.5 TikTok-Forward Restaurant Discovery
+
 Social video links (TikTok, Instagram Reels) are first-class content. Venue suggestion cards prominently feature rich video previews because in Indonesia, a 15-second food review video is the primary credibility signal that drives dining decisions.
 
 ### 4.6 Sungkan-Friendly Decision Making
+
 All voting is anonymous until finalized. A dedicated "Ikut aja 😊" option respects Indonesian musyawarah culture where direct disagreement causes discomfort. The app navigates consensus-seeking without forcing confrontation.
 
 ### 4.7 WhatsApp-Native Distribution
+
 Every key moment (invitation, voting reminder, decision confirmation) generates a beautifully formatted WhatsApp-shareable card. The app complements WhatsApp, never competes with it.
 
 ### 4.8 Celebration-Rich Interactions
+
 Collective decisions should feel like shared victories. Confetti, haptics, and celebratory animations turn coordination from logistical chore into social experience.
 
 ---
@@ -121,26 +129,32 @@ Collective decisions should feel like shared victories. Confetti, haptics, and c
 This is the core UX innovation — how venue recommendations evolve from cold start to consensus.
 
 #### Phase 1: System Cold Start (Core Data Only)
+
 Once enough attendees have completed onboarding (minimum 3 or 50% of expected group), the system generates initial venue suggestions purely from geographic centroid + budget filtering + Google Places ratings. These are "smart defaults" — decent restaurants near the group's center point.
 
 **UI:** Venue cards appear in the session feed with a system avatar: "Gue udah cari beberapa tempat yang strategis buat semua orang nih 🔍" Activity feed shows this as the first recommendation event.
 
 #### Phase 2: Smart Nudge for Preferences
+
 The system sends a nudge to all members: "Oke [X] orang udah join! Sebelum voting, ada yang punya preference ga? Cuisine, dietary, atau tempat yang udah di-bookmark?"
 
 **UI:** A dismissible card appears with quick-action buttons: "Add Cuisine Preference," "Add Dietary Need," "Suggest a Venue." This mirrors the natural WhatsApp moment where someone asks "mau makan apa?"
 
 #### Phase 3: Preferences Trickle In — Live Re-ranking
+
 As attendees add preferences (cuisine mood, dietary restrictions), the venue list re-ranks in real-time with spring-physics position animations. Rising venues get a brief golden glow; displaced venues slide down smoothly. A small activity badge shows: "Updated based on 3 people's preferences ✨"
 
 **UI:** The activity feed shows lightweight updates: "Sarah added Korean BBQ preference 🍖" — creating the TikTok-like sense of liveness.
 
 #### Phase 4: Venue Suggestions with Social Proof
+
 Attendees can suggest specific venues by:
+
 1. Searching Google Places within the app
 2. **Attaching a TikTok or Instagram video link** as social proof
 
 When a user pastes a social media URL, the app renders a **rich preview card** (Slack-style link unfurling):
+
 - Video thumbnail (4:5 aspect ratio) with centered play button overlay
 - Creator name and avatar
 - Caption snippet (2 lines max)
@@ -154,7 +168,9 @@ Tapping the thumbnail plays video inline. Tapping the platform logo deep-links t
 **Technical:** Server-side fetch via TikTok oEmbed endpoint (`tiktok.com/oembed?url=`). Instagram requires Meta Graph API authentication — fall back to Open Graph scraping. Lazy-load previews, cache OG metadata on CDN, use low-res thumbnails (~50KB), never auto-download video.
 
 #### Phase 5: Emoji Reactions (Pre-Vote Sentiment)
+
 Before formal voting, attendees can react to venue suggestions with emoji:
+
 - 🔥 = "pengen banget!" (really want this)
 - 😐 = "biasa aja" (meh)
 - 💸 = "kemahalan" (too expensive)
@@ -163,12 +179,15 @@ Before formal voting, attendees can react to venue suggestions with emoji:
 These function as low-commitment signals with Slack-style bounce-in animations. Reaction counts help surface group preferences before formal voting begins.
 
 #### Phase 6: Formal Voting
+
 Host triggers voting when the shortlist is ready. Each attendee gets one vote. An "Ikut aja 😊" option is always available as a non-blocking neutral vote (the "Terserah" escape valve). Votes are anonymous until the host finalizes.
 
 **Vote interaction:** Selected venue scales up (1.0→1.15→1.0, spring easing, ~400ms), fills with brand color, emits 5-8 colored particles. Vote counter uses odometer-style rolling animation. Haptic feedback fires on iOS.
 
 #### Phase 7: Consensus & Celebration
+
 When a clear winner emerges (or host decides), confirmation triggers:
+
 - Full-screen confetti (canvas-based, 1.5 seconds, auto-dismissing)
 - Custom haptic pattern (three ascending pulses)
 - Celebratory card: "🎉 Kita sepakat! Bukber di Arab Steak, Jumat jam 18:15!"
@@ -180,9 +199,11 @@ When a clear winner emerges (or host decides), confirmation triggers:
 ## 6. Multi-Session Management
 
 ### 6.1 Session List (Home Screen)
+
 After login, users see a list of all active sessions sorted by next upcoming date. Each card shows: session name, mode badge (Personal/Work), attendee count with avatar stack, current status (collecting/voting/confirmed), and confirmed date/venue if applicable.
 
 ### 6.2 Session States
+
 - **Collecting:** Host created session, attendees joining and inputting core preferences.
 - **Discovering:** System has enough data to show venue suggestions; preferences and venue suggestions trickling in.
 - **Voting:** Host opened formal voting on the shortlist.
@@ -190,6 +211,7 @@ After login, users see a list of all active sessions sorted by next upcoming dat
 - **Completed:** The bukber happened (or the date passed).
 
 ### 6.3 Cross-Session Awareness
+
 The system detects date conflicts across a user's sessions and surfaces warnings: "Heads up bestie, lu udah ada bukber lain di tanggal ini 👀" This appears during date selection in onboarding and in the session dashboard.
 
 ---
@@ -199,6 +221,7 @@ The system detects date conflicts across a user's sessions and surfaces warnings
 The session dashboard features a compact, reverse-chronological activity feed that creates liveness — inspired by Partiful's event pages and TikTok's layered activity signals.
 
 ### 7.1 Activity Types
+
 - "[Avatar] Sarah just joined! 🎉" (slide-in from top, 300ms fade)
 - "[Avatar] Aldi suggested Arab Steak 📍" (with TikTok preview card)
 - "[Avatar] Dina added Korean BBQ preference 🍖"
@@ -208,6 +231,7 @@ The session dashboard features a compact, reverse-chronological activity feed th
 - "🎉 Venue confirmed: Arab Steak, Jumat 18:15!"
 
 ### 7.2 Liveness Signals
+
 - RSVP/vote count badge pulses (scale 1→1.15→1) on each increment
 - Milestone confetti bursts at thresholds (5 joined, 10 joined, voting 50%, voting complete)
 - Subtle haptic pulse for users with the app open when new activity arrives
@@ -215,7 +239,9 @@ The session dashboard features a compact, reverse-chronological activity feed th
 - "Waiting on" soft accountability: pulsing ring animations on pending avatars
 
 ### 7.3 Cold Start Prevention
+
 The page never looks empty:
+
 - Host's creation event is the first activity entry
 - Share CTAs fill the space where responses will appear
 - Empty state message: "Kamu yang pertama! Share ke grup buat mulai voting 🚀" with prominent WhatsApp share button
@@ -225,6 +251,7 @@ The page never looks empty:
 ## 8. Gamification & Social Mechanics
 
 ### 8.1 Cooperative Over Competitive
+
 All gamification is cooperative (shared progress) not competitive (leaderboards). Indonesian musyawarah culture values the process of reaching agreement — individual scoring or surfacing who voted "wrong" would create resentment.
 
 ### 8.2 Core Gamification Elements (Ordered by Impact)
@@ -242,6 +269,7 @@ All gamification is cooperative (shared progress) not competitive (leaderboards)
 6. **"Traktir" badge** — Celebrates the person who treats the group. Acknowledges Indonesian treating culture with a fun visual reward and animation.
 
 ### 8.3 The "Terserah" Escape Valve
+
 A dedicated "Ikut aja 😊" button is always available during voting. It counts as a neutral, non-blocking participation signal. This respects sungkan culture while still collecting data. Doodle's "if need be" option is the closest Western equivalent.
 
 ---
@@ -251,7 +279,7 @@ A dedicated "Ikut aja 😊" button is always available during voting. It counts 
 The entire UI is written in Jaksel (Jakarta Selatan slang) — a casual mix of Bahasa Indonesia and English that feels natural to the target audience.
 
 | Context | Copy |
-|---|---|
+| --- | --- |
 | Welcome | "Yooo welcome to BookBurr! Mau plan bukber yang ga ribet? Let's go 🔥" |
 | Session name prompt | "Mau bikin bukber apa nih?" |
 | Mode selection | "Ini buat siapa? Friends or coworkers?" |
@@ -291,9 +319,11 @@ The entire UI is written in Jaksel (Jakarta Selatan slang) — a casual mix of B
 ## 10. Visual Design Direction
 
 ### 10.1 Typography
+
 **Plus Jakarta Sans** — designed by an Indonesian foundry, with rounded, bold weight that Gen-Z finds approachable. Used for all headings and body text.
 
 ### 10.2 Color Palette (Ramadan Context)
+
 - **Primary:** Warm gold (#D4A843)
 - **Secondary:** Deep green (#1B5E3C)
 - **Background:** Cream/ivory (#FFF8F0)
@@ -302,9 +332,11 @@ The entire UI is written in Jaksel (Jakarta Selatan slang) — a casual mix of B
 - **System:** Neutral grays for non-interactive text
 
 ### 10.3 Illustration Style
+
 Sticker-style illustrations of diverse friend groups and food items. Aligned with Indonesian visual culture (WhatsApp stickers, LINE stickers). Inclusive representation of hijab-wearing and non-hijab-wearing users.
 
 ### 10.4 Platform Accent Colors (Social Embeds)
+
 - TikTok: Black (#000000) left-border accent
 - Instagram: Gradient pink (#E1306C → #F77737) left-border accent
 - Google Maps: Blue/red left-border accent
@@ -314,12 +346,14 @@ Sticker-style illustrations of diverse friend groups and food items. Aligned wit
 ## 11. Microinteractions Specification
 
 ### 11.1 Vote Submission
+
 - Visual: Selected option scales 1.0→1.15→1.0 (spring easing, ~400ms), fills with brand color, emits 5-8 colored particles drifting outward
 - Counter: Odometer-style rolling animation (old number scrolls up, new slides in from below)
 - Haptic: iOS `UIImpactFeedbackGenerator.medium`
 - Reference: Twitter/X heart animation
 
 ### 11.2 Venue Re-ranking
+
 - Spring-physics position animations at 300-400ms
 - Rising venue gets brief golden glow
 - Displaced venue slides down smoothly
@@ -327,6 +361,7 @@ Sticker-style illustrations of diverse friend groups and food items. Aligned wit
 - Reference: Slido/Mentimeter live poll results
 
 ### 11.3 Consensus Confirmation
+
 - Full-screen confetti (canvas-based particle system, 1.5 seconds, auto-dismissing)
 - Custom haptic pattern (three ascending pulses)
 - Celebratory card with venue details
@@ -334,29 +369,34 @@ Sticker-style illustrations of diverse friend groups and food items. Aligned wit
 - Reference: iMessage screen effects
 
 ### 11.4 Activity Feed Updates
+
 - New entries slide in from top with 300ms fade
 - Count badges pulse (scale 1→1.15→1) on increment
 - Milestone confetti at thresholds
 - Subtle haptic pulse for open-app users
 
 ### 11.5 Emoji Reactions
+
 - Slack-style bounce-in animation on add
 - Reaction counts animate with odometer roll
 - Reference: Slack emoji reactions
 
 ### 11.6 Onboarding Transitions
+
 - Full-screen questions with smooth slide-left transitions
 - Selected options glow with brand color
 - Completion triggers a small celebration burst
 - Progress dots at bottom (3 total for core flow)
 
 ### 11.7 Waiting States
+
 - Completed voters: checkmark with green fill animation
 - Pending voters: pulsing ring animation
 - Rotating playful copy underneath
 - Reference: Slack's personality-infused loading messages
 
 ### 11.8 Social Link Unfurling
+
 - URL detected via regex → skeleton shimmer card appears (1-2 seconds)
 - Metadata populates with fade-in
 - User can dismiss with X button
@@ -367,7 +407,7 @@ Sticker-style illustrations of diverse friend groups and food items. Aligned wit
 ## 12. Tech Stack
 
 | Layer | Technology |
-|---|---|
+| --- | --- |
 | Frontend | Next.js (React), Tailwind CSS |
 | Auth | Google OAuth 2.0 |
 | Database | PostgreSQL (via Supabase or Neon) |
@@ -385,30 +425,39 @@ Sticker-style illustrations of diverse friend groups and food items. Aligned wit
 ## 13. Data Model (High-Level)
 
 ### Users
+
 `id`, `google_id`, `email`, `name`, `phone_number` (optional), `whatsapp_registered` (boolean), `favorite_venues` (google_place_ids[]), `marital_status` (optional), `dietary_preferences` (optional), `default_cuisine_preferences` (optional)
 
 ### Sessions
+
 `id`, `host_id`, `name`, `mode` (personal/work), `office_location` (lat/lng, work mode only), `invite_code` (unique), `status` (collecting/discovering/voting/confirmed/completed), `created_at`
 
 ### SessionMembers
+
 `id`, `session_id`, `user_id`, `reference_location` (lat/lng), `proximity_tolerance` (work mode), `budget_ceiling`, `flexibility_score` (calculated), `session_cuisine_preferences` (optional), `session_dietary_preferences` (optional), `joined_via` (web/whatsapp), `joined_at`
 
 ### DateOptions
+
 `id`, `session_id`, `date`, `created_by` (host)
 
 ### DateVotes
+
 `id`, `date_option_id`, `member_id`, `preference_level` (strongly_prefer / can_do / unavailable)
 
 ### Venues
+
 `id`, `session_id`, `google_place_id`, `name`, `location` (lat/lng), `rating`, `price_level`, `cuisine_type`, `capacity`, `suggested_by` (system / member_id), `composite_score`, `social_link_url` (optional), `social_link_platform` (tiktok/instagram/null), `social_link_metadata` (JSON: thumbnail_url, creator_name, caption)
 
 ### VenueReactions
+
 `id`, `venue_id`, `member_id`, `emoji` (🔥/😐/💸/📍)
 
 ### VenueVotes
+
 `id`, `venue_id`, `member_id`, `is_terserah` (boolean — true if "Ikut aja" vote)
 
 ### ActivityFeed
+
 `id`, `session_id`, `member_id` (nullable for system events), `type` (joined/voted/suggested_venue/added_preference/system_recommendation/milestone/confirmed), `metadata` (JSON), `created_at`
 
 ---
@@ -417,7 +466,7 @@ Sticker-style illustrations of diverse friend groups and food items. Aligned wit
 
 ### 14.1 Flexibility Score
 
-```
+```text
 flexibility_score = 
   (marital_weight × 0.3) + 
   (distance_weight × 0.4) + 
@@ -433,7 +482,7 @@ Higher score = more flexible = less tiebreaker power. When optional data is miss
 
 ### 14.2 Date Scoring
 
-```
+```text
 date_score(d) = Σ (1 / flexibility_score(attendee)) × preference_multiplier
 
 Where:
@@ -444,7 +493,7 @@ Less flexible attendees contribute more to a date's score.
 
 ### 14.3 Venue Composite Score
 
-```
+```text
 venue_score = 
   (proximity_score × 0.30) + 
   (rating_normalized × 0.20) + 
@@ -461,11 +510,12 @@ Where:
 ```
 
 ### 14.4 Progressive Refinement
+
 Venue scores recalculate in real-time whenever new data arrives (preferences, suggestions, reactions). The recommendation list is live — not a one-time snapshot. Emoji reactions (🔥/😐/💸/📍) serve as lightweight preference signals that influence re-ranking before formal voting.
 
 ### 14.5 Geographic Centroid (Personal Mode)
 
-```
+```text
 centroid = weighted_mean(attendee_locations)
 
 Where weight = 1 / flexibility_score(attendee)
@@ -480,6 +530,7 @@ Less flexible attendees pull the centroid toward them. If a clear cluster exists
 The venue card is the most important UI component. It stacks three layers:
 
 ### Layer 1: Social Proof (if TikTok/IG link attached)
+
 - Video thumbnail at 4:5 aspect ratio
 - Semi-transparent dark scrim with centered play button
 - Creator name + avatar (small, bottom-left)
@@ -488,6 +539,7 @@ The venue card is the most important UI component. It stacks three layers:
 - Tap thumbnail → play inline; tap platform logo → deep-link to native app
 
 ### Layer 2: Restaurant Metadata
+
 - Restaurant name (bold, Plus Jakarta Sans)
 - Star rating + review count
 - Cuisine type tag
@@ -497,6 +549,7 @@ The venue card is the most important UI component. It stacks three layers:
 - Group capacity indicator ("Muat 20 orang ✓")
 
 ### Layer 3: Social + Action
+
 - Suggester attribution: "[Avatar] Suggested by Aldi"
 - Emoji reaction bar (🔥 😐 💸 📍) with counts
 - Vote button (during voting phase)
@@ -509,12 +562,15 @@ The venue card is the most important UI component. It stacks three layers:
 Every key moment generates a formatted card optimized for WhatsApp sharing:
 
 ### Invitation Card
+
 "🌙 [Name] ngajak lu bukber! [Session Name] — [Date options]. Klik link ini buat join & vote tempat: [URL]"
 
 ### Voting Open Card
+
 "🗳️ Voting udah dibuka buat [Session Name]! Ada [X] pilihan tempat. Vote sekarang: [URL]"
 
 ### Confirmation Card
+
 "🎉 Bukber [Session Name] udah fix! 📍 [Venue Name] 📅 [Date] ⏰ [Time] 📍 [Google Maps link]. See you there bestie!"
 
 ---
@@ -522,6 +578,7 @@ Every key moment generates a formatted card optimized for WhatsApp sharing:
 ## 17. MVP Scope (v1)
 
 ### In Scope
+
 - Session creation with Personal/Work mode (Typeform flow)
 - Google login
 - 3-question Typeform onboarding for attendees
@@ -549,6 +606,7 @@ Every key moment generates a formatted card optimized for WhatsApp sharing:
 - Favorite venues
 
 ### Out of Scope (v1)
+
 - In-app venue booking
 - Grab API integration
 - Chat / messaging within sessions
@@ -598,4 +656,5 @@ Every key moment generates a formatted card optimized for WhatsApp sharing:
 
 ---
 
+<!-- markdownlint-disable-next-line MD036 -->
 *"Literally the easiest way to plan bukber, no cap. 🫶"*

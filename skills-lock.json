@@ -11,6 +11,11 @@
       "sourceType": "well-known",
       "computedHash": "40e9f84a09a080231d47ee4c93f4464d3799df85ff1b1e4c6a551af74ac8f808"
     },
+    "heroui-react": {
+      "source": "heroui-inc/heroui",
+      "sourceType": "github",
+      "computedHash": "927aea70da0c060f930998e4c7373f790b87125798698e89f6431de689690f23"
+    },
     "neon-postgres": {
       "source": "neondatabase/agent-skills",
       "sourceType": "github",
