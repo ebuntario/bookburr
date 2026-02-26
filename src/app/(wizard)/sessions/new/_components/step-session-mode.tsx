@@ -1,0 +1,94 @@
+"use client";
+
+import { Button, Card } from "@heroui/react";
+import type { SessionMode } from "@/lib/constants";
+
+interface StepSessionModeProps {
+  value: SessionMode | null;
+  onChange: (mode: SessionMode) => void;
+  onNext: () => void;
+}
+
+export function StepSessionMode({
+  value,
+  onChange,
+  onNext,
+}: StepSessionModeProps) {
+  return (
+    <div className="flex flex-1 flex-col justify-between">
+      <div className="flex flex-col gap-4">
+        <h2 className="text-2xl font-bold text-foreground">
+          Tipe bukber-nya apa?
+        </h2>
+        <p className="text-foreground/60">
+          Ini ngaruh ke cara milih lokasi nanti
+        </p>
+
+        <div className="flex flex-col gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => onChange("personal")}
+            className="text-left"
+          >
+            <Card
+              className={`rounded-2xl border-2 p-0 transition-colors ${
+                value === "personal"
+                  ? "border-gold bg-gold/5"
+                  : "border-foreground/10 bg-white"
+              }`}
+            >
+              <Card.Header className="px-5 pt-5 pb-1">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🫂</span>
+                  <span className="text-lg font-semibold">Personal</span>
+                </div>
+              </Card.Header>
+              <Card.Content className="px-5 pb-5">
+                <p className="text-sm text-foreground/60">
+                  Bukber temen, keluarga, komunitas — lokasi ditentuin dari
+                  lokasi masing-masing
+                </p>
+              </Card.Content>
+            </Card>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onChange("work")}
+            className="text-left"
+          >
+            <Card
+              className={`rounded-2xl border-2 p-0 transition-colors ${
+                value === "work"
+                  ? "border-gold bg-gold/5"
+                  : "border-foreground/10 bg-white"
+              }`}
+            >
+              <Card.Header className="px-5 pt-5 pb-1">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">💼</span>
+                  <span className="text-lg font-semibold">Work</span>
+                </div>
+              </Card.Header>
+              <Card.Content className="px-5 pb-5">
+                <p className="text-sm text-foreground/60">
+                  Bukber kantor — lokasi ditentuin dari alamat kantor
+                </p>
+              </Card.Content>
+            </Card>
+          </button>
+        </div>
+      </div>
+
+      <div className="pb-6 pt-8">
+        <Button
+          onPress={onNext}
+          isDisabled={!value}
+          className="w-full rounded-xl bg-coral py-3 font-semibold text-white disabled:opacity-40"
+        >
+          Lanjut
+        </Button>
+      </div>
+    </div>
+  );
+}
