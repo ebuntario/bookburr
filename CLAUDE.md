@@ -150,3 +150,47 @@ Platform accents for embed cards: TikTok = `#000000` left-border, Instagram = gr
 **In scope (v1):** Everything in `BookBurr_PRD_v2.md` Section 17 in-scope list, including full WhatsApp bot.
 
 **Explicitly out of scope for v1:** in-app booking, Grab API, chat/messaging, payment splitting/QRIS, planning streak counter, traktir badge, native mobile app, swipe-to-vote.
+
+---
+
+## Way of Working
+
+### Linear Issue Tracking
+
+All work is tracked in **Linear** under the **BookBurr** team. Before starting any task:
+
+1. **Find or create** the corresponding Linear issue
+2. **Move the issue to "In Progress"** when you begin work
+3. **Commit after completing each phase/issue** — do not batch multiple phases into one commit
+4. **Move the issue to "Done"** after the commit succeeds
+5. **Reference the Linear issue identifier** (e.g., `BOO-5`) in the commit message
+
+Commit message format:
+```
+BOO-XX: Short description of what was done
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+```
+
+### Schema-First Database Migrations
+
+For **any database change**, follow the schema-first migration skill at `.agents/skills/schema-first-migration/SKILL.md`:
+
+1. **Read** `db/schema.sql` first — this is the single source of truth for the current DB state
+2. **Edit** `db/schema.sql` to reflect the desired end state
+3. **Construct** the migration SQL from the diff
+4. **Also maintain** `src/lib/db/schema.ts` (Drizzle ORM) — keep it in sync with `db/schema.sql`
+5. **Never** write a migration without updating `db/schema.sql` first
+6. **Never** use migration files as reference for current schema
+
+### Coding Conventions
+
+- Functional, declarative TypeScript — no classes
+- Interfaces over types; avoid TS enums, use `as const` maps
+- Lowercase-with-dashes for directories (e.g., `components/session-card/`)
+- Named exports for components
+- Minimize `"use client"` — favor React Server Components
+- Wrap client components in `<Suspense>` with fallbacks
+- Mobile-first responsive design
+- HeroUI components for UI primitives
+- Plus Jakarta Sans font
