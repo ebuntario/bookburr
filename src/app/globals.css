@@ -13,8 +13,9 @@
   --danger-foreground: oklch(1 0 0);
 }
 
-/* Custom BookBurr Tailwind colors via @theme inline */
+/* Custom BookBurr Tailwind colors + font via @theme inline */
 @theme inline {
+  --font-sans: var(--font-plus-jakarta-sans), "Plus Jakarta Sans", sans-serif;
   --color-gold: oklch(0.75 0.11 80);
   --color-green: oklch(0.40 0.10 155);
   --color-cream: oklch(0.98 0.01 80);
