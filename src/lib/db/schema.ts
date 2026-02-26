@@ -53,6 +53,18 @@ export const accounts = pgTable(
   ],
 );
 
+export const verificationTokens = pgTable(
+  "verification_tokens",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires", { mode: "date", withTimezone: true }).notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.identifier, table.token] }),
+  ],
+);
+
 // § Sessions -----------------------------------------------------------
 
 export const bukberSessions = pgTable(

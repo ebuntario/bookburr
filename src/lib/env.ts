@@ -5,8 +5,16 @@ function requireEnv(name: string): string {
 }
 
 export const env = {
-  DATABASE_URL: requireEnv("DATABASE_URL"),
-  AUTH_SECRET: requireEnv("AUTH_SECRET"),
-  AUTH_GOOGLE_ID: requireEnv("AUTH_GOOGLE_ID"),
-  AUTH_GOOGLE_SECRET: requireEnv("AUTH_GOOGLE_SECRET"),
+  get DATABASE_URL() {
+    return requireEnv("DATABASE_URL");
+  },
+  get AUTH_SECRET() {
+    return process.env.AUTH_SECRET ?? "";
+  },
+  get AUTH_RESEND_KEY() {
+    return process.env.AUTH_RESEND_KEY ?? "";
+  },
+  get AUTH_EMAIL_FROM() {
+    return process.env.AUTH_EMAIL_FROM ?? "BookBurr <noreply@bookburr.com>";
+  },
 } as const;

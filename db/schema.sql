@@ -35,6 +35,13 @@ CREATE TABLE accounts (
     PRIMARY KEY (provider, "providerAccountId")
 );
 
+CREATE TABLE verification_tokens (
+    identifier text NOT NULL,
+    token text NOT NULL,
+    expires timestamp with time zone NOT NULL,
+    PRIMARY KEY (identifier, token)
+);
+
 -- § Sessions -----------------------------------------------------------
 
 CREATE TABLE bukber_sessions (

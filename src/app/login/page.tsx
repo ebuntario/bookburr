@@ -1,4 +1,4 @@
-import { LoginButton } from "./login-button";
+import { LoginForm } from "./login-form";
 
 export default function LoginPage() {
   return (
@@ -9,7 +9,7 @@ export default function LoginPage() {
           Koordinasi bukber anti ribet
         </p>
       </div>
-      <LoginButton />
+      <LoginForm />
     </main>
   );
 }
