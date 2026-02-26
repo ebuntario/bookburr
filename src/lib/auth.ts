@@ -18,6 +18,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       from: process.env.AUTH_EMAIL_FROM ?? "BookBurr <noreply@bookburr.com>",
     }),
   ],
+  callbacks: {
+    jwt({ token, user }) {
+      if (user?.id) token.sub = user.id;
+      return token;
+    },
+    session({ session, token }) {
+      if (token.sub && session.user) session.user.id = token.sub;
+      return session;
+    },
+  },
   pages: {
     signIn: "/login",
     verifyRequest: "/login/verify",

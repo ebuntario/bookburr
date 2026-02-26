@@ -50,6 +50,7 @@ export const JOINED_VIA = {
 export type JoinedVia = (typeof JOINED_VIA)[keyof typeof JOINED_VIA];
 
 export const ACTIVITY_TYPE = {
+  session_created: "session_created",
   joined: "joined",
   voted: "voted",
   suggested_venue: "suggested_venue",

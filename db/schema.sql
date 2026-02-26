@@ -49,7 +49,7 @@ CREATE TABLE bukber_sessions (
     host_id text NOT NULL REFERENCES users(id),
     name text NOT NULL,
     mode text NOT NULL, -- 'personal' | 'work'
-    office_location jsonb, -- {lat, lng}
+    office_location jsonb, -- {address: string, lat?: number, lng?: number}
     invite_code text UNIQUE NOT NULL,
     status text NOT NULL DEFAULT 'collecting', -- 'collecting' | 'discovering' | 'voting' | 'confirmed' | 'completed'
     expected_group_size integer,
@@ -84,7 +84,8 @@ CREATE TABLE date_options (
     id text PRIMARY KEY,
     session_id text NOT NULL REFERENCES bukber_sessions(id) ON DELETE CASCADE,
     date date NOT NULL,
-    created_by text NOT NULL REFERENCES users(id)
+    created_by text NOT NULL REFERENCES users(id),
+    UNIQUE (session_id, date)
 );
 
 CREATE INDEX idx_date_options_session_id ON date_options(session_id);
@@ -152,7 +153,7 @@ CREATE TABLE activity_feed (
     id text PRIMARY KEY,
     session_id text NOT NULL REFERENCES bukber_sessions(id) ON DELETE CASCADE,
     member_id text REFERENCES session_members(id), -- null for system events
-    type text NOT NULL, -- 'joined' | 'voted' | 'suggested_venue' | 'added_preference' | 'system_recommendation' | 'milestone' | 'confirmed'
+    type text NOT NULL, -- 'session_created' | 'joined' | 'voted' | 'suggested_venue' | 'added_preference' | 'system_recommendation' | 'milestone' | 'confirmed'
     metadata jsonb,
     created_at timestamp with time zone NOT NULL DEFAULT now()
 );

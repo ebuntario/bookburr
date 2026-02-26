@@ -137,6 +137,7 @@ export const dateOptions = pgTable(
       .references(() => users.id),
   },
   (table) => [
+    uniqueIndex("uq_date_options_session_date").on(table.sessionId, table.date),
     index("idx_date_options_session_id").on(table.sessionId),
   ],
 );
