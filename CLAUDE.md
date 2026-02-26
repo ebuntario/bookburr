@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-BookBurr is in **pre-development phase**. The repository currently contains only planning documents (`BookBurr_PRD_v2.md`, UX research). No code exists yet.
+BookBurr is in **pre-development phase**. The repository currently contains only planning documents (`docs/prd.md`, `docs/ux-patterns.md`). No code exists yet.
 
 ## What This App Is
 
