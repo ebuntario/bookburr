@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { advanceSessionStatus } from "@/lib/actions/session-status";
+import { discoverVenues, retryDiscoverVenues } from "@/lib/actions/venues";
 import { copyToClipboard } from "@/lib/share-utils";
 import { ConfirmSessionSheet } from "./confirm-session-sheet";
 
@@ -41,6 +42,7 @@ export function HostControls({
   const [error, setError] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
+  const [discoveryFailed, setDiscoveryFailed] = useState(false);
 
   if (status === "completed") return null;
 
@@ -53,7 +55,20 @@ export function HostControls({
       setError(result.error);
     } else {
       router.refresh();
+      // Fire venue discovery non-blocking after advancing to "discovering"
+      if (status === "collecting") {
+        discoverVenues(sessionId).then((r) => {
+          if (!r.ok) setDiscoveryFailed(true);
+        });
+      }
     }
+  };
+
+  const handleRetryDiscovery = async () => {
+    setDiscoveryFailed(false);
+    const result = await retryDiscoverVenues(sessionId);
+    if (!result.ok) setDiscoveryFailed(true);
+    else router.refresh();
   };
 
   const handleInvite = async () => {
@@ -134,6 +149,22 @@ export function HostControls({
 
   /* ── Discovering ── */
   if (status === "discovering") {
+    if (discoveryFailed) {
+      return (
+        <div className="rounded-2xl border border-coral/30 bg-coral/5 px-5 py-5 flex flex-col gap-3">
+          <p className="text-sm font-medium text-foreground/70">
+            😬 Gagal nyari venue otomatis. Coba lagi?
+          </p>
+          <button
+            type="button"
+            onClick={handleRetryDiscovery}
+            className="flex items-center justify-center gap-2 rounded-xl border border-coral/30 py-2.5 text-sm font-semibold text-coral"
+          >
+            🔄 Cari Ulang
+          </button>
+        </div>
+      );
+    }
     if (venueCount < 1) {
       return (
         <div className="rounded-2xl border border-dashed border-foreground/20 bg-foreground/[0.03] px-5 py-5">

@@ -17,4 +17,7 @@ export const env = {
   get AUTH_EMAIL_FROM() {
     return process.env.AUTH_EMAIL_FROM ?? "BookBurr <noreply@bookburr.com>";
   },
+  get GOOGLE_PLACES_API_KEY() {
+    return process.env.GOOGLE_PLACES_API_KEY ?? null;
+  },
 } as const;

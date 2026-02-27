@@ -41,11 +41,10 @@ export default async function SessionDashboardPage({
   if (!currentMember) redirect(`/sessions/${sessionId}/join`);
 
   // Second round: fetch data that depends on currentMember.id
-  const [datesData, venuesData] =
-    await Promise.all([
-      getDatesWithVoteCounts(sessionId, currentMember.id),
-      getVenuesForSession(sessionId),
-    ]);
+  const [datesData, venuesData] = await Promise.all([
+    getDatesWithVoteCounts(sessionId, currentMember.id),
+    getVenuesForSession(sessionId, currentMember.id),
+  ]);
 
   const isHost = sessionData.session.hostId === userId;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://bookburr.com";
@@ -77,9 +76,10 @@ export default async function SessionDashboardPage({
       )}
 
       <VenueSection
+        sessionId={sessionId}
         status={status as SessionStatus}
         isHost={isHost}
-        venueCount={venuesData.length}
+        venues={venuesData}
       />
 
       {isHost && (

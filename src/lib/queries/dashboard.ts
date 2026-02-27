@@ -1,4 +1,4 @@
-import { eq, desc, asc, sql, and, lt } from "drizzle-orm";
+import { eq, desc, asc, sql, and, lt, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   bukberSessions,
@@ -8,6 +8,7 @@ import {
   activityFeed,
   users,
   venues,
+  venueReactions,
 } from "@/lib/db/schema";
 
 export async function getSessionWithMembers(sessionId: string) {
@@ -84,16 +85,54 @@ export async function getDatesWithVoteCounts(
   return { dates, votedMemberCount };
 }
 
-export async function getVenuesForSession(sessionId: string) {
-  return db
+export async function getVenuesForSession(sessionId: string, memberId?: string) {
+  const venueList = await db
     .select({
       id: venues.id,
       name: venues.name,
+      rating: venues.rating,
+      priceLevel: venues.priceLevel,
       compositeScore: venues.compositeScore,
+      location: venues.location,
+      socialLinkUrl: venues.socialLinkUrl,
+      socialLinkPlatform: venues.socialLinkPlatform,
+      socialLinkMetadata: venues.socialLinkMetadata,
+      suggestedByMemberId: venues.suggestedByMemberId,
     })
     .from(venues)
     .where(eq(venues.sessionId, sessionId))
     .orderBy(desc(venues.compositeScore));
+
+  if (venueList.length === 0) return [];
+
+  const venueIds = venueList.map((v) => v.id);
+
+  const reactionRows = await db
+    .select({
+      venueId: venueReactions.venueId,
+      emoji: venueReactions.emoji,
+      count: sql<number>`count(*)::int`,
+      hasMyReaction: memberId
+        ? sql<boolean>`bool_or(${venueReactions.memberId} = ${memberId})`
+        : sql<boolean>`false`,
+    })
+    .from(venueReactions)
+    .where(inArray(venueReactions.venueId, venueIds))
+    .groupBy(venueReactions.venueId, venueReactions.emoji);
+
+  const reactionMap: Record<
+    string,
+    Record<string, { count: number; hasMyReaction: boolean }>
+  > = {};
+  for (const r of reactionRows) {
+    if (!reactionMap[r.venueId]) reactionMap[r.venueId] = {};
+    reactionMap[r.venueId][r.emoji] = {
+      count: r.count,
+      hasMyReaction: r.hasMyReaction,
+    };
+  }
+
+  return venueList.map((v) => ({ ...v, reactions: reactionMap[v.id] ?? {} }));
 }
 
 export async function getRecentActivity(sessionId: string, limit: number) {

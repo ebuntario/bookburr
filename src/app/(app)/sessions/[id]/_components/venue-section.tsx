@@ -1,20 +1,50 @@
 import type { SessionStatus } from "@/lib/constants";
+import { VenueList } from "./venue-list";
+import { SuggestVenueFab } from "./suggest-venue-fab";
+
+interface VenueReaction {
+  count: number;
+  hasMyReaction: boolean;
+}
+
+interface Venue {
+  id: string;
+  name: string;
+  rating: number | null;
+  priceLevel: number | null;
+  compositeScore: number;
+  location: unknown;
+  socialLinkUrl: string | null;
+  socialLinkPlatform: string | null;
+  socialLinkMetadata: unknown;
+  suggestedByMemberId: string | null;
+  reactions: Record<string, VenueReaction>;
+}
 
 interface VenueSectionProps {
+  sessionId: string;
   status: SessionStatus;
   isHost: boolean;
-  venueCount?: number;
+  venues: Venue[];
 }
 
 export function VenueSection({
+  sessionId,
   status,
   isHost,
-  venueCount = 0,
+  venues,
 }: VenueSectionProps) {
-  const showVenues = status === "discovering" || status === "voting" || status === "confirmed" || status === "completed";
+  const showVenues =
+    status === "discovering" ||
+    status === "voting" ||
+    status === "confirmed" ||
+    status === "completed";
+
+  const canSuggest =
+    status === "discovering" || status === "voting";
 
   if (!showVenues) {
-    // collecting phase
+    // Collecting phase
     return (
       <div className="flex flex-col gap-2">
         <h3 className="text-sm font-semibold text-foreground/60">Venue</h3>
@@ -35,27 +65,27 @@ export function VenueSection({
     );
   }
 
-  if (status === "discovering" && venueCount === 0) {
+  if (status === "discovering" && venues.length === 0) {
     return (
       <div className="flex flex-col gap-2">
         <h3 className="text-sm font-semibold text-foreground/60">Venue</h3>
         <div className="flex flex-col gap-3">
-          {/* Skeleton cards */}
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-20 rounded-2xl bg-foreground/8 animate-pulse"
+              className="h-20 animate-pulse rounded-2xl bg-foreground/8"
             />
           ))}
           <p className="text-center text-sm text-foreground/40">
             Lagi nyari venue yang pas...
           </p>
         </div>
+        {canSuggest && <SuggestVenueFab sessionId={sessionId} />}
       </div>
     );
   }
 
-  if (venueCount === 0) {
+  if (venues.length === 0) {
     return (
       <div className="flex flex-col gap-2">
         <h3 className="text-sm font-semibold text-foreground/60">Venue</h3>
@@ -66,17 +96,21 @@ export function VenueSection({
             Lu bisa suggest langsung! 👇
           </p>
         </div>
+        {canSuggest && <SuggestVenueFab sessionId={sessionId} />}
       </div>
     );
   }
 
-  // venues exist — will be rendered by BOO-26 (venue cards)
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-sm font-semibold text-foreground/60">Venue</h3>
-      <p className="text-sm text-foreground/40">
-        {venueCount} venue ditemukan
-      </p>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-foreground/60">Venue</h3>
+        <p className="text-xs text-foreground/40">{venues.length} tempat</p>
+      </div>
+
+      <VenueList venues={venues} />
+
+      {canSuggest && <SuggestVenueFab sessionId={sessionId} />}
     </div>
   );
 }
