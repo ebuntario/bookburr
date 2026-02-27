@@ -4,6 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@heroui/react";
+import {
+  copyToClipboard,
+  buildWhatsAppShareUrl,
+  nativeShare,
+} from "@/lib/share-utils";
 
 interface SharePanelProps {
   sessionName: string;
@@ -21,37 +26,21 @@ export function SharePanel({
   const [linkCopied, setLinkCopied] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
 
-  const copyToClipboard = async (text: string, type: "link" | "code") => {
-    try {
-      await navigator.clipboard.writeText(text);
-      if (type === "link") {
-        setLinkCopied(true);
-        setTimeout(() => setLinkCopied(false), 2000);
-      } else {
-        setCodeCopied(true);
-        setTimeout(() => setCodeCopied(false), 2000);
-      }
-    } catch {
-      // fallback — ignore
+  const handleCopy = async (text: string, type: "link" | "code") => {
+    const ok = await copyToClipboard(text);
+    if (!ok) return;
+    if (type === "link") {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } else {
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
     }
   };
 
-  const whatsappText = encodeURIComponent(
-    `Yuk bukber bareng! Join "${sessionName}" di BookBurr 🌙\n\nKlik link: ${shareUrl}\n\nAtau pake kode: ${inviteCode}`,
-  );
+  const whatsappHref = buildWhatsAppShareUrl(sessionName, shareUrl, inviteCode);
 
-  const handleNativeShare = async () => {
-    if (!navigator.share) return;
-    try {
-      await navigator.share({
-        title: `Bukber: ${sessionName}`,
-        text: `Yuk join bukber "${sessionName}" di BookBurr!`,
-        url: shareUrl,
-      });
-    } catch {
-      // user cancelled — ignore
-    }
-  };
+  const handleNativeShare = () => nativeShare(sessionName, shareUrl);
 
   return (
     <motion.div
@@ -86,7 +75,7 @@ export function SharePanel({
           </span>
           <Button
             size="sm"
-            onPress={() => copyToClipboard(shareUrl, "link")}
+            onPress={() => handleCopy(shareUrl, "link")}
             className="shrink-0 rounded-lg bg-gold px-3 py-1.5 text-xs font-semibold text-white"
           >
             {linkCopied ? "Tersalin!" : "Copy"}
@@ -105,7 +94,7 @@ export function SharePanel({
           </span>
           <Button
             size="sm"
-            onPress={() => copyToClipboard(inviteCode, "code")}
+            onPress={() => handleCopy(inviteCode, "code")}
             className="shrink-0 rounded-lg bg-gold px-3 py-1.5 text-xs font-semibold text-white"
           >
             {codeCopied ? "Tersalin!" : "Copy"}
@@ -116,7 +105,7 @@ export function SharePanel({
       {/* Share buttons */}
       <div className="flex w-full flex-col gap-3">
         <a
-          href={`https://wa.me/?text=${whatsappText}`}
+          href={whatsappHref}
           target="_blank"
           rel="noopener noreferrer"
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-green py-3 font-semibold text-white"

@@ -6,7 +6,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { joinSession } from "@/lib/actions/members";
 import { PREFERENCE_LEVEL } from "@/lib/constants";
 import type { PreferenceLevel } from "@/lib/constants";
+import { slideVariants } from "@/lib/motion-variants";
 import { WizardProgress } from "@/app/(wizard)/sessions/new/_components/wizard-progress";
+import { WizardErrorToast } from "@/components/wizard-error-toast";
 import { StepDateVotes } from "./step-date-votes";
 import { StepLocation } from "./step-location";
 import { StepBudget } from "./step-budget";
@@ -30,18 +32,6 @@ const defaultState: JoinWizardState = {
   budgetCeiling: null,
 };
 
-const slideVariants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? 300 : -300,
-    opacity: 0,
-  }),
-  center: { x: 0, opacity: 1 },
-  exit: (direction: number) => ({
-    x: direction > 0 ? -300 : 300,
-    opacity: 0,
-  }),
-};
-
 const TOTAL_STEPS = 3;
 
 export function JoinWizard({ session, dateOptions }: JoinWizardProps) {
@@ -54,6 +44,7 @@ export function JoinWizard({ session, dateOptions }: JoinWizardProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [mounted, setMounted] = useState(false);
+  const [pendingUnvotedConfirm, setPendingUnvotedConfirm] = useState(false);
 
   useEffect(() => {
     try {
@@ -114,13 +105,14 @@ export function JoinWizard({ session, dateOptions }: JoinWizardProps) {
     setState((prev) => ({ ...prev, ...patch }));
   }, []);
 
-  const handleSubmit = useCallback(() => {
+  const executeSubmit = useCallback(() => {
     setError(null);
+    setPendingUnvotedConfirm(false);
     startTransition(async () => {
-      // All dates get a vote — unvoted dates become "unavailable"
+      // Unvoted dates default to "can_do" (not "unavailable") so they don't tank date scores
       const votes = dateOptions.map((d) => ({
         dateOptionId: d.id,
-        preferenceLevel: state.votes[d.id] || PREFERENCE_LEVEL.unavailable,
+        preferenceLevel: state.votes[d.id] || PREFERENCE_LEVEL.can_do,
       }));
 
       const result = await joinSession({
@@ -144,6 +136,15 @@ export function JoinWizard({ session, dateOptions }: JoinWizardProps) {
       }
     });
   }, [state, session.id, dateOptions, storageKey, router]);
+
+  const handleSubmit = useCallback(() => {
+    const unvotedCount = dateOptions.filter((d) => !state.votes[d.id]).length;
+    if (unvotedCount > 0) {
+      setPendingUnvotedConfirm(true);
+      return;
+    }
+    executeSubmit();
+  }, [dateOptions, state.votes, executeSubmit]);
 
   if (!mounted) return null;
 
@@ -206,21 +207,44 @@ export function JoinWizard({ session, dateOptions }: JoinWizardProps) {
           </motion.div>
         </AnimatePresence>
 
-        {/* Error toast */}
+        {/* Unvoted dates confirmation */}
         <AnimatePresence>
-          {error && (
+          {pendingUnvotedConfirm && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="absolute inset-x-6 bottom-6 rounded-xl bg-coral/10 px-4 py-3 text-center text-sm text-coral"
+              className="absolute inset-x-6 bottom-6 flex flex-col gap-3 rounded-xl border border-foreground/10 bg-white p-4 text-center shadow-lg"
             >
-              {error === "unauthorized"
-                ? "Lu belum login nih"
-                : error || "Aduh, gagal join. Coba lagi ya"}
+              <p className="text-sm text-foreground">
+                Lu belum pilih untuk{" "}
+                {dateOptions.filter((d) => !state.votes[d.id]).length} tanggal.
+                Gue anggap bisa ya? 😊
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPendingUnvotedConfirm(false)}
+                  className="flex-1 rounded-lg border border-foreground/20 py-2 text-sm font-medium text-foreground/60"
+                >
+                  Mau pilih dulu
+                </button>
+                <button
+                  type="button"
+                  onClick={executeSubmit}
+                  className="flex-1 rounded-lg bg-gold py-2 text-sm font-semibold text-white"
+                >
+                  Yep, lanjut!
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
+
+        <WizardErrorToast
+          error={error}
+          fallbackMessage="Aduh, gagal join. Coba lagi ya"
+        />
       </div>
     </div>
   );

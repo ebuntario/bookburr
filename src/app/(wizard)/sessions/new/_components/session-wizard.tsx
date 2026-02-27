@@ -4,11 +4,13 @@ import { useState, useEffect, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { createSession } from "@/lib/actions/sessions";
+import { slideVariants } from "@/lib/motion-variants";
 import { StepSessionName } from "./step-session-name";
 import { StepSessionMode } from "./step-session-mode";
 import { StepOfficeLocation } from "./step-office-location";
 import { StepDatePicker } from "./step-date-picker";
 import { WizardProgress } from "./wizard-progress";
+import { WizardErrorToast } from "@/components/wizard-error-toast";
 import type { SessionMode } from "@/lib/constants";
 
 const STORAGE_KEY = "bookburr-new-session";
@@ -54,17 +56,6 @@ function clearState() {
   }
 }
 
-const slideVariants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? 300 : -300,
-    opacity: 0,
-  }),
-  center: { x: 0, opacity: 1 },
-  exit: (direction: number) => ({
-    x: direction > 0 ? -300 : 300,
-    opacity: 0,
-  }),
-};
 
 export function SessionWizard() {
   const router = useRouter();
@@ -234,21 +225,10 @@ export function SessionWizard() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Error toast */}
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              className="absolute inset-x-6 bottom-6 rounded-xl bg-coral/10 px-4 py-3 text-center text-sm text-coral"
-            >
-              {error === "unauthorized"
-                ? "Lu belum login nih"
-                : error || "Aduh, gagal bikin bukber. Coba lagi ya"}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <WizardErrorToast
+          error={error}
+          fallbackMessage="Aduh, gagal bikin bukber. Coba lagi ya"
+        />
       </div>
     </div>
   );

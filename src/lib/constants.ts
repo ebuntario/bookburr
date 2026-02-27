@@ -57,11 +57,25 @@ export const ACTIVITY_TYPE = {
   added_preference: "added_preference",
   system_recommendation: "system_recommendation",
   milestone: "milestone",
+  status_changed: "status_changed",
   confirmed: "confirmed",
 } as const;
 
 export type ActivityType =
   (typeof ACTIVITY_TYPE)[keyof typeof ACTIVITY_TYPE];
+
+export const SESSION_STATUS_TRANSITIONS: Record<
+  string,
+  string | null
+> = {
+  collecting: "discovering",
+  discovering: "voting",
+  voting: "confirmed",
+  confirmed: "completed",
+  completed: null,
+} as const;
+
+export const FLEXIBILITY_SCORE_MIN = 0.1;
 
 export const MARITAL_STATUS = {
   single: "single",
