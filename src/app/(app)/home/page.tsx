@@ -39,6 +39,8 @@ export default async function HomePage() {
               status={s.status}
               memberCount={s.memberCount}
               createdAt={s.createdAt.toISOString()}
+              earliestDate={s.earliestDate}
+              latestDate={s.latestDate}
             />
           ))}
         </div>

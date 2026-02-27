@@ -12,6 +12,20 @@ interface SessionCardProps {
   status: string;
   memberCount: number;
   createdAt: string;
+  earliestDate?: string | null;
+  latestDate?: string | null;
+}
+
+function formatDateRange(earliest: string | null | undefined, latest: string | null | undefined): string | null {
+  if (!earliest || !latest) return null;
+  const d1 = new Date(earliest + "T00:00:00");
+  const d2 = new Date(latest + "T00:00:00");
+  const day1 = d1.toLocaleDateString("id-ID", { day: "numeric" });
+  const mon1 = d1.toLocaleDateString("id-ID", { month: "short" });
+  const day2 = d2.toLocaleDateString("id-ID", { day: "numeric" });
+  const mon2 = d2.toLocaleDateString("id-ID", { month: "short" });
+  if (earliest === latest) return `${day1} ${mon1}`;
+  return mon1 === mon2 ? `${day1}–${day2} ${mon1}` : `${day1} ${mon1}–${day2} ${mon2}`;
 }
 
 export function SessionCard({
@@ -21,10 +35,14 @@ export function SessionCard({
   status,
   memberCount,
   createdAt,
+  earliestDate,
+  latestDate,
 }: SessionCardProps) {
   const statusConfig =
     STATUS_CONFIG[status as SessionStatus] ?? STATUS_CONFIG.collecting;
   const modeIcon = MODE_ICON[mode as SessionMode] ?? "🫂";
+  const dateRange = formatDateRange(earliestDate, latestDate);
+  const dateDisplay = dateRange ?? new Date(createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
 
   return (
     <Link href={`/sessions/${id}`}>
@@ -45,12 +63,7 @@ export function SessionCard({
             {memberCount} orang
           </span>
           <span className="text-foreground/20">·</span>
-          <span className="text-sm text-foreground/50">
-            {new Date(createdAt).toLocaleDateString("id-ID", {
-              day: "numeric",
-              month: "short",
-            })}
-          </span>
+          <span className="text-sm text-foreground/50">{dateDisplay}</span>
         </Card.Content>
       </Card>
     </Link>

@@ -2,6 +2,9 @@ import { eq, sql, desc, and, asc } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { bukberSessions, sessionMembers, dateOptions } from "@/lib/db/schema";
 
+// date "YYYY-MM-DD" strings for display
+type DateRange = { earliestDate: string | null; latestDate: string | null };
+
 export async function getSessionsByUserId(userId: string) {
   const rows = await db
     .select({
@@ -12,13 +15,16 @@ export async function getSessionsByUserId(userId: string) {
       inviteCode: bukberSessions.inviteCode,
       hostId: bukberSessions.hostId,
       createdAt: bukberSessions.createdAt,
-      memberCount: sql<number>`count(${sessionMembers.id})::int`,
+      memberCount: sql<number>`count(distinct ${sessionMembers.id})::int`,
+      earliestDate: sql<string | null>`min(${dateOptions.date})`,
+      latestDate: sql<string | null>`max(${dateOptions.date})`,
     })
     .from(bukberSessions)
     .innerJoin(
       sessionMembers,
       eq(bukberSessions.id, sessionMembers.sessionId),
     )
+    .leftJoin(dateOptions, eq(bukberSessions.id, dateOptions.sessionId))
     .where(
       eq(
         bukberSessions.id,
@@ -30,6 +36,8 @@ export async function getSessionsByUserId(userId: string) {
 
   return rows;
 }
+
+export type { DateRange };
 
 export async function getSessionById(sessionId: string) {
   const [row] = await db
