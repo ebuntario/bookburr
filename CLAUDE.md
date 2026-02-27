@@ -8,20 +8,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 BookBurr is in **active development**. Core scaffolding is complete: auth, database, session creation wizard, home page, and share screen are implemented. The app is runnable locally.
 
-**What's been built (BOO-14 through BOO-18):**
+**What's been built (BOO-14 through BOO-19):**
 - Email magic link auth (NextAuth v5 + Resend)
 - Full database schema (Neon PostgreSQL + Drizzle ORM)
 - Session creation wizard (typeform-style, 3–4 steps with Framer Motion transitions)
 - Home page with live session list
 - Success/share screen after session creation
 - PWA manifest + icons
-- Middleware-based route protection
+- Middleware-based route protection with `callbackUrl` preservation
+- Attendee join flow — 3-step typeform wizard (date votes, location, budget)
 
 **What's NOT built yet:**
-- Session detail/dashboard page (stub exists at `src/app/(app)/sessions/[id]/page.tsx`)
-- Session join flow (page exists but incomplete)
-- Date/venue voting UI
-- Activity feed (data model exists, no UI)
+- Session detail/dashboard page (stub at `src/app/(app)/sessions/[id]/page.tsx`)
+- Date/venue voting UI (post-join, within the session dashboard)
+- Activity feed (data model + `activityFeed` writes exist, no UI)
 - Venue discovery + Google Places integration
 - Real-time updates (Supabase Realtime)
 - WhatsApp bot
@@ -98,8 +98,11 @@ src/
 │   │   │       └── _components/ # share-panel.tsx
 │   │   └── profile/            # Profile page (stub)
 │   ├── (wizard)/               # Layout group WITHOUT header (full-screen)
-│   │   └── sessions/new/       # Session creation wizard
-│   │       └── _components/    # session-wizard.tsx, step-*.tsx
+│   │   └── sessions/
+│   │       ├── new/            # Session creation wizard
+│   │       │   └── _components/ # session-wizard.tsx, step-*.tsx
+│   │       └── [id]/join/      # Attendee join wizard
+│   │           └── _components/ # join-wizard.tsx, step-date-votes.tsx, step-location.tsx, step-budget.tsx
 │   ├── api/auth/[...nextauth]/ # NextAuth route handler
 │   ├── login/                  # Login + verify pages
 │   ├── layout.tsx              # Root layout (fonts, providers)
@@ -108,8 +111,10 @@ src/
 │   ├── auth.ts                 # NextAuth v5 config
 │   ├── env.ts                  # Environment variable validation
 │   ├── constants.ts            # All enum-like constants (as const maps)
-│   ├── actions/sessions.ts     # createSession() server action
-│   ├── queries/sessions.ts     # getSessionsByUserId(), getSessionById()
+│   ├── actions/
+│   │   ├── sessions.ts         # createSession() server action
+│   │   └── members.ts          # joinSession() server action
+│   ├── queries/sessions.ts     # getSessionsByUserId(), getSessionById(), getSessionWithDates(), getMemberByUserAndSession()
 │   └── db/
 │       ├── index.ts            # Neon Pool + Drizzle instance (singleton)
 │       └── schema.ts           # Drizzle ORM schema (mirrors db/schema.sql)
@@ -169,10 +174,9 @@ Planned via **Supabase Realtime**. Feed entries slide in from top (300ms fade). 
 
 These are known bugs/gaps that should be fixed when working in related areas:
 
-1. **`src/lib/auth.ts` missing JWT callbacks** — `session.user.id` is undefined because there are no `jwt` or `session` callbacks to propagate the user ID. Must add callbacks before any feature that needs `session.user.id`.
-2. **`date_options` table missing UNIQUE constraint** — Should have `UNIQUE(session_id, date)` to prevent duplicate dates per session.
-3. **`office_location` type mismatch** — Schema comment says `{lat, lng}` JSON but v1 only collects an address string in the wizard.
-4. **nanoid v5 is ESM-only** — Works in Next.js but may cause issues in certain test/script contexts.
+1. **`date_options` table missing UNIQUE constraint** — Should have `UNIQUE(session_id, date)` to prevent duplicate dates per session.
+2. **`office_location` type mismatch** — Schema comment says `{lat, lng}` JSON but v1 only collects an address string in the wizard.
+3. **nanoid v5 is ESM-only** — Works in Next.js but may cause issues in certain test/script contexts.
 
 ---
 
@@ -241,11 +245,14 @@ Theme tokens are defined in `src/app/globals.css` using oklch() format within `@
 
 HeroUI v3 (beta) uses different patterns than v2:
 - **Compound components:** `<Card><Card.Header><Card.Title>...` (not `<CardHeader>`)
-- **Event handlers:** Use `onPress` on buttons, not `onClick`
+- **Event handlers:** Use `onPress` on HeroUI `<Button>`, not `onClick`. Native `<button>` elements do NOT accept `onPress` — use `onClick` on those.
 - **Input onChange:** Standard `onChange` works (confirmed)
 - **No Provider needed** (unlike v2)
 - **Requires Tailwind CSS v4** (not v3)
 - **Built on React Aria Components**
+- **`Input` has no `label` prop** — use a separate `<label>` element or `<Label>` from `@heroui/react` above the `<Input>`
+- **`Input` has no `startContent`/`endContent` props** — use a wrapper `<div>` with flex layout to add prefix/suffix elements
+- **`Spinner` color values:** only `"current" | "warning" | "accent" | "danger" | "success"` — `"white"` is not valid
 
 ---
 
