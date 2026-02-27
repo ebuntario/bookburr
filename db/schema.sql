@@ -53,6 +53,8 @@ CREATE TABLE bukber_sessions (
     invite_code text UNIQUE NOT NULL,
     status text NOT NULL DEFAULT 'collecting', -- 'collecting' | 'discovering' | 'voting' | 'confirmed' | 'completed'
     expected_group_size integer,
+    confirmed_venue_id text,
+    confirmed_date_option_id text,
     created_at timestamp with time zone NOT NULL DEFAULT now()
 );
 
@@ -159,3 +161,16 @@ CREATE TABLE activity_feed (
 );
 
 CREATE INDEX idx_activity_feed_session_created ON activity_feed(session_id, created_at DESC);
+
+-- § Deferred FK Constraints -------------------------------------------
+-- Added after all tables are created to avoid forward-reference issues
+
+ALTER TABLE bukber_sessions
+    ADD CONSTRAINT fk_bukber_sessions_confirmed_venue
+        FOREIGN KEY (confirmed_venue_id) REFERENCES venues(id),
+    ADD CONSTRAINT fk_bukber_sessions_confirmed_date_option
+        FOREIGN KEY (confirmed_date_option_id) REFERENCES date_options(id);
+
+-- § Missing Indexes ----------------------------------------------------
+
+CREATE INDEX idx_venue_reactions_venue_id ON venue_reactions(venue_id);

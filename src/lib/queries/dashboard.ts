@@ -7,6 +7,7 @@ import {
   dateVotes,
   activityFeed,
   users,
+  venues,
 } from "@/lib/db/schema";
 
 export async function getSessionWithMembers(sessionId: string) {
@@ -60,6 +61,18 @@ export async function getDatesWithVoteCounts(sessionId: string) {
     .where(eq(dateOptions.sessionId, sessionId));
 
   return { dates, votedMemberCount };
+}
+
+export async function getVenuesForSession(sessionId: string) {
+  return db
+    .select({
+      id: venues.id,
+      name: venues.name,
+      compositeScore: venues.compositeScore,
+    })
+    .from(venues)
+    .where(eq(venues.sessionId, sessionId))
+    .orderBy(desc(venues.compositeScore));
 }
 
 export async function getRecentActivity(sessionId: string, limit: number) {

@@ -80,6 +80,8 @@ export const bukberSessions = pgTable(
     inviteCode: text("invite_code").notNull().unique(),
     status: text("status").notNull().default("collecting"),
     expectedGroupSize: integer("expected_group_size"),
+    confirmedVenueId: text("confirmed_venue_id"),
+    confirmedDateOptionId: text("confirmed_date_option_id"),
     createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -217,6 +219,7 @@ export const venueReactions = pgTable(
       table.memberId,
       table.emoji,
     ),
+    index("idx_venue_reactions_venue_id").on(table.venueId),
   ],
 );
 
