@@ -137,14 +137,16 @@ CREATE TABLE venue_reactions (
 );
 
 -- § Venue Votes --------------------------------------------------------
+-- One vote per member per session. venue_id is nullable when is_terserah = true.
 
 CREATE TABLE venue_votes (
     id text PRIMARY KEY,
-    venue_id text NOT NULL REFERENCES venues(id) ON DELETE CASCADE,
+    session_id text NOT NULL REFERENCES bukber_sessions(id) ON DELETE CASCADE,
+    venue_id text REFERENCES venues(id) ON DELETE CASCADE,
     member_id text NOT NULL REFERENCES session_members(id) ON DELETE CASCADE,
     is_terserah boolean NOT NULL DEFAULT false,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
-    UNIQUE (venue_id, member_id)
+    UNIQUE (session_id, member_id)
 );
 
 CREATE INDEX idx_venue_votes_venue_id ON venue_votes(venue_id);

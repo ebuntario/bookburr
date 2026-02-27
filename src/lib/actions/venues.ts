@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import {
   venues,
   venueReactions,
+  venueVotes,
   sessionMembers,
   bukberSessions,
   activityFeed,
@@ -354,4 +355,75 @@ export async function retryDiscoverVenues(sessionId: string): Promise<ActionResu
   }
 
   return discoverVenues(sessionId);
+}
+
+// ── Vote for Venue ─────────────────────────────────────────────────────────────
+
+export async function voteForVenue(params: {
+  sessionId: string;
+  venueId?: string | null;
+  isTerserah?: boolean;
+}): Promise<ActionResult> {
+  const authSession = await auth();
+  const userId = authSession?.user?.id;
+  if (!userId) return { ok: false, error: "Harus login dulu" };
+
+  const [session] = await db
+    .select({ status: bukberSessions.status })
+    .from(bukberSessions)
+    .where(eq(bukberSessions.id, params.sessionId))
+    .limit(1);
+
+  if (!session) return { ok: false, error: "Session ga ditemukan" };
+  if (session.status !== "voting") {
+    return { ok: false, error: "Session belum di fase voting" };
+  }
+
+  const [member] = await db
+    .select({ id: sessionMembers.id })
+    .from(sessionMembers)
+    .where(
+      and(
+        eq(sessionMembers.sessionId, params.sessionId),
+        eq(sessionMembers.userId, userId),
+      ),
+    )
+    .limit(1);
+
+  if (!member) return { ok: false, error: "Lu bukan anggota session ini" };
+
+  const isTerserah = params.isTerserah ?? false;
+  const venueId = isTerserah ? null : (params.venueId ?? null);
+
+  if (!isTerserah && !venueId) {
+    return { ok: false, error: "Pilih venue atau pilih 'Ikut aja'" };
+  }
+
+  // Validate venueId belongs to this session
+  if (venueId) {
+    const [venue] = await db
+      .select({ id: venues.id })
+      .from(venues)
+      .where(and(eq(venues.id, venueId), eq(venues.sessionId, params.sessionId)))
+      .limit(1);
+    if (!venue) return { ok: false, error: "Venue ga valid" };
+  }
+
+  // Upsert: one vote per session per member
+  await db
+    .insert(venueVotes)
+    .values({
+      id: nanoid(),
+      sessionId: params.sessionId,
+      venueId,
+      memberId: member.id,
+      isTerserah,
+    })
+    .onConflictDoUpdate({
+      target: [venueVotes.sessionId, venueVotes.memberId],
+      set: { venueId, isTerserah },
+    });
+
+  revalidatePath(`/sessions/${params.sessionId}`);
+  return { ok: true };
 }

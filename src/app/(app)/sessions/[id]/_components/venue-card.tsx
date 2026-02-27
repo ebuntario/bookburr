@@ -1,4 +1,6 @@
 import { SocialEmbedPreview } from "./social-embed-preview";
+import { EmojiReactionBar } from "./emoji-reaction-bar";
+import { VenueVoteButton } from "./venue-vote-button";
 import type { SocialLinkMetadata } from "@/types";
 
 interface VenueReaction {
@@ -17,7 +19,11 @@ interface VenueCardProps {
   socialLinkMetadata: unknown;
   suggestedByMemberId: string | null;
   reactions: Record<string, VenueReaction>;
+  voteCount: number;
+  isMyVote: boolean;
   rank?: number; // 0-indexed
+  sessionId: string;
+  status: string; // session status
 }
 
 function RatingStars({ rating }: { rating: number }) {
@@ -41,9 +47,8 @@ function PriceLevel({ level }: { level: number }) {
   );
 }
 
-const REACTION_EMOJIS = ["🔥", "😐", "💸", "📍"] as const;
-
 export function VenueCard({
+  id,
   name,
   rating,
   priceLevel,
@@ -52,23 +57,39 @@ export function VenueCard({
   socialLinkMetadata,
   suggestedByMemberId,
   reactions,
+  voteCount,
+  isMyVote,
   rank = 0,
+  sessionId,
+  status,
 }: VenueCardProps) {
   const meta = socialLinkMetadata as SocialLinkMetadata | null;
   const isBestPick = rank === 0;
+  const isVotingPhase = status === "voting";
+  const canReact = status === "discovering" || status === "voting";
 
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-foreground/10 bg-white px-4 py-3.5">
-      {/* Header: name + best pick badge */}
+      {/* Header: name + best pick badge + vote button */}
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold leading-tight text-foreground">
           {name}
         </p>
-        {isBestPick && (
-          <span className="shrink-0 rounded-full bg-gold/15 px-2 py-0.5 text-xs font-semibold text-gold">
-            ✨ Top Pick
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {isBestPick && (
+            <span className="rounded-full bg-gold/15 px-2 py-0.5 text-xs font-semibold text-gold">
+              ✨ Top Pick
+            </span>
+          )}
+          {isVotingPhase && (
+            <VenueVoteButton
+              sessionId={sessionId}
+              venueId={id}
+              voteCount={voteCount}
+              isMyVote={isMyVote}
+            />
+          )}
+        </div>
       </div>
 
       {/* Rating + price + suggested badge */}
@@ -88,7 +109,7 @@ export function VenueCard({
         {suggestedByMemberId && (
           <>
             <span className="text-foreground/20">·</span>
-            <span className="text-xs text-teal font-medium">Saran anggota</span>
+            <span className="text-xs font-medium text-teal">Saran anggota</span>
           </>
         )}
       </div>
@@ -102,24 +123,13 @@ export function VenueCard({
         />
       )}
 
-      {/* Reaction bar (read-only counts) */}
-      <div className="flex items-center gap-3">
-        {REACTION_EMOJIS.map((emoji) => {
-          const r = reactions[emoji];
-          const count = r?.count ?? 0;
-          return (
-            <div
-              key={emoji}
-              className="flex items-center gap-1 rounded-full border border-foreground/10 bg-foreground/5 px-2 py-0.5 text-xs"
-            >
-              <span>{emoji}</span>
-              {count > 0 && (
-                <span className="font-medium text-foreground/60">{count}</span>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      {/* Emoji reaction bar */}
+      <EmojiReactionBar
+        sessionId={sessionId}
+        venueId={id}
+        reactions={reactions}
+        canReact={canReact}
+      />
     </div>
   );
 }

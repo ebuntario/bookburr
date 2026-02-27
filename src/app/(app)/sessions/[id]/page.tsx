@@ -5,6 +5,7 @@ import {
   getDatesWithVoteCounts,
   getVenuesForSession,
   getRecentActivity,
+  getMemberVoteStatus,
 } from "@/lib/queries/dashboard";
 import { getMemberByUserAndSession } from "@/lib/queries/sessions";
 import { SessionHeader } from "./_components/session-header";
@@ -41,9 +42,10 @@ export default async function SessionDashboardPage({
   if (!currentMember) redirect(`/sessions/${sessionId}/join`);
 
   // Second round: fetch data that depends on currentMember.id
-  const [datesData, venuesData] = await Promise.all([
+  const [datesData, venuesData, memberVoteStatus] = await Promise.all([
     getDatesWithVoteCounts(sessionId, currentMember.id),
     getVenuesForSession(sessionId, currentMember.id),
+    getMemberVoteStatus(sessionId, currentMember.id),
   ]);
 
   const isHost = sessionData.session.hostId === userId;
@@ -80,6 +82,7 @@ export default async function SessionDashboardPage({
         status={status as SessionStatus}
         isHost={isHost}
         venues={venuesData}
+        isTerserah={memberVoteStatus.isTerserah}
       />
 
       {isHost && (

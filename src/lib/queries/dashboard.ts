@@ -9,6 +9,7 @@ import {
   users,
   venues,
   venueReactions,
+  venueVotes,
 } from "@/lib/db/schema";
 
 export async function getSessionWithMembers(sessionId: string) {
@@ -107,6 +108,7 @@ export async function getVenuesForSession(sessionId: string, memberId?: string) 
 
   const venueIds = venueList.map((v) => v.id);
 
+  // Reaction counts per emoji per venue
   const reactionRows = await db
     .select({
       venueId: venueReactions.venueId,
@@ -120,6 +122,40 @@ export async function getVenuesForSession(sessionId: string, memberId?: string) 
     .where(inArray(venueReactions.venueId, venueIds))
     .groupBy(venueReactions.venueId, venueReactions.emoji);
 
+  // Vote counts per venue (aggregate only — never expose who voted for what)
+  const voteRows = await db
+    .select({
+      venueId: venueVotes.venueId,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(venueVotes)
+    .where(
+      and(
+        eq(venueVotes.sessionId, sessionId),
+        sql`${venueVotes.venueId} IS NOT NULL`,
+      ),
+    )
+    .groupBy(venueVotes.venueId);
+
+  // Current member's vote (venueId or isTerserah)
+  let myVote: { venueId: string | null; isTerserah: boolean } | null = null;
+  if (memberId) {
+    const [mv] = await db
+      .select({
+        venueId: venueVotes.venueId,
+        isTerserah: venueVotes.isTerserah,
+      })
+      .from(venueVotes)
+      .where(
+        and(
+          eq(venueVotes.sessionId, sessionId),
+          eq(venueVotes.memberId, memberId),
+        ),
+      )
+      .limit(1);
+    myVote = mv ?? null;
+  }
+
   const reactionMap: Record<
     string,
     Record<string, { count: number; hasMyReaction: boolean }>
@@ -132,7 +168,55 @@ export async function getVenuesForSession(sessionId: string, memberId?: string) 
     };
   }
 
-  return venueList.map((v) => ({ ...v, reactions: reactionMap[v.id] ?? {} }));
+  const voteCountMap: Record<string, number> = {};
+  for (const v of voteRows) {
+    if (v.venueId) voteCountMap[v.venueId] = v.count;
+  }
+
+  return venueList.map((v) => ({
+    ...v,
+    reactions: reactionMap[v.id] ?? {},
+    voteCount: voteCountMap[v.id] ?? 0,
+    isMyVote: myVote?.venueId === v.id,
+  }));
+}
+
+/** Total terserah count for the session. */
+export async function getTerserahCount(sessionId: string): Promise<number> {
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(venueVotes)
+    .where(
+      and(
+        eq(venueVotes.sessionId, sessionId),
+        eq(venueVotes.isTerserah, true),
+      ),
+    );
+  return count;
+}
+
+/** Whether the current member has voted "terserah". */
+export async function getMemberVoteStatus(
+  sessionId: string,
+  memberId: string,
+): Promise<{ voted: boolean; isTerserah: boolean; venueId: string | null }> {
+  const [vote] = await db
+    .select({
+      venueId: venueVotes.venueId,
+      isTerserah: venueVotes.isTerserah,
+    })
+    .from(venueVotes)
+    .where(
+      and(
+        eq(venueVotes.sessionId, sessionId),
+        eq(venueVotes.memberId, memberId),
+      ),
+    )
+    .limit(1);
+
+  return vote
+    ? { voted: true, isTerserah: vote.isTerserah, venueId: vote.venueId }
+    : { voted: false, isTerserah: false, venueId: null };
 }
 
 export async function getRecentActivity(sessionId: string, limit: number) {

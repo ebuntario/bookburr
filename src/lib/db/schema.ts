@@ -224,14 +224,16 @@ export const venueReactions = pgTable(
 );
 
 // § Venue Votes --------------------------------------------------------
+// One vote per member per session. venueId is nullable when isTerserah = true.
 
 export const venueVotes = pgTable(
   "venue_votes",
   {
     id: text("id").primaryKey(),
-    venueId: text("venue_id")
+    sessionId: text("session_id")
       .notNull()
-      .references(() => venues.id, { onDelete: "cascade" }),
+      .references(() => bukberSessions.id, { onDelete: "cascade" }),
+    venueId: text("venue_id").references(() => venues.id, { onDelete: "cascade" }),
     memberId: text("member_id")
       .notNull()
       .references(() => sessionMembers.id, { onDelete: "cascade" }),
@@ -241,8 +243,8 @@ export const venueVotes = pgTable(
       .defaultNow(),
   },
   (table) => [
-    uniqueIndex("uq_venue_votes_venue_member").on(
-      table.venueId,
+    uniqueIndex("uq_venue_votes_session_member").on(
+      table.sessionId,
       table.memberId,
     ),
     index("idx_venue_votes_venue_id").on(table.venueId),

@@ -19,6 +19,8 @@ interface Venue {
   socialLinkMetadata: unknown;
   suggestedByMemberId: string | null;
   reactions: Record<string, VenueReaction>;
+  voteCount: number;
+  isMyVote: boolean;
 }
 
 interface VenueSectionProps {
@@ -26,6 +28,7 @@ interface VenueSectionProps {
   status: SessionStatus;
   isHost: boolean;
   venues: Venue[];
+  isTerserah: boolean;
 }
 
 export function VenueSection({
@@ -33,6 +36,7 @@ export function VenueSection({
   status,
   isHost,
   venues,
+  isTerserah,
 }: VenueSectionProps) {
   const showVenues =
     status === "discovering" ||
@@ -40,8 +44,7 @@ export function VenueSection({
     status === "confirmed" ||
     status === "completed";
 
-  const canSuggest =
-    status === "discovering" || status === "voting";
+  const canSuggest = status === "discovering" || status === "voting";
 
   if (!showVenues) {
     // Collecting phase
@@ -108,7 +111,12 @@ export function VenueSection({
         <p className="text-xs text-foreground/40">{venues.length} tempat</p>
       </div>
 
-      <VenueList venues={venues} />
+      <VenueList
+        venues={venues}
+        sessionId={sessionId}
+        status={status}
+        isTerserah={isTerserah}
+      />
 
       {canSuggest && <SuggestVenueFab sessionId={sessionId} />}
     </div>
