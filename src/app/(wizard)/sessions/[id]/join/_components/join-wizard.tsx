@@ -16,6 +16,7 @@ import { StepBudget } from "./step-budget";
 interface JoinWizardProps {
   session: { id: string; name: string; mode: string; status: string };
   dateOptions: { id: string; date: string }[];
+  conflictDates?: Record<string, string[]>;
 }
 
 interface JoinWizardState {
@@ -34,7 +35,7 @@ const defaultState: JoinWizardState = {
 
 const TOTAL_STEPS = 3;
 
-export function JoinWizard({ session, dateOptions }: JoinWizardProps) {
+export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWizardProps) {
   const router = useRouter();
   const storageKey = `bookburr-join-${session.id}`;
 
@@ -183,6 +184,7 @@ export function JoinWizard({ session, dateOptions }: JoinWizardProps) {
                 votes={state.votes}
                 onChange={(votes) => updateState({ votes })}
                 onNext={goNext}
+                conflictDates={conflictDates}
               />
             )}
             {step === 1 && (

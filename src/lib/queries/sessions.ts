@@ -1,4 +1,4 @@
-import { eq, sql, desc, and, asc } from "drizzle-orm";
+import { eq, sql, desc, and, asc, ne, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { bukberSessions, sessionMembers, dateOptions } from "@/lib/db/schema";
 
@@ -83,4 +83,42 @@ export async function getMemberByUserAndSession(
     .limit(1);
 
   return member ?? null;
+}
+
+/**
+ * Get dates from user's confirmed/completed sessions (for conflict warnings).
+ * Returns { date, sessionName }[] — caller builds Record<string, string[]>.
+ */
+export async function getUserConfirmedDates(
+  userId: string,
+  excludeSessionId?: string,
+): Promise<{ date: string; sessionName: string }[]> {
+  try {
+    const conditions = [
+      eq(sessionMembers.userId, userId),
+      inArray(bukberSessions.status, ["confirmed", "completed"]),
+      sql`${bukberSessions.confirmedDateOptionId} IS NOT NULL`,
+    ];
+    if (excludeSessionId) {
+      conditions.push(ne(bukberSessions.id, excludeSessionId));
+    }
+
+    const rows = await db
+      .select({
+        date: dateOptions.date,
+        sessionName: bukberSessions.name,
+      })
+      .from(sessionMembers)
+      .innerJoin(bukberSessions, eq(sessionMembers.sessionId, bukberSessions.id))
+      .innerJoin(
+        dateOptions,
+        eq(bukberSessions.confirmedDateOptionId, dateOptions.id),
+      )
+      .where(and(...conditions));
+
+    return rows;
+  } catch {
+    // Progressive enhancement — return empty on failure
+    return [];
+  }
 }

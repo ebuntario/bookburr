@@ -1,8 +1,10 @@
 "use client";
 
 import { Button } from "@heroui/react";
+import { motion } from "framer-motion";
 import { PREFERENCE_LEVEL } from "@/lib/constants";
 import type { PreferenceLevel } from "@/lib/constants";
+import { formatDate } from "@/lib/format-utils";
 
 interface StepDateVotesProps {
   sessionName: string;
@@ -10,6 +12,7 @@ interface StepDateVotesProps {
   votes: Record<string, PreferenceLevel>;
   onChange: (votes: Record<string, PreferenceLevel>) => void;
   onNext: () => void;
+  conflictDates?: Record<string, string[]>;
 }
 
 const CYCLE: PreferenceLevel[] = [
@@ -39,15 +42,6 @@ const PILL_CONFIG: Record<
   },
 };
 
-function formatDate(dateStr: string): string {
-  return new Date(`${dateStr}T00:00:00`).toLocaleDateString("id-ID", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
 function setVote(
   votes: Record<string, PreferenceLevel>,
   dateId: string,
@@ -70,6 +64,7 @@ export function StepDateVotes({
   votes,
   onChange,
   onNext,
+  conflictDates = {},
 }: StepDateVotesProps) {
   const hasAvailable = Object.values(votes).some(
     (v) =>
@@ -94,11 +89,26 @@ export function StepDateVotes({
         </div>
       ) : (
         <div className="flex flex-1 flex-col gap-3">
-          {dateOptions.map((opt) => (
+          {dateOptions.map((opt) => {
+            const conflicts = conflictDates[opt.date];
+            return (
             <div
               key={opt.id}
               className="rounded-2xl border border-foreground/10 bg-white px-4 py-3"
             >
+              {conflicts && conflicts.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-2 rounded-lg border border-coral/20 bg-coral/10 px-3 py-2"
+                >
+                  {conflicts.map((name) => (
+                    <p key={name} className="text-xs text-coral">
+                      Heads up bestie, lu udah ada bukber &ldquo;{name}&rdquo; di tanggal ini
+                    </p>
+                  ))}
+                </motion.div>
+              )}
               <p className="mb-3 font-medium">{formatDate(opt.date)}</p>
               <div className="flex gap-2">
                 {CYCLE.map((level) => {
@@ -122,7 +132,8 @@ export function StepDateVotes({
                 })}
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
 

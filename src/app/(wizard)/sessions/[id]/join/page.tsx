@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import {
   getSessionWithDates,
   getMemberByUserAndSession,
+  getUserConfirmedDates,
 } from "@/lib/queries/sessions";
 import { JoinWizard } from "./_components/join-wizard";
 
@@ -18,9 +19,10 @@ export default async function JoinPage({
   const userId = session?.user?.id;
   if (!userId) redirect("/login");
 
-  const [result, existingMember] = await Promise.all([
+  const [result, existingMember, confirmedDates] = await Promise.all([
     getSessionWithDates(sessionId),
     getMemberByUserAndSession(userId, sessionId),
+    getUserConfirmedDates(userId, sessionId),
   ]);
 
   if (!result) notFound();
@@ -30,6 +32,13 @@ export default async function JoinPage({
     result.session.status === "completed"
   ) {
     redirect(`/sessions/${sessionId}`);
+  }
+
+  // Build conflict map: date string → session names[]
+  const conflictDates: Record<string, string[]> = {};
+  for (const row of confirmedDates) {
+    if (!conflictDates[row.date]) conflictDates[row.date] = [];
+    conflictDates[row.date].push(row.sessionName);
   }
 
   return (
@@ -42,6 +51,7 @@ export default async function JoinPage({
           status: result.session.status,
         }}
         dateOptions={result.dateOptions}
+        conflictDates={conflictDates}
       />
     </Suspense>
   );
