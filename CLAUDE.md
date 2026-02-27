@@ -6,50 +6,146 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-BookBurr is in **pre-development phase**. The repository currently contains only planning documents (`docs/prd.md`, `docs/ux-patterns.md`). No code exists yet.
+BookBurr is in **active development**. Core scaffolding is complete: auth, database, session creation wizard, home page, and share screen are implemented. The app is runnable locally.
+
+**What's been built (BOO-14 through BOO-18):**
+- Email magic link auth (NextAuth v5 + Resend)
+- Full database schema (Neon PostgreSQL + Drizzle ORM)
+- Session creation wizard (typeform-style, 3–4 steps with Framer Motion transitions)
+- Home page with live session list
+- Success/share screen after session creation
+- PWA manifest + icons
+- Middleware-based route protection
+
+**What's NOT built yet:**
+- Session detail/dashboard page (stub exists at `src/app/(app)/sessions/[id]/page.tsx`)
+- Session join flow (page exists but incomplete)
+- Date/venue voting UI
+- Activity feed (data model exists, no UI)
+- Venue discovery + Google Places integration
+- Real-time updates (Supabase Realtime)
+- WhatsApp bot
+- Profile page (stub)
 
 ## What This App Is
 
-**BookBurr** ("Booktabbersama") — a Next.js PWA for coordinating Ramadan iftar gatherings (bukber) among Indonesian Gen-Z/millennials. Core problems it solves: scheduling chaos across 5–20 people, venue deadlock, and invisible constraints (flexibility varies by marital status, distance, schedule). The entire UI is written in **Jaksel slang** (casual Bahasa Indonesia + English mix).
+**BookBurr** ("Booktabbersama") — a Next.js PWA for coordinating Ramadan iftar gatherings (bukber) among Indonesian Gen-Z/millennials. Core problems it solves: scheduling chaos across 5-20 people, venue deadlock, and invisible constraints (flexibility varies by marital status, distance, schedule). The entire UI is written in **Jaksel slang** (casual Bahasa Indonesia + English mix).
 
 ---
 
-## Planned Tech Stack
+## Tech Stack (Actual)
 
-| Layer | Technology |
-|---|---|
-| Frontend | Next.js (React), Tailwind CSS |
-| Auth | Google OAuth 2.0 |
-| Database | PostgreSQL via **Neon** (serverless Postgres) |
-| Realtime | Supabase Realtime (for live activity feed + vote updates) |
-| APIs | Google Places, Google Maps JS, Google Calendar |
-| Social Embeds | TikTok oEmbed, Meta Graph API (Instagram), Open Graph fallback |
-| Animations | Framer Motion (UI transitions), Lottie (celebration moments) |
-| State | React hooks + Context or Zustand |
-| Notifications | Google Calendar invites, Resend (email), WhatsApp messages |
-| WhatsApp Bot | WhatsApp Business API |
-| Hosting | Vercel |
+| Layer | Technology | Version |
+|---|---|---|
+| Framework | Next.js (App Router) | 15.3.4 |
+| Runtime | React | 19.2.3 |
+| Language | TypeScript | 5.x |
+| Styling | Tailwind CSS v4 + `@tailwindcss/postcss` | 4.x |
+| UI Library | HeroUI v3 (beta) | 3.0.0-beta.7 |
+| Auth | NextAuth v5 (JWT + Resend email magic link) | 5.0.0-beta.30 |
+| Database | Neon serverless PostgreSQL | `@neondatabase/serverless` 1.0.2 |
+| ORM | Drizzle ORM + Drizzle Kit | 0.45.1 / 0.31.9 |
+| Animations | Framer Motion | 12.34.3 |
+| Data Fetching | TanStack React Query (client), RSC (server) | 5.90.21 |
+| State | Zustand (installed, unused so far) | 5.0.11 |
+| ID Generation | nanoid (ESM-only) | 5.1.6 |
+| Email | Resend | 6.9.2 |
+| Git Hooks | Husky + lint-staged | 9.1.7 / 16.2.7 |
+| Package Manager | Bun | — |
+| Hosting | Vercel | — |
 
-**Expected dev commands once scaffolded:**
+**Planned but not yet integrated:** Supabase Realtime, Google Places API, Google Maps JS, Google Calendar API, TikTok oEmbed, Lottie, WhatsApp Business API.
+
+**Dev commands:**
 ```bash
-bun install         # or npm install
-bun dev             # Next.js dev server
-bun build           # production build
-bun lint            # ESLint
-bun test            # Jest / Vitest
+bun install          # install dependencies
+bun dev              # Next.js dev server
+bun build            # production build
+bun lint             # ESLint
+bun db:generate      # generate Drizzle migrations from schema changes
+bun db:migrate       # apply migrations to Neon
+bun db:studio        # open Drizzle Studio (DB browser)
 ```
 
-**Required env vars (create `.env.local`):**
+**Required env vars (`.env.local`):**
 ```
-DATABASE_URL=        # Neon PostgreSQL connection string (pooled, sslmode=require)
+DATABASE_URL=        # Neon PostgreSQL pooled connection string (sslmode=require)
+AUTH_SECRET=         # NextAuth JWT secret (generate with `openssl rand -hex 32`)
+AUTH_RESEND_KEY=     # Resend API key for magic link emails
+AUTH_URL=            # Full auth URL (http://localhost:3000 in dev)
 ```
+
+**Optional env vars:**
+```
+AUTH_EMAIL_FROM=     # From address (defaults to "BookBurr <noreply@bookburr.com>")
+NEXT_PUBLIC_BASE_URL= # Public base URL for share links (defaults to https://bookburr.com)
+```
+
+---
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── (app)/                  # Layout group WITH header
+│   │   ├── layout.tsx          # Shared header + avatar
+│   │   ├── home/               # Session list (main page after login)
+│   │   │   └── _components/    # session-card.tsx, empty-state.tsx
+│   │   ├── sessions/[id]/      # Session detail (stub)
+│   │   │   ├── join/           # Join session flow
+│   │   │   └── success/        # Post-creation share screen
+│   │   │       └── _components/ # share-panel.tsx
+│   │   └── profile/            # Profile page (stub)
+│   ├── (wizard)/               # Layout group WITHOUT header (full-screen)
+│   │   └── sessions/new/       # Session creation wizard
+│   │       └── _components/    # session-wizard.tsx, step-*.tsx
+│   ├── api/auth/[...nextauth]/ # NextAuth route handler
+│   ├── login/                  # Login + verify pages
+│   ├── layout.tsx              # Root layout (fonts, providers)
+│   └── globals.css             # Tailwind v4 + HeroUI + theme tokens
+├── lib/
+│   ├── auth.ts                 # NextAuth v5 config
+│   ├── env.ts                  # Environment variable validation
+│   ├── constants.ts            # All enum-like constants (as const maps)
+│   ├── actions/sessions.ts     # createSession() server action
+│   ├── queries/sessions.ts     # getSessionsByUserId(), getSessionById()
+│   └── db/
+│       ├── index.ts            # Neon Pool + Drizzle instance (singleton)
+│       └── schema.ts           # Drizzle ORM schema (mirrors db/schema.sql)
+├── components/
+│   └── providers.tsx           # SessionProvider + QueryClientProvider
+├── types/
+│   ├── index.ts                # LatLng, SocialLinkMetadata interfaces
+│   └── next-auth.d.ts          # NextAuth type augmentation
+├── middleware.ts               # Route protection + auth redirects
+└── instrumentation.ts          # localStorage SSR polyfill (Node.js 25)
+db/
+└── schema.sql                  # CANONICAL database schema (single source of truth)
+drizzle/
+└── *.sql                       # Generated migration files (do NOT edit directly)
+```
+
+### Key Architectural Patterns
+
+- **Route groups:** `(app)` has shared header layout; `(wizard)` is full-screen without header. Login pages are outside both groups.
+- **Route-specific components:** Use `_components/` subdirectory under each route, not a global `components/` folder.
+- **Server-first data fetching:** Use RSC + async server components for reads. `@tanstack/react-query` is available for client-side needs but RSC is preferred.
+- **Server actions:** All mutations go through `src/lib/actions/`. Each action validates input, runs DB operations, and revalidates paths.
+- **Constants:** All domain enums live in `src/lib/constants.ts` as `as const` maps. Always import from there, never hardcode strings.
+- **IDs:** All primary keys are `text` type generated with `nanoid()`, not UUIDs.
+- **Timestamps:** `timestamp with time zone` in SQL, Drizzle `mode: "date"` for JS Date objects.
+- **JSONB:** Used for flexible structured data (locations, preferences, metadata).
 
 ---
 
 ## Architecture Overview
 
-### Dual Entry Points
-Users join sessions via **web** (link/QR code) or **WhatsApp bot** (invite code). Both collect identical core data. The WhatsApp bot architecture follows the "TangTingTung" pattern — maintain per-user context across multiple active sessions.
+### Auth Flow
+Email magic link via Resend → verification token → JWT session. No OAuth/Google currently (switched from Google OAuth to email magic link in BOO-14).
+- Config: `src/lib/auth.ts`
+- Middleware: `src/middleware.ts` (protects all routes except `/login`, `/api/auth`)
+- Type augmentation: `src/types/next-auth.d.ts`
 
 ### Session State Machine
 `collecting → discovering → voting → confirmed → completed`
@@ -58,11 +154,25 @@ Users join sessions via **web** (link/QR code) or **WhatsApp bot** (invite code)
 - **Voting:** host opens formal vote on shortlist
 - **Confirmed:** date/venue locked, Google Calendar invites sent
 
+### Dual Entry Points
+Users join sessions via **web** (link/QR code) or **WhatsApp bot** (invite code). Both collect identical core data.
+
 ### Multi-Session First
-The home screen is a session list, not a single session view. Users juggle multiple concurrent bukber groups. Cross-session date conflict detection is required at the data layer.
+The home screen is a session list, not a single session view. Users juggle multiple concurrent bukber groups.
 
 ### Real-Time Activity Feed
-Powered by **Supabase Realtime**. Feed entries slide in from top (300ms fade). Vote counts animate with odometer-style rolls. Milestone thresholds trigger confetti bursts. This feed is the primary liveness signal — it should never appear empty (host creation event is always the first entry).
+Planned via **Supabase Realtime**. Feed entries slide in from top (300ms fade). Vote counts animate with odometer-style rolls. Milestone thresholds trigger confetti bursts. The activity_feed table and ACTIVITY_TYPE constants are defined but no UI exists yet.
+
+---
+
+## Known Issues
+
+These are known bugs/gaps that should be fixed when working in related areas:
+
+1. **`src/lib/auth.ts` missing JWT callbacks** — `session.user.id` is undefined because there are no `jwt` or `session` callbacks to propagate the user ID. Must add callbacks before any feature that needs `session.user.id`.
+2. **`date_options` table missing UNIQUE constraint** — Should have `UNIQUE(session_id, date)` to prevent duplicate dates per session.
+3. **`office_location` type mismatch** — Schema comment says `{lat, lng}` JSON but v1 only collects an address string in the wizard.
+4. **nanoid v5 is ESM-only** — Works in Next.js but may cause issues in certain test/script contexts.
 
 ---
 
@@ -70,48 +180,30 @@ Powered by **Supabase Realtime**. Feed entries slide in from top (300ms fade). V
 
 ### Flexibility Score
 ```
-flexibility_score = (marital_weight × 0.3) + (distance_weight × 0.4) + (schedule_weight × 0.3)
+flexibility_score = (marital_weight * 0.3) + (distance_weight * 0.4) + (schedule_weight * 0.3)
 # marital_weight: 1.0 single | 0.5 married | 0.75 not provided
 # distance_weight: 1.0 - (distance_from_centroid / max_distance_in_group)
 # schedule_weight: available_dates / total_candidate_dates
 ```
-Higher score = more flexible = **less** tiebreaker power. Gracefully degrades when optional data is missing — never block on incomplete data.
+Higher score = more flexible = **less** tiebreaker power. Gracefully degrades when optional data is missing.
 
 ### Date Scoring
 ```
-date_score(d) = Σ (1 / flexibility_score(attendee)) × preference_multiplier
+date_score(d) = SUM(1 / flexibility_score(attendee)) * preference_multiplier
 # preference_multiplier: 1.5 strongly_prefer | 1.0 can_do | 0 unavailable
 ```
-Less flexible attendees count more toward date selection.
 
 ### Venue Composite Score
 ```
-venue_score = (proximity × 0.30) + (rating_normalized × 0.20) + (price_fit × 0.20) + (cuisine_match × 0.15) + (social_proof × 0.15)
-# social_proof = 0.5 base + 0.25 if has TikTok/IG link + 0.25 if member-suggested (not system)
+venue_score = (proximity * 0.30) + (rating_normalized * 0.20) + (price_fit * 0.20) + (cuisine_match * 0.15) + (social_proof * 0.15)
+# social_proof = 0.5 base + 0.25 if has TikTok/IG link + 0.25 if member-suggested
 ```
-Recalculates in real-time as preferences/reactions arrive — not a one-time snapshot.
 
 ### Geographic Centroid (Personal mode)
 ```
 centroid = weighted_mean(attendee_locations, weight = 1/flexibility_score)
 ```
-If >60% of attendees cluster within 5km, snap centroid to cluster center rather than letting outliers pull it.
-
----
-
-## Core Data Model
-
-```
-Users: google_id, email, name, phone_number?, whatsapp_registered, favorite_venues[]
-Sessions: host_id, name, mode(personal|work), office_location?, invite_code, status
-SessionMembers: session_id, user_id, reference_location, budget_ceiling, flexibility_score, joined_via(web|whatsapp)
-DateOptions: session_id, date
-DateVotes: date_option_id, member_id, preference_level(strongly_prefer|can_do|unavailable)
-Venues: session_id, google_place_id, composite_score, social_link_url?, social_link_platform(tiktok|instagram|null), social_link_metadata(JSON)
-VenueReactions: venue_id, member_id, emoji(🔥|😐|💸|📍)
-VenueVotes: venue_id, member_id, is_terserah(boolean)
-ActivityFeed: session_id, member_id?, type, metadata(JSON), created_at
-```
+If >60% of attendees cluster within 5km, snap centroid to cluster center.
 
 ---
 
@@ -119,18 +211,18 @@ ActivityFeed: session_id, member_id?, type, metadata(JSON), created_at
 
 ### Social Embed Handling
 - **TikTok:** server-side fetch via `tiktok.com/oembed?url=`
-- **Instagram:** requires Meta Graph API auth — plan for this or fall back to Open Graph scraping
-- Render rich preview cards (4:5 thumbnail, play overlay, creator + caption), never auto-download video
-- Lazy-load previews, cache OG metadata on CDN, use ~50KB low-res thumbnails initially
+- **Instagram:** requires Meta Graph API auth or fall back to Open Graph scraping
+- Render rich preview cards (4:5 thumbnail, play overlay, creator + caption)
+- Platform accents: TikTok = `#000000` left-border, Instagram = gradient `#E1306C -> #F77737` left-border
 
 ### Voting Must Be Anonymous Until Finalized
-All votes hidden from peers until host confirms. The `is_terserah` flag on VenueVotes marks the "Ikut aja 😊" neutral vote — counts as participation, never blocks consensus.
+All votes hidden from peers until host confirms. `is_terserah` on VenueVotes = "Ikut aja" neutral vote — counts as participation, never blocks consensus.
 
 ### Onboarding is Typeform-Style
-One question per screen, full-screen, smooth slide-left transitions. Core attendee flow is exactly 3 questions (date, location, budget). Target completion: under 60 seconds. Do not add required steps.
+One question per screen, full-screen, smooth slide-left transitions (Framer Motion). Core attendee flow is exactly 3 questions (date, location, budget). Session creation wizard is 3 steps (personal) or 4 steps (work mode adds office location). Uses `sessionStorage` for persistence + browser history integration.
 
 ### Jaksel Copy
-All UI copy is in Jaksel (Jakarta Selatan slang). Refer to the copy table in `BookBurr_PRD_v2.md` Section 9 for the full string set. Do not substitute with standard Bahasa Indonesia or English.
+All UI copy is in Jaksel (Jakarta Selatan slang). Refer to copy tables in `docs/prd.md`. Do not substitute with standard Bahasa Indonesia or English.
 
 ### Visual Design Tokens
 ```
@@ -141,15 +233,27 @@ Accent CTA:  #FF6B6B  (coral)
 Accent 2:    #2DD4BF  (teal)
 Font:        Plus Jakarta Sans
 ```
-Platform accents for embed cards: TikTok = `#000000` left-border, Instagram = gradient `#E1306C → #F77737` left-border.
+Theme tokens are defined in `src/app/globals.css` using oklch() format within `@theme`.
+
+---
+
+## HeroUI v3 Usage
+
+HeroUI v3 (beta) uses different patterns than v2:
+- **Compound components:** `<Card><Card.Header><Card.Title>...` (not `<CardHeader>`)
+- **Event handlers:** Use `onPress` on buttons, not `onClick`
+- **Input onChange:** Standard `onChange` works (confirmed)
+- **No Provider needed** (unlike v2)
+- **Requires Tailwind CSS v4** (not v3)
+- **Built on React Aria Components**
 
 ---
 
 ## MVP Scope
 
-**In scope (v1):** Everything in `BookBurr_PRD_v2.md` Section 17 in-scope list, including full WhatsApp bot.
+**In scope (v1):** Session creation, attendee onboarding, date voting, venue discovery + voting, activity feed, share/invite, WhatsApp bot.
 
-**Explicitly out of scope for v1:** in-app booking, Grab API, chat/messaging, payment splitting/QRIS, planning streak counter, traktir badge, native mobile app, swipe-to-vote.
+**Out of scope for v1:** in-app booking, Grab API, chat/messaging, payment splitting/QRIS, planning streak counter, traktir badge, native mobile app, swipe-to-vote.
 
 ---
 
@@ -186,11 +290,23 @@ For **any database change**, follow the schema-first migration skill at `.agents
 ### Coding Conventions
 
 - Functional, declarative TypeScript — no classes
-- Interfaces over types; avoid TS enums, use `as const` maps
+- Interfaces over types; avoid TS enums, use `as const` maps from `src/lib/constants.ts`
 - Lowercase-with-dashes for directories (e.g., `components/session-card/`)
 - Named exports for components
 - Minimize `"use client"` — favor React Server Components
 - Wrap client components in `<Suspense>` with fallbacks
 - Mobile-first responsive design
-- HeroUI components for UI primitives
+- HeroUI v3 compound components for UI primitives
 - Plus Jakarta Sans font
+- Route-specific components in `_components/` subdirectories, not global `components/`
+- Server actions in `src/lib/actions/`, queries in `src/lib/queries/`
+- All domain constants imported from `src/lib/constants.ts`
+
+### Frontend Design Philosophy
+
+Avoid generic "AI-generated" UI. No symmetrical hero sections, no glassmorphism without reason, no default Tailwind shadows everywhere. Instead:
+- **Layout:** Strong asymmetry, overlapping elements, unusual grid breaks
+- **Color:** Commit to the gold/green/cream palette with coral as high-contrast accent. Break rules intentionally.
+- **Motion:** Micro-interactions, scroll-triggered reveals, Framer Motion spring physics
+- **Personality:** Jaksel energy — playful, irreverent, youthful Indonesian vibe in every pixel
+- **Typography:** Plus Jakarta Sans with confident weight variation

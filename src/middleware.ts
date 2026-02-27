@@ -7,14 +7,20 @@ export default auth((req) => {
   // Public routes
   if (pathname === "/login" || pathname.startsWith("/api/auth")) {
     if (isLoggedIn && pathname === "/login") {
-      return Response.redirect(new URL("/home", req.nextUrl));
+      const callbackUrl = req.nextUrl.searchParams.get("callbackUrl");
+      const target = callbackUrl?.startsWith("/") ? callbackUrl : "/home";
+      return Response.redirect(new URL(target, req.nextUrl));
     }
     return;
   }
 
   // Protected routes — redirect to login if not authed
   if (!isLoggedIn) {
-    return Response.redirect(new URL("/login", req.nextUrl));
+    const loginUrl = new URL("/login", req.nextUrl);
+    if (pathname.startsWith("/")) {
+      loginUrl.searchParams.set("callbackUrl", pathname);
+    }
+    return Response.redirect(loginUrl);
   }
 
   // Root redirect

@@ -4,13 +4,13 @@ import { Button, Input, Label } from "@heroui/react";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 
-export function LoginForm() {
+export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await signIn("resend", { email, callbackUrl: "/home" });
+    await signIn("resend", { email, callbackUrl: callbackUrl || "/home" });
     setSubmitted(true);
   }
 

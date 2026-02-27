@@ -1,6 +1,6 @@
-import { eq, sql, desc } from "drizzle-orm";
+import { eq, sql, desc, and, asc } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { bukberSessions, sessionMembers } from "@/lib/db/schema";
+import { bukberSessions, sessionMembers, dateOptions } from "@/lib/db/schema";
 
 export async function getSessionsByUserId(userId: string) {
   const rows = await db
@@ -39,4 +39,40 @@ export async function getSessionById(sessionId: string) {
     .limit(1);
 
   return row ?? null;
+}
+
+export async function getSessionWithDates(sessionId: string) {
+  const [session] = await db
+    .select()
+    .from(bukberSessions)
+    .where(eq(bukberSessions.id, sessionId))
+    .limit(1);
+
+  if (!session) return null;
+
+  const dates = await db
+    .select({ id: dateOptions.id, date: dateOptions.date })
+    .from(dateOptions)
+    .where(eq(dateOptions.sessionId, sessionId))
+    .orderBy(asc(dateOptions.date));
+
+  return { session, dateOptions: dates };
+}
+
+export async function getMemberByUserAndSession(
+  userId: string,
+  sessionId: string,
+) {
+  const [member] = await db
+    .select({ id: sessionMembers.id })
+    .from(sessionMembers)
+    .where(
+      and(
+        eq(sessionMembers.userId, userId),
+        eq(sessionMembers.sessionId, sessionId),
+      ),
+    )
+    .limit(1);
+
+  return member ?? null;
 }

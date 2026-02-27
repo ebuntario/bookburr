@@ -3,9 +3,9 @@ import { LoginForm } from "./login-form";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; callbackUrl?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, callbackUrl } = await searchParams;
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-8 px-6">
@@ -22,7 +22,7 @@ export default async function LoginPage({
             : "Login gagal, coba lagi"}
         </div>
       )}
-      <LoginForm />
+      <LoginForm callbackUrl={callbackUrl} />
     </main>
   );
 }

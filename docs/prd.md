@@ -79,7 +79,7 @@ Collective decisions should feel like shared victories. Confetti, haptics, and c
 
 ### 5.1 Host Creates a Session (Typeform Flow)
 
-1. Host logs in via Google.
+1. Host logs in via email magic link.
 2. Host creates a new session, one question per screen:
    - **Q1:** "Mau bikin bukber apa nih?" → Session name (e.g., "Bukber Geng SMA 😎")
    - **Q2:** "Ini buat siapa?" → Mode: **Personal** (friends/family) or **Work** (coworkers)
@@ -91,7 +91,7 @@ Collective decisions should feel like shared victories. Confetti, haptics, and c
 ### 5.2 Attendee Joins via Web (Typeform Flow)
 
 1. Attendee clicks link or scans QR code.
-2. Attendee logs in via Google.
+2. Attendee logs in via email magic link.
 3. **Core onboarding — 3 questions, one at a time, full-screen:**
    - **Q1:** "Which day yang lu available, bestie?" → Multi-select from host's candidate dates. Single tap = "can do," double-tap/long-press = "strongly prefer." Visual: selected dates glow with brand color, strongly preferred dates get a ⭐ badge.
    - **Q2:** "Lu mau bukber di sekitar mana?" → Map with pin drop, address search, or "Use my location" auto-detect button. Work mode shows office pin and asks for proximity tolerance slider instead ("Mau sejauh apa dari kantor?").
@@ -408,16 +408,18 @@ Sticker-style illustrations of diverse friend groups and food items. Aligned wit
 
 | Layer | Technology |
 | --- | --- |
-| Frontend | Next.js (React), Tailwind CSS |
-| Auth | Google OAuth 2.0 |
-| Database | PostgreSQL (via Supabase or Neon) |
+| Frontend | Next.js 15 (App Router, React 19), Tailwind CSS v4 |
+| Auth | Email magic link via NextAuth v5 + Resend |
+| Database | PostgreSQL via **Neon** (serverless) |
+| UI Components | HeroUI v3 (beta) |
+| ORM | Drizzle ORM + Drizzle Kit |
 | APIs | Google Places API, Google Calendar API, Google Maps JavaScript API |
 | Social Embeds | TikTok oEmbed API, Meta Graph API (Instagram), Open Graph fallback |
 | WhatsApp Bot | WhatsApp Business API (TangTingTung architecture) |
 | Notifications | Google Calendar invites, email (Resend), WhatsApp messages |
-| Animations | Lottie (celebration moments), Framer Motion (UI transitions) |
+| Animations | Framer Motion (UI transitions), Lottie (celebration moments) |
 | Hosting | Vercel |
-| State Management | React hooks + Context (or Zustand) |
+| State Management | Zustand + React hooks |
 | Real-time | Supabase Realtime (for live activity feed + vote updates) |
 
 ---
@@ -426,15 +428,23 @@ Sticker-style illustrations of diverse friend groups and food items. Aligned wit
 
 ### Users
 
-`id`, `google_id`, `email`, `name`, `phone_number` (optional), `whatsapp_registered` (boolean), `favorite_venues` (google_place_ids[]), `marital_status` (optional), `dietary_preferences` (optional), `default_cuisine_preferences` (optional)
+`id`, `email`, `name`, `emailVerified`, `image`, `phone_number` (optional), `whatsapp_registered` (boolean), `marital_status` (optional), `dietary_preferences` (optional), `default_cuisine_preferences` (optional), `favorite_venues` (jsonb), `created_at`
 
-### Sessions
+### Accounts *(NextAuth — stores OAuth/email provider links)*
 
-`id`, `host_id`, `name`, `mode` (personal/work), `office_location` (lat/lng, work mode only), `invite_code` (unique), `status` (collecting/discovering/voting/confirmed/completed), `created_at`
+`userId`, `type`, `provider`, `providerAccountId`, `refresh_token`, `access_token`, `expires_at`, `token_type`, `scope`, `id_token`, `session_state`
+
+### VerificationTokens *(NextAuth — email magic link tokens)*
+
+`identifier`, `token`, `expires`
+
+### Sessions *(table: `bukber_sessions`)*
+
+`id`, `host_id`, `name`, `mode` (personal/work), `office_location` (lat/lng, work mode only), `invite_code` (unique), `status` (collecting/discovering/voting/confirmed/completed), `expected_group_size` (optional), `created_at`
 
 ### SessionMembers
 
-`id`, `session_id`, `user_id`, `reference_location` (lat/lng), `proximity_tolerance` (work mode), `budget_ceiling`, `flexibility_score` (calculated), `session_cuisine_preferences` (optional), `session_dietary_preferences` (optional), `joined_via` (web/whatsapp), `joined_at`
+`id`, `session_id`, `user_id`, `reference_location` (lat/lng), `proximity_tolerance` (work mode), `budget_ceiling`, `session_cuisine_preferences` (optional), `session_dietary_preferences` (optional), `flexibility_score` (calculated), `joined_via` (web/whatsapp), `created_at`
 
 ### DateOptions
 
