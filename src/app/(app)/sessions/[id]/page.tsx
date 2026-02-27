@@ -10,7 +10,7 @@ import { getMemberByUserAndSession } from "@/lib/queries/sessions";
 import { SessionHeader } from "./_components/session-header";
 import { StatusProgress } from "./_components/status-progress";
 import { MemberAvatars } from "./_components/member-avatars";
-import { DateSummary } from "./_components/date-summary";
+import { DateVotingResults } from "./_components/date-voting-results";
 import { VenueSection } from "./_components/venue-section";
 import { ActivityPreview } from "./_components/activity-preview";
 import { InviteButton } from "./_components/invite-button";
@@ -29,19 +29,23 @@ export default async function SessionDashboardPage({
   if (!userId) redirect("/login");
 
   // 4 parallel queries: session+members, dates, venues, activity+membership check
-  const [sessionData, datesData, venuesData, [recentActivity, currentMember]] =
-    await Promise.all([
-      getSessionWithMembers(sessionId),
-      getDatesWithVoteCounts(sessionId),
-      getVenuesForSession(sessionId),
-      Promise.all([
-        getRecentActivity(sessionId, 5),
-        getMemberByUserAndSession(userId, sessionId),
-      ]),
-    ]);
+  const [sessionData, [recentActivity, currentMember]] = await Promise.all([
+    getSessionWithMembers(sessionId),
+    Promise.all([
+      getRecentActivity(sessionId, 5),
+      getMemberByUserAndSession(userId, sessionId),
+    ]),
+  ]);
 
   if (!sessionData) notFound();
   if (!currentMember) redirect(`/sessions/${sessionId}/join`);
+
+  // Second round: fetch data that depends on currentMember.id
+  const [datesData, venuesData] =
+    await Promise.all([
+      getDatesWithVoteCounts(sessionId, currentMember.id),
+      getVenuesForSession(sessionId),
+    ]);
 
   const isHost = sessionData.session.hostId === userId;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://bookburr.com";
@@ -62,10 +66,13 @@ export default async function SessionDashboardPage({
       <MemberAvatars members={sessionData.members} />
 
       {datesData.dates.length > 0 && (
-        <DateSummary
+        <DateVotingResults
+          sessionId={sessionId}
+          memberId={currentMember.id}
           dates={datesData.dates}
           totalMembers={sessionData.members.length}
           votedMemberCount={datesData.votedMemberCount}
+          status={status}
         />
       )}
 

@@ -37,7 +37,25 @@ export async function getSessionWithMembers(sessionId: string) {
   return { session, members };
 }
 
-export async function getDatesWithVoteCounts(sessionId: string) {
+export async function getDatesWithVoteCounts(
+  sessionId: string,
+  memberId?: string,
+) {
+  const myVoteExpr = memberId
+    ? sql<string | null>`MAX(CASE WHEN ${dateVotes.memberId} = ${memberId} THEN ${dateVotes.preferenceLevel} END)`
+    : sql<string | null>`CAST(NULL AS text)`;
+
+  const dateScoreExpr = sql<number>`
+    COALESCE(SUM(
+      1.0 / GREATEST(COALESCE(${sessionMembers.flexibilityScore}, 0.1), 0.1)
+      * CASE ${dateVotes.preferenceLevel}
+          WHEN 'strongly_prefer' THEN 1.5
+          WHEN 'can_do' THEN 1.0
+          ELSE 0
+        END
+    ), 0)::float
+  `;
+
   const dates = await db
     .select({
       id: dateOptions.id,
@@ -45,9 +63,12 @@ export async function getDatesWithVoteCounts(sessionId: string) {
       stronglyPrefer: sql<number>`count(${dateVotes.id}) filter (where ${dateVotes.preferenceLevel} = 'strongly_prefer')::int`,
       canDo: sql<number>`count(${dateVotes.id}) filter (where ${dateVotes.preferenceLevel} = 'can_do')::int`,
       unavailable: sql<number>`count(${dateVotes.id}) filter (where ${dateVotes.preferenceLevel} = 'unavailable')::int`,
+      dateScore: dateScoreExpr,
+      myVote: myVoteExpr,
     })
     .from(dateOptions)
     .leftJoin(dateVotes, eq(dateVotes.dateOptionId, dateOptions.id))
+    .leftJoin(sessionMembers, eq(sessionMembers.id, dateVotes.memberId))
     .where(eq(dateOptions.sessionId, sessionId))
     .groupBy(dateOptions.id, dateOptions.date)
     .orderBy(asc(dateOptions.date));
