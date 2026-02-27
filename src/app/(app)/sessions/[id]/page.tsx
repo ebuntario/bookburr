@@ -87,7 +87,7 @@ export default async function SessionDashboardPage({
         />
       )}
 
-      <ActivityPreview activities={recentActivity} />
+      <ActivityPreview sessionId={sessionId} activities={recentActivity} />
 
       <InviteButton
         sessionId={sessionId}

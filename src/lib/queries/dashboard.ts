@@ -1,4 +1,4 @@
-import { eq, desc, asc, sql } from "drizzle-orm";
+import { eq, desc, asc, sql, and, lt } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   bukberSessions,
@@ -76,6 +76,21 @@ export async function getVenuesForSession(sessionId: string) {
 }
 
 export async function getRecentActivity(sessionId: string, limit: number) {
+  return getActivityFeed(sessionId, limit);
+}
+
+export async function getActivityFeed(
+  sessionId: string,
+  limit: number,
+  cursor?: Date,
+) {
+  const where = cursor
+    ? and(
+        eq(activityFeed.sessionId, sessionId),
+        lt(activityFeed.createdAt, cursor),
+      )
+    : eq(activityFeed.sessionId, sessionId);
+
   return db
     .select({
       id: activityFeed.id,
@@ -89,7 +104,7 @@ export async function getRecentActivity(sessionId: string, limit: number) {
     .from(activityFeed)
     .leftJoin(sessionMembers, eq(activityFeed.memberId, sessionMembers.id))
     .leftJoin(users, eq(sessionMembers.userId, users.id))
-    .where(eq(activityFeed.sessionId, sessionId))
+    .where(where)
     .orderBy(desc(activityFeed.createdAt))
     .limit(limit);
 }
