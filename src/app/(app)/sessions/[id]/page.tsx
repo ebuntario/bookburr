@@ -4,13 +4,15 @@ import {
   getSessionWithMembers,
   getDatesWithVoteCounts,
   getVenuesForSession,
+  getVenueVotedMemberCount,
   getRecentActivity,
   getMemberVoteStatus,
 } from "@/lib/queries/dashboard";
 import { getMemberByUserAndSession } from "@/lib/queries/sessions";
 import { SessionHeader } from "./_components/session-header";
 import { StatusProgress } from "./_components/status-progress";
-import { MemberAvatars } from "./_components/member-avatars";
+import { SessionProgress } from "./_components/session-progress";
+import { WaitingOnList } from "./_components/waiting-on-list";
 import { DateVotingResults } from "./_components/date-voting-results";
 import { VenueSection } from "./_components/venue-section";
 import { ActivityPreview } from "./_components/activity-preview";
@@ -43,16 +45,63 @@ export default async function SessionDashboardPage({
   if (!currentMember) redirect(`/sessions/${sessionId}/join`);
 
   // Second round: fetch data that depends on currentMember.id
-  const [datesData, venuesData, memberVoteStatus] = await Promise.all([
+  const [datesData, venuesData, memberVoteStatus, venueVotedCount] = await Promise.all([
     getDatesWithVoteCounts(sessionId, currentMember.id),
     getVenuesForSession(sessionId, currentMember.id),
     getMemberVoteStatus(sessionId, currentMember.id),
+    getVenueVotedMemberCount(sessionId),
   ]);
 
   const isHost = sessionData.session.hostId === userId;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://bookburr.com";
   const shareUrl = `${baseUrl}/sessions/${sessionId}/join`;
   const status = sessionData.session.status;
+  const hostMember = sessionData.members.find(
+    (m) => m.userId === sessionData.session.hostId,
+  );
+  const hostName = hostMember?.name ?? undefined;
+  const dateRange =
+    datesData.dates.length > 0
+      ? datesData.dates.length === 1
+        ? datesData.dates[0].date
+        : `${datesData.dates[0].date} – ${datesData.dates[datesData.dates.length - 1].date}`
+      : undefined;
+
+  // Progress ring data
+  const totalMembers = sessionData.members.length;
+  const expectedSize = sessionData.session.expectedGroupSize;
+  const progressTotal =
+    status === "collecting" || status === "discovering"
+      ? expectedSize && expectedSize > totalMembers
+        ? expectedSize
+        : totalMembers
+      : totalMembers;
+
+  // Completed members by status phase
+  const memberIds = sessionData.members.map((m) => m.id);
+  const completedMemberIds = new Set<string>();
+  if (status === "voting") {
+    // venueVotedCount is the total; we don't know *which* members voted (anonymous)
+    // For the ring we just use counts, completedMemberIds stays empty during voting
+  } else if (status === "confirmed" || status === "completed") {
+    memberIds.forEach((id) => completedMemberIds.add(id));
+  } else {
+    // collecting/discovering: all members who have joined are "completed"
+    memberIds.forEach((id) => completedMemberIds.add(id));
+  }
+
+  const completedCount =
+    status === "voting"
+      ? venueVotedCount
+      : status === "confirmed" || status === "completed"
+        ? totalMembers
+        : totalMembers; // collecting/discovering: joined count = completed
+
+  // For voting: pass dummy pending members (names hidden by WaitingOnList)
+  const pendingMembersForList =
+    status === "voting"
+      ? sessionData.members.slice(0, totalMembers - venueVotedCount)
+      : [];
 
   return (
     <RealtimeDashboardWrapper sessionId={sessionId}>
@@ -66,7 +115,18 @@ export default async function SessionDashboardPage({
 
       <StatusProgress status={status} />
 
-      <MemberAvatars members={sessionData.members} />
+      <SessionProgress
+        completedCount={completedCount}
+        totalCount={progressTotal}
+        members={sessionData.members}
+        completedMemberIds={completedMemberIds}
+        status={status}
+      />
+
+      <WaitingOnList
+        pendingMembers={pendingMembersForList}
+        status={status}
+      />
 
       {datesData.dates.length > 0 && (
         <DateVotingResults
@@ -90,6 +150,7 @@ export default async function SessionDashboardPage({
       {isHost && (
         <HostControls
           sessionId={sessionId}
+          sessionName={sessionData.session.name}
           status={status}
           memberCount={sessionData.members.length}
           venueCount={venuesData.length}
@@ -106,6 +167,8 @@ export default async function SessionDashboardPage({
         sessionName={sessionData.session.name}
         inviteCode={sessionData.session.inviteCode}
         shareUrl={shareUrl}
+        hostName={hostName}
+        dateRange={dateRange}
       />
     </div>
     </RealtimeDashboardWrapper>

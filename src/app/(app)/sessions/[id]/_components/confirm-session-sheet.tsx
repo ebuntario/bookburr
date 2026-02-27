@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { confirmSession } from "@/lib/actions/session-status";
 import { CelebrationOverlay } from "./celebration-overlay";
+import { formatDateShort } from "@/lib/format-utils";
 
 interface Venue {
   id: string;
   name: string;
   compositeScore: number;
+  location?: unknown;
 }
 
 interface DateOption {
@@ -17,23 +19,16 @@ interface DateOption {
 
 interface ConfirmSessionSheetProps {
   sessionId: string;
+  sessionName: string;
   venues: Venue[];
   dates: DateOption[];
   onClose: () => void;
   onConfirmed: () => void;
 }
 
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("id-ID", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
-}
-
 export function ConfirmSessionSheet({
   sessionId,
+  sessionName,
   venues,
   dates,
   onClose,
@@ -50,6 +45,8 @@ export function ConfirmSessionSheet({
   const [confirmedInfo, setConfirmedInfo] = useState<{
     venueName: string;
     dateStr: string;
+    sessionName: string;
+    googleMapsUrl?: string;
   } | null>(null);
 
   const handleConfirm = async () => {
@@ -68,9 +65,16 @@ export function ConfirmSessionSheet({
     } else {
       const venue = venues.find((v) => v.id === selectedVenueId);
       const date = dates.find((d) => d.id === selectedDateId);
+      const loc = venue?.location as { lat?: number; lng?: number } | null;
+      const googleMapsUrl =
+        loc?.lat && loc?.lng
+          ? `https://maps.google.com/?q=${loc.lat},${loc.lng}`
+          : undefined;
       setConfirmedInfo({
         venueName: venue?.name ?? "venue",
-        dateStr: date ? formatDate(date.date) : "",
+        dateStr: date ? formatDateShort(date.date) : "",
+        sessionName,
+        googleMapsUrl,
       });
     }
   };
@@ -80,6 +84,8 @@ export function ConfirmSessionSheet({
       <CelebrationOverlay
         venueName={confirmedInfo.venueName}
         dateStr={confirmedInfo.dateStr}
+        sessionName={confirmedInfo.sessionName}
+        googleMapsUrl={confirmedInfo.googleMapsUrl}
         onClose={() => {
           setConfirmedInfo(null);
           onConfirmed();
@@ -164,7 +170,7 @@ export function ConfirmSessionSheet({
                   }`}
                 >
                   <span className="text-sm font-medium text-foreground">
-                    {formatDate(date.date)}
+                    {formatDateShort(date.date)}
                   </span>
                   {selectedDateId === date.id && (
                     <span className="text-gold">✓</span>

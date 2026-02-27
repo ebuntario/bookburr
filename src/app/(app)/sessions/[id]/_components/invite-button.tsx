@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   copyToClipboard,
-  buildWhatsAppShareUrl,
+  buildInvitationCard,
   nativeShare,
 } from "@/lib/share-utils";
 
@@ -12,12 +12,16 @@ interface InviteButtonProps {
   sessionName: string;
   inviteCode: string;
   shareUrl: string;
+  hostName?: string;
+  dateRange?: string;
 }
 
 export function InviteButton({
   sessionName,
   inviteCode,
   shareUrl,
+  hostName,
+  dateRange,
 }: InviteButtonProps) {
   const [copied, setCopied] = useState(false);
   const [showSheet, setShowSheet] = useState(false);
@@ -38,7 +42,7 @@ export function InviteButton({
     }
   };
 
-  const whatsappHref = buildWhatsAppShareUrl(sessionName, shareUrl, inviteCode);
+  const whatsappHref = buildInvitationCard({ hostName, sessionName, dateRange, shareUrl, inviteCode });
 
   return (
     <>

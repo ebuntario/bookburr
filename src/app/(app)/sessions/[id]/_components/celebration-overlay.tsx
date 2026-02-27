@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { buildConfirmationCard } from "@/lib/share-utils";
 
 interface CelebrationOverlayProps {
   venueName: string;
   dateStr: string;
+  sessionName?: string;
+  googleMapsUrl?: string;
   onClose: () => void;
 }
 
@@ -14,6 +17,8 @@ const CONFETTI_EMOJIS = ["🎉", "🎊", "✨", "🌟", "🥳", "🎈", "🪅"];
 export function CelebrationOverlay({
   venueName,
   dateStr,
+  sessionName,
+  googleMapsUrl,
   onClose,
 }: CelebrationOverlayProps) {
   const [confetti] = useState(() =>
@@ -31,9 +36,12 @@ export function CelebrationOverlay({
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const whatsappText = encodeURIComponent(
-    `Bukber kita jadi nih! Di ${venueName}${dateStr ? `, ${dateStr}` : ""}. See you! 🎉`,
-  );
+  const whatsappHref = buildConfirmationCard({
+    sessionName: sessionName ?? venueName,
+    venueName,
+    dateStr,
+    googleMapsUrl,
+  });
 
   return (
     <motion.div
@@ -85,7 +93,7 @@ export function CelebrationOverlay({
 
         <div className="mt-5 flex flex-col gap-2">
           <a
-            href={`https://wa.me/?text=${whatsappText}`}
+            href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 rounded-xl bg-green py-3 text-sm font-semibold text-white"

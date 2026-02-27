@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Button } from "@heroui/react";
 import {
   copyToClipboard,
-  buildWhatsAppShareUrl,
+  buildInvitationCard,
   nativeShare,
 } from "@/lib/share-utils";
 
@@ -38,7 +38,7 @@ export function SharePanel({
     }
   };
 
-  const whatsappHref = buildWhatsAppShareUrl(sessionName, shareUrl, inviteCode);
+  const whatsappHref = buildInvitationCard({ sessionName, shareUrl, inviteCode });
 
   const handleNativeShare = () => nativeShare(sessionName, shareUrl);
 
