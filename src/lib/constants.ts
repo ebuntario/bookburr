@@ -59,6 +59,7 @@ export const ACTIVITY_TYPE = {
   milestone: "milestone",
   status_changed: "status_changed",
   confirmed: "confirmed",
+  calendar_sent: "calendar_sent",
 } as const;
 
 export type ActivityType =

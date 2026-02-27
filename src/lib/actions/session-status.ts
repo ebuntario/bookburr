@@ -14,6 +14,7 @@ import {
 import { SESSION_STATUS_TRANSITIONS, ACTIVITY_TYPE } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
+import { sendCalendarInvitesForSession } from "@/lib/email/calendar-invite";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -181,6 +182,11 @@ export async function confirmSession(input: {
     });
 
     revalidatePath(`/sessions/${sessionId}`);
+    broadcastSessionEvent({ event: "status_changed", sessionId }).catch(() => {});
+    // Fire-and-forget calendar invites
+    sendCalendarInvitesForSession(sessionId, venueId, dateOptionId).catch((err) => {
+      console.error("[confirmSession] calendar invite failed:", err);
+    });
     return { ok: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "unknown";

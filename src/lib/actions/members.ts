@@ -18,6 +18,7 @@ import {
   ACTIVITY_TYPE,
   SESSION_STATUS,
 } from "@/lib/constants";
+import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
 import type { PreferenceLevel } from "@/lib/constants";
 
 interface JoinSessionInput {
@@ -135,6 +136,7 @@ export async function joinSession(
     });
 
     revalidatePath(`/sessions/${input.sessionId}`);
+    broadcastSessionEvent({ event: "member_joined", sessionId: input.sessionId }).catch(() => {});
     return { ok: true, sessionId: input.sessionId };
   } catch (err: unknown) {
     const pgErr = err as { code?: string };
