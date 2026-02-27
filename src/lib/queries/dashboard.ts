@@ -181,6 +181,15 @@ export async function getVenuesForSession(sessionId: string, memberId?: string) 
   }));
 }
 
+/** Count of distinct members who have cast a venue vote (including terserah). */
+export async function getVenueVotedMemberCount(sessionId: string): Promise<number> {
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(distinct ${venueVotes.memberId})::int` })
+    .from(venueVotes)
+    .where(eq(venueVotes.sessionId, sessionId));
+  return count;
+}
+
 /** Total terserah count for the session. */
 export async function getTerserahCount(sessionId: string): Promise<number> {
   const [{ count }] = await db
