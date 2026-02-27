@@ -20,4 +20,14 @@ export const env = {
   get GOOGLE_PLACES_API_KEY() {
     return process.env.GOOGLE_PLACES_API_KEY ?? null;
   },
+  // Supabase Realtime (optional — app works without these)
+  get NEXT_PUBLIC_SUPABASE_URL() {
+    return process.env.NEXT_PUBLIC_SUPABASE_URL ?? null;
+  },
+  get NEXT_PUBLIC_SUPABASE_ANON_KEY() {
+    return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? null;
+  },
+  get SUPABASE_SERVICE_ROLE_KEY() {
+    return process.env.SUPABASE_SERVICE_ROLE_KEY ?? null;
+  },
 } as const;

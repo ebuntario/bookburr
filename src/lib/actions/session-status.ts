@@ -13,6 +13,7 @@ import {
 } from "@/lib/db/schema";
 import { SESSION_STATUS_TRANSITIONS, ACTIVITY_TYPE } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
+import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -90,6 +91,7 @@ export async function advanceSessionStatus(
     });
 
     revalidatePath(`/sessions/${sessionId}`);
+    broadcastSessionEvent({ event: "status_changed", sessionId }).catch(() => {});
     return { ok: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "unknown";

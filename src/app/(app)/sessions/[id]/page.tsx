@@ -16,6 +16,7 @@ import { VenueSection } from "./_components/venue-section";
 import { ActivityPreview } from "./_components/activity-preview";
 import { InviteButton } from "./_components/invite-button";
 import { HostControls } from "./_components/host-controls";
+import { RealtimeDashboardWrapper } from "./_components/realtime-dashboard-wrapper";
 import type { SessionStatus } from "@/lib/constants";
 
 export const metadata = { title: "Dashboard Bukber — BookBurr" };
@@ -54,6 +55,7 @@ export default async function SessionDashboardPage({
   const status = sessionData.session.status;
 
   return (
+    <RealtimeDashboardWrapper sessionId={sessionId}>
     <div className="flex flex-col gap-5 pb-24">
       <SessionHeader
         name={sessionData.session.name}
@@ -106,5 +108,6 @@ export default async function SessionDashboardPage({
         shareUrl={shareUrl}
       />
     </div>
+    </RealtimeDashboardWrapper>
   );
 }

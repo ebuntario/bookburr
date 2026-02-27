@@ -17,6 +17,7 @@ import { ACTIVITY_TYPE, VENUE_EMOJI } from "@/lib/constants";
 import { env } from "@/lib/env";
 import { detectPlatform, fetchSocialLinkMetadata } from "@/lib/social-embed";
 import { calculateCentroid, calculateVenueScore } from "@/lib/algorithms/scoring";
+import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -90,6 +91,7 @@ export async function suggestVenue(params: {
   });
 
   revalidatePath(`/sessions/${params.sessionId}`);
+  broadcastSessionEvent({ event: "venue_suggested", sessionId: params.sessionId, venueName: params.name }).catch(() => {});
   return { ok: true };
 }
 
@@ -322,6 +324,7 @@ export async function reactToVenue(params: {
   }
 
   revalidatePath(`/sessions/${params.sessionId}`);
+  broadcastSessionEvent({ event: "reaction_changed", sessionId: params.sessionId }).catch(() => {});
   return { ok: true };
 }
 
@@ -425,5 +428,6 @@ export async function voteForVenue(params: {
     });
 
   revalidatePath(`/sessions/${params.sessionId}`);
+  broadcastSessionEvent({ event: "venue_voted", sessionId: params.sessionId }).catch(() => {});
   return { ok: true };
 }

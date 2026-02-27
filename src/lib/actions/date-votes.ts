@@ -16,6 +16,7 @@ import { ACTIVITY_TYPE } from "@/lib/constants";
 import type { PreferenceLevel } from "@/lib/constants";
 import { calculateFlexibilityScore } from "@/lib/algorithms/scoring";
 import { revalidatePath } from "next/cache";
+import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -132,6 +133,8 @@ export async function updateDateVotes(input: {
     });
 
     revalidatePath(`/sessions/${sessionId}`);
+    // Broadcast non-blocking
+    broadcastSessionEvent({ event: "votes_updated", sessionId }).catch(() => {});
     return { ok: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "unknown";
