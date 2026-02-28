@@ -10,6 +10,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? "https://bookburr.com"),
   title: "BookBurr",
   description: "Koordinasi bukber anti ribet",
   manifest: "/manifest.json",
@@ -17,6 +18,11 @@ export const metadata: Metadata = {
     title: "BookBurr",
     description: "Koordinasi bukber anti ribet",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BookBurr",
+    description: "Koordinasi bukber anti ribet",
   },
 };
 
