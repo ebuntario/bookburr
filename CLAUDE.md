@@ -15,7 +15,7 @@ BookBurr is in **active development**. Core scaffolding is complete: auth, datab
 - Home page with live session list
 - Success/share screen after session creation
 - PWA manifest + icons
-- Middleware-based route protection with `callbackUrl` preservation
+- Proxy-based route protection with `callbackUrl` preservation
 - Attendee join flow — 3-step typeform wizard (date votes, location, budget)
 - Session detail/dashboard page — full implementation with two-waterfall data fetch pattern
 - Date voting results UI with optimistic updates + score badges
@@ -145,7 +145,7 @@ src/
 ├── types/
 │   ├── index.ts                # LatLng, SocialLinkMetadata interfaces
 │   └── next-auth.d.ts          # NextAuth type augmentation
-├── middleware.ts               # Route protection + auth redirects
+├── proxy.ts                   # Route protection + auth redirects
 └── instrumentation.ts          # localStorage SSR polyfill (Node.js 25)
 db/
 └── schema.sql                  # CANONICAL database schema (single source of truth)
@@ -171,7 +171,7 @@ drizzle/
 ### Auth Flow
 Email magic link via Resend → verification token → JWT session. No OAuth/Google currently (switched from Google OAuth to email magic link in BOO-14).
 - Config: `src/lib/auth.ts`
-- Middleware: `src/middleware.ts` (protects all routes except `/login`, `/api/auth`)
+- Proxy: `src/proxy.ts` (protects all routes except `/login`, `/api/auth`)
 - Type augmentation: `src/types/next-auth.d.ts`
 
 ### Session State Machine
