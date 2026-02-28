@@ -10,7 +10,11 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await signIn("resend", { email, callbackUrl: callbackUrl || "/home" });
+    await signIn("resend", {
+      email,
+      callbackUrl: callbackUrl || "/home",
+      redirect: false,
+    });
     setSubmitted(true);
   }
 

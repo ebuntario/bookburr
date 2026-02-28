@@ -24,18 +24,12 @@ export function SharePanel({
   sessionId,
 }: SharePanelProps) {
   const [linkCopied, setLinkCopied] = useState(false);
-  const [codeCopied, setCodeCopied] = useState(false);
 
-  const handleCopy = async (text: string, type: "link" | "code") => {
-    const ok = await copyToClipboard(text);
+  const handleCopyLink = async () => {
+    const ok = await copyToClipboard(shareUrl);
     if (!ok) return;
-    if (type === "link") {
-      setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2000);
-    } else {
-      setCodeCopied(true);
-      setTimeout(() => setCodeCopied(false), 2000);
-    }
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
   };
 
   const whatsappHref = buildInvitationCard({ sessionName, shareUrl, inviteCode });
@@ -75,29 +69,10 @@ export function SharePanel({
           </span>
           <Button
             size="sm"
-            onPress={() => handleCopy(shareUrl, "link")}
+            onPress={handleCopyLink}
             className="shrink-0 rounded-lg bg-gold px-3 py-1.5 text-xs font-semibold text-white"
           >
             {linkCopied ? "Tersalin!" : "Copy"}
-          </Button>
-        </div>
-      </div>
-
-      {/* Invite code */}
-      <div className="flex w-full flex-col gap-3">
-        <p className="text-sm font-medium text-foreground/60">
-          Kode buat WhatsApp Bot
-        </p>
-        <div className="flex items-center gap-2 rounded-xl border border-foreground/10 bg-white px-4 py-3">
-          <span className="flex-1 font-mono text-lg font-bold tracking-wider text-foreground">
-            {inviteCode}
-          </span>
-          <Button
-            size="sm"
-            onPress={() => handleCopy(inviteCode, "code")}
-            className="shrink-0 rounded-lg bg-gold px-3 py-1.5 text-xs font-semibold text-white"
-          >
-            {codeCopied ? "Tersalin!" : "Copy"}
           </Button>
         </div>
       </div>
