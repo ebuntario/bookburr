@@ -52,6 +52,159 @@ interface DateWithVotes {
   myVote: string | null;
 }
 
+// ── VoteBar sub-component ──────────────────────────────────────────────────
+
+function VoteBar({ stronglyPrefer, canDo, unavailable }: { stronglyPrefer: number; canDo: number; unavailable: number }) {
+  const total = stronglyPrefer + canDo + unavailable;
+  if (total === 0) return null;
+
+  const segments = [
+    { value: stronglyPrefer, color: "bg-gold" },
+    { value: canDo, color: "bg-teal" },
+    { value: unavailable, color: "bg-coral" },
+  ].filter((s) => s.value > 0);
+
+  return (
+    <div className="flex h-2 w-full overflow-hidden rounded-full gap-0.5">
+      {segments.map((seg) => (
+        <motion.div
+          key={seg.color}
+          className={`h-full rounded-full ${seg.color}`}
+          initial={{ width: 0 }}
+          animate={{ width: `${(seg.value / total) * 100}%` }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          style={{ minWidth: 4 }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ── VotePills sub-component ────────────────────────────────────────────────
+
+function VotePills({
+  myVote,
+  isSuccess,
+  submitting,
+  onVote,
+}: {
+  myVote: PreferenceLevel | null;
+  isSuccess: boolean;
+  submitting: boolean;
+  onVote: (level: PreferenceLevel) => void;
+}) {
+  return (
+    <div className="flex gap-2">
+      {PREFERENCE_LEVELS.map((level) => {
+        const config = PILL_CONFIG[level];
+        const isSelected = myVote === level;
+        return (
+          <motion.button
+            key={level}
+            type="button"
+            onClick={() => onVote(level)}
+            animate={
+              isSuccess && isSelected
+                ? { scale: [1, 1.1, 1] }
+                : { scale: 1 }
+            }
+            transition={{ duration: 0.2 }}
+            disabled={submitting}
+            className={[
+              "flex-1 rounded-xl border px-2 py-2 text-xs font-medium transition-all disabled:opacity-60",
+              isSelected ? config.selected : config.unselected,
+            ].join(" ")}
+          >
+            {config.label}
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── ReadOnlyVote sub-component ─────────────────────────────────────────────
+
+function ReadOnlyVote({ myVote }: { myVote: PreferenceLevel }) {
+  const colorClass =
+    myVote === PREFERENCE_LEVEL.strongly_prefer
+      ? "font-medium text-gold"
+      : myVote === PREFERENCE_LEVEL.can_do
+        ? "font-medium text-teal"
+        : "font-medium text-coral";
+
+  return (
+    <p className="text-xs text-foreground/50">
+      Pilihan lu:{" "}
+      <span className={colorClass}>
+        {PILL_CONFIG[myVote]?.label}
+      </span>
+    </p>
+  );
+}
+
+// ── DateRow sub-component ──────────────────────────────────────────────────
+
+function DateRow({
+  date,
+  myVote,
+  isSuccess,
+  isBestDate,
+  canEdit,
+  submitting,
+  onVote,
+}: {
+  date: DateWithVotes;
+  myVote: PreferenceLevel | null;
+  isSuccess: boolean;
+  isBestDate: boolean;
+  canEdit: boolean;
+  submitting: boolean;
+  onVote: (dateId: string, level: PreferenceLevel) => void;
+}) {
+  const total = date.stronglyPrefer + date.canDo + date.unavailable;
+
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-foreground/10 bg-white px-4 py-3">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-medium text-foreground leading-tight">
+          {formatDate(date.date)}
+        </p>
+        {isBestDate && <DateScoreBadge />}
+      </div>
+
+      <VoteBar
+        stronglyPrefer={date.stronglyPrefer}
+        canDo={date.canDo}
+        unavailable={date.unavailable}
+      />
+
+      {total > 0 && (
+        <p className="text-xs text-foreground/50">
+          <span className="text-gold">{date.stronglyPrefer} bisa banget</span>
+          {" · "}
+          <span className="text-teal">{date.canDo} bisa</span>
+          {" · "}
+          <span className="text-coral">{date.unavailable} gabisa</span>
+        </p>
+      )}
+
+      {canEdit && (
+        <VotePills
+          myVote={myVote}
+          isSuccess={isSuccess}
+          submitting={submitting}
+          onVote={(level) => onVote(date.id, level)}
+        />
+      )}
+
+      {!canEdit && myVote && <ReadOnlyVote myVote={myVote} />}
+    </div>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────
+
 interface DateVotingResultsProps {
   sessionId: string;
   memberId: string;
@@ -81,7 +234,6 @@ export function DateVotingResults({
 
   const canEdit = status === "collecting" || status === "discovering";
 
-  // Sort: date ASC during collecting/discovering, dateScore DESC otherwise
   const sorted = [...initialDates].sort((a, b) =>
     canEdit ? a.date.localeCompare(b.date) : b.dateScore - a.dateScore,
   );
@@ -95,7 +247,6 @@ export function DateVotingResults({
     const prev = localVotes[dateId];
     const next = prev === level ? null : level;
 
-    // Optimistic update
     const newLocalVotes = { ...localVotes, [dateId]: next };
     setLocalVotes(newLocalVotes);
     setError(null);
@@ -112,7 +263,6 @@ export function DateVotingResults({
     setSubmitting(false);
 
     if (!result.ok) {
-      // Revert on failure
       setLocalVotes((v) => ({ ...v, [dateId]: prev }));
       setError(result.error);
     } else {
@@ -139,120 +289,18 @@ export function DateVotingResults({
       )}
 
       <div className="flex flex-col gap-3">
-        {sorted.map((d, i) => {
-          const total = d.stronglyPrefer + d.canDo + d.unavailable;
-          const myVote = localVotes[d.id];
-          const isSuccess = successDateId === d.id;
-
-          return (
-            <div
-              key={d.id}
-              className="flex flex-col gap-3 rounded-2xl border border-foreground/10 bg-white px-4 py-3"
-            >
-              {/* Date label + best-date badge */}
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-medium text-foreground leading-tight">
-                  {formatDate(d.date)}
-                </p>
-                {threshold50 && i === 0 && <DateScoreBadge />}
-              </div>
-
-              {/* Stacked bar */}
-              {total > 0 && (
-                <div className="flex h-2 w-full overflow-hidden rounded-full gap-0.5">
-                  {d.stronglyPrefer > 0 && (
-                    <motion.div
-                      className="h-full rounded-full bg-gold"
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${(d.stronglyPrefer / total) * 100}%`,
-                      }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
-                      style={{ minWidth: 4 }}
-                    />
-                  )}
-                  {d.canDo > 0 && (
-                    <motion.div
-                      className="h-full rounded-full bg-teal"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(d.canDo / total) * 100}%` }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
-                      style={{ minWidth: 4 }}
-                    />
-                  )}
-                  {d.unavailable > 0 && (
-                    <motion.div
-                      className="h-full rounded-full bg-coral"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(d.unavailable / total) * 100}%` }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
-                      style={{ minWidth: 4 }}
-                    />
-                  )}
-                </div>
-              )}
-
-              {/* Vote count text */}
-              {total > 0 && (
-                <p className="text-xs text-foreground/50">
-                  <span className="text-gold">{d.stronglyPrefer} bisa banget</span>
-                  {" · "}
-                  <span className="text-teal">{d.canDo} bisa</span>
-                  {" · "}
-                  <span className="text-coral">{d.unavailable} gabisa</span>
-                </p>
-              )}
-
-              {/* Editable vote pills */}
-              {canEdit && (
-                <div className="flex gap-2">
-                  {PREFERENCE_LEVELS.map((level) => {
-                    const config = PILL_CONFIG[level];
-                    const isSelected = myVote === level;
-                    return (
-                      <motion.button
-                        key={level}
-                        type="button"
-                        onClick={() => handleVote(d.id, level)}
-                        animate={
-                          isSuccess && isSelected
-                            ? { scale: [1, 1.1, 1] }
-                            : { scale: 1 }
-                        }
-                        transition={{ duration: 0.2 }}
-                        disabled={submitting}
-                        className={[
-                          "flex-1 rounded-xl border px-2 py-2 text-xs font-medium transition-all disabled:opacity-60",
-                          isSelected ? config.selected : config.unselected,
-                        ].join(" ")}
-                      >
-                        {config.label}
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Read-only vote display when locked */}
-              {!canEdit && myVote && (
-                <p className="text-xs text-foreground/50">
-                  Pilihan lu:{" "}
-                  <span
-                    className={
-                      myVote === PREFERENCE_LEVEL.strongly_prefer
-                        ? "font-medium text-gold"
-                        : myVote === PREFERENCE_LEVEL.can_do
-                          ? "font-medium text-teal"
-                          : "font-medium text-coral"
-                    }
-                  >
-                    {PILL_CONFIG[myVote as PreferenceLevel]?.label}
-                  </span>
-                </p>
-              )}
-            </div>
-          );
-        })}
+        {sorted.map((d, i) => (
+          <DateRow
+            key={d.id}
+            date={d}
+            myVote={localVotes[d.id]}
+            isSuccess={successDateId === d.id}
+            isBestDate={threshold50 && i === 0}
+            canEdit={canEdit}
+            submitting={submitting}
+            onVote={handleVote}
+          />
+        ))}
       </div>
     </div>
   );

@@ -207,36 +207,33 @@ export async function suggestVenue(params: {
 
 // ── Discover Venues ────────────────────────────────────────────────────────────
 
-export async function discoverVenues(sessionId: string): Promise<ActionResult & { count?: number; skipped?: boolean }> {
-  const authSession = await auth();
-  const userId = authSession?.user?.id;
-  if (!userId) return { ok: false, error: "Harus login dulu" };
-
+async function validateDiscoverSession(
+  sessionId: string,
+  userId: string,
+) {
   const [session] = await db
     .select()
     .from(bukberSessions)
     .where(eq(bukberSessions.id, sessionId))
     .limit(1);
 
-  if (!session) return { ok: false, error: "Session ga ditemukan" };
-  if (session.hostId !== userId) return { ok: false, error: "Cuma host yang bisa" };
-  if (session.status !== "discovering") {
-    return { ok: false, error: "Session belum di fase discovering" };
-  }
+  if (!session) return { error: "Session ga ditemukan" } as const;
+  if (session.hostId !== userId) return { error: "Cuma host yang bisa" } as const;
+  if (session.status !== "discovering") return { error: "Session belum di fase discovering" } as const;
+  return { session } as const;
+}
 
-  // Idempotency: skip if system venues already exist
+async function hasExistingSystemVenues(sessionId: string): Promise<boolean> {
   const existing = await db
     .select({ id: venues.id })
     .from(venues)
     .where(and(eq(venues.sessionId, sessionId), isNull(venues.suggestedByMemberId)))
     .limit(1);
+  return existing.length > 0;
+}
 
-  if (existing.length > 0) return { ok: true, skipped: true };
-
-  const apiKey = env.GOOGLE_PLACES_API_KEY;
-  if (!apiKey) return { ok: false, error: "Google Places API ga dikonfigurasi" };
-
-  const members = await db
+async function fetchSessionMembers(sessionId: string) {
+  return db
     .select({
       flexibilityScore: sessionMembers.flexibilityScore,
       referenceLocation: sessionMembers.referenceLocation,
@@ -246,7 +243,43 @@ export async function discoverVenues(sessionId: string): Promise<ActionResult & 
     })
     .from(sessionMembers)
     .where(eq(sessionMembers.sessionId, sessionId));
+}
 
+async function insertDiscoveredVenues(
+  results: GooglePlaceResult[],
+  members: DiscoverMember[],
+  centroid: { lat: number; lng: number } | null,
+  sessionId: string,
+): Promise<number> {
+  const venueInserts = buildVenueInserts(results, members, centroid, sessionId);
+  await db.insert(venues).values(venueInserts);
+
+  await db.insert(activityFeed).values({
+    id: nanoid(),
+    sessionId,
+    type: ACTIVITY_TYPE.system_recommendation,
+    metadata: { message: `${venueInserts.length} venue ditemukan di sekitar lu!` },
+  });
+
+  revalidatePath(`/sessions/${sessionId}`);
+  broadcastSessionEvent({ event: "venues_discovered", sessionId }).catch(() => {});
+  return venueInserts.length;
+}
+
+export async function discoverVenues(sessionId: string): Promise<ActionResult & { count?: number; skipped?: boolean }> {
+  const authSession = await auth();
+  const userId = authSession?.user?.id;
+  if (!userId) return { ok: false, error: "Harus login dulu" };
+
+  const validation = await validateDiscoverSession(sessionId, userId);
+  if ("error" in validation) return { ok: false, error: validation.error as string };
+
+  if (await hasExistingSystemVenues(sessionId)) return { ok: true, skipped: true };
+
+  const apiKey = env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) return { ok: false, error: "Google Places API ga dikonfigurasi" };
+
+  const members = await fetchSessionMembers(sessionId);
   const centroid = calculateCentroid(
     members.map((m) => ({
       flexibilityScore: m.flexibilityScore,
@@ -254,7 +287,7 @@ export async function discoverVenues(sessionId: string): Promise<ActionResult & 
     })),
   );
 
-  const searchLocation = resolveSearchLocation(session, members, centroid);
+  const searchLocation = resolveSearchLocation(validation.session, members, centroid);
   if (!searchLocation) {
     await insertNoResultsActivity(sessionId, "Ga ada data lokasi, venue discovery diskip");
     return { ok: true, skipped: true };
@@ -273,19 +306,8 @@ export async function discoverVenues(sessionId: string): Promise<ActionResult & 
     return { ok: true, count: 0 };
   }
 
-  const venueInserts = buildVenueInserts(results, members, centroid, sessionId);
-  await db.insert(venues).values(venueInserts);
-
-  await db.insert(activityFeed).values({
-    id: nanoid(),
-    sessionId,
-    type: ACTIVITY_TYPE.system_recommendation,
-    metadata: { message: `${venueInserts.length} venue ditemukan di sekitar lu!` },
-  });
-
-  revalidatePath(`/sessions/${sessionId}`);
-  broadcastSessionEvent({ event: "venues_discovered", sessionId }).catch(() => {});
-  return { ok: true, count: venueInserts.length };
+  const count = await insertDiscoveredVenues(results, members, centroid, sessionId);
+  return { ok: true, count };
 }
 
 // ── React to Venue ─────────────────────────────────────────────────────────────

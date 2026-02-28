@@ -36,6 +36,45 @@ const defaultState: JoinWizardState = {
 
 const TOTAL_STEPS = 3;
 
+function UnvotedConfirmModal({
+  unvotedCount,
+  onCancel,
+  onConfirm,
+}: {
+  unvotedCount: number;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      className="absolute inset-x-6 bottom-6 flex flex-col gap-3 rounded-xl border border-foreground/10 bg-white p-4 text-center shadow-lg"
+    >
+      <p className="text-sm text-foreground">
+        Lu belum pilih untuk {unvotedCount} tanggal. Gue anggap bisa ya? 😊
+      </p>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 rounded-lg border border-foreground/20 py-2 text-sm font-medium text-foreground/60"
+        >
+          Mau pilih dulu
+        </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          className="flex-1 rounded-lg bg-gold py-2 text-sm font-semibold text-white"
+        >
+          Yep, lanjut!
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWizardProps) {
   const router = useRouter();
 
@@ -158,34 +197,11 @@ export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWiz
 
         <AnimatePresence>
           {pendingUnvotedConfirm && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              className="absolute inset-x-6 bottom-6 flex flex-col gap-3 rounded-xl border border-foreground/10 bg-white p-4 text-center shadow-lg"
-            >
-              <p className="text-sm text-foreground">
-                Lu belum pilih untuk{" "}
-                {dateOptions.filter((d) => !state.votes[d.id]).length} tanggal.
-                Gue anggap bisa ya? 😊
-              </p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPendingUnvotedConfirm(false)}
-                  className="flex-1 rounded-lg border border-foreground/20 py-2 text-sm font-medium text-foreground/60"
-                >
-                  Mau pilih dulu
-                </button>
-                <button
-                  type="button"
-                  onClick={executeSubmit}
-                  className="flex-1 rounded-lg bg-gold py-2 text-sm font-semibold text-white"
-                >
-                  Yep, lanjut!
-                </button>
-              </div>
-            </motion.div>
+            <UnvotedConfirmModal
+              unvotedCount={dateOptions.filter((d) => !state.votes[d.id]).length}
+              onCancel={() => setPendingUnvotedConfirm(false)}
+              onConfirm={executeSubmit}
+            />
           )}
         </AnimatePresence>
 
