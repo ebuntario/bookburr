@@ -6,6 +6,8 @@ import { and, eq } from "drizzle-orm";
 import { env } from "@/lib/env";
 import { placesRatelimit } from "@/lib/rate-limit";
 
+export const dynamic = "force-dynamic";
+
 interface GooglePlace {
   place_id: string;
   name: string;
