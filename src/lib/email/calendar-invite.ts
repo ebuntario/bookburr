@@ -22,19 +22,13 @@ interface CalendarInviteInput {
   icsContent: string;
 }
 
-async function sendCalendarInvites(input: CalendarInviteInput): Promise<void> {
-  const apiKey = process.env.AUTH_RESEND_KEY;
-  if (!apiKey) return; // Silent no-op
-
-  const resend = new Resend(apiKey);
-  const from = process.env.AUTH_EMAIL_FROM ?? "BookBurr <noreply@bookburr.com>";
-
+function buildCalendarEmailHtml(input: CalendarInviteInput): string {
   const googleMapsUrl =
     input.lat && input.lng
       ? `https://maps.google.com/?q=${input.lat},${input.lng}`
       : null;
 
-  const htmlBody = `
+  return `
     <div style="font-family: 'Plus Jakarta Sans', sans-serif; max-width: 480px; margin: 0 auto;">
       <h2>Bukber "${input.sessionName}" udah fix!</h2>
       <p><strong>${input.venueName}</strong></p>
@@ -45,38 +39,56 @@ async function sendCalendarInvites(input: CalendarInviteInput): Promise<void> {
       </p>
     </div>
   `;
+}
 
-  const icsBuffer = Buffer.from(input.icsContent, "utf-8");
-
-  // Batch to avoid Resend rate limits (max ~10 per batch for safety)
+async function sendEmailBatch(
+  resend: Resend,
+  emails: string[],
+  from: string,
+  subject: string,
+  html: string,
+  icsBuffer: Buffer,
+): Promise<void> {
   const BATCH_SIZE = 10;
-  if (input.to.length > 20) {
+  if (emails.length > 20) {
     console.warn(
-      `[calendar-invite] Sending to ${input.to.length} recipients — may hit Resend rate limits`,
+      `[calendar-invite] Sending to ${emails.length} recipients — may hit Resend rate limits`,
     );
   }
 
-  for (let i = 0; i < input.to.length; i += BATCH_SIZE) {
-    const batch = input.to.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+    const batch = emails.slice(i, i + BATCH_SIZE);
     await Promise.allSettled(
       batch.map((email) =>
         resend.emails.send({
           from,
           to: email,
-          subject: `Bukber: ${input.sessionName} — ${formatDate(input.date)}`,
-          html: htmlBody,
+          subject,
+          html,
           attachments: [
             {
               filename: "bukber.ics",
               content: icsBuffer,
-              contentType:
-                "text/calendar; method=REQUEST; charset=utf-8",
+              contentType: "text/calendar; method=REQUEST; charset=utf-8",
             },
           ],
         }),
       ),
     );
   }
+}
+
+async function sendCalendarInvites(input: CalendarInviteInput): Promise<void> {
+  const apiKey = process.env.AUTH_RESEND_KEY;
+  if (!apiKey) return;
+
+  const resend = new Resend(apiKey);
+  const from = process.env.AUTH_EMAIL_FROM ?? "BookBurr <noreply@bookburr.com>";
+  const html = buildCalendarEmailHtml(input);
+  const icsBuffer = Buffer.from(input.icsContent, "utf-8");
+  const subject = `Bukber: ${input.sessionName} — ${formatDate(input.date)}`;
+
+  await sendEmailBatch(resend, input.to, from, subject, html, icsBuffer);
 }
 
 /**
@@ -89,7 +101,6 @@ export async function sendCalendarInvitesForSession(
   dateOptionId: string,
 ): Promise<void> {
   try {
-    // Fetch session, venue, date, and member emails in parallel
     const [sessionRow, venueRow, dateRow, memberEmails] = await Promise.all([
       db
         .select({ name: bukberSessions.name })

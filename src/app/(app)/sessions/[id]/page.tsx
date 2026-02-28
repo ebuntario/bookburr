@@ -19,6 +19,11 @@ import { ActivityPreview } from "./_components/activity-preview";
 import { InviteButton } from "./_components/invite-button";
 import { HostControls } from "./_components/host-controls";
 import { RealtimeDashboardWrapper } from "./_components/realtime-dashboard-wrapper";
+import {
+  computeProgressData,
+  computePendingMembers,
+  computeDateRange,
+} from "./_components/dashboard-helpers";
 import type { SessionStatus } from "@/lib/constants";
 
 export const metadata = { title: "Dashboard Bukber — BookBurr" };
@@ -32,7 +37,6 @@ export default async function SessionDashboardPage({
   const userId = session?.user?.id;
   if (!userId) redirect("/login");
 
-  // 4 parallel queries: session+members, dates, venues, activity+membership check
   const [sessionData, [recentActivity, currentMember]] = await Promise.all([
     getSessionWithMembers(sessionId),
     Promise.all([
@@ -44,7 +48,6 @@ export default async function SessionDashboardPage({
   if (!sessionData) notFound();
   if (!currentMember) redirect(`/sessions/${sessionId}/join`);
 
-  // Second round: fetch data that depends on currentMember.id
   const [datesData, venuesData, memberVoteStatus, venueVotedCount] = await Promise.all([
     getDatesWithVoteCounts(sessionId, currentMember.id),
     getVenuesForSession(sessionId, currentMember.id),
@@ -60,48 +63,22 @@ export default async function SessionDashboardPage({
     (m) => m.userId === sessionData.session.hostId,
   );
   const hostName = hostMember?.name ?? undefined;
-  const dateRange =
-    datesData.dates.length > 0
-      ? datesData.dates.length === 1
-        ? datesData.dates[0].date
-        : `${datesData.dates[0].date} – ${datesData.dates[datesData.dates.length - 1].date}`
-      : undefined;
+  const dateRange = computeDateRange(datesData.dates);
 
-  // Progress ring data
-  const totalMembers = sessionData.members.length;
-  const expectedSize = sessionData.session.expectedGroupSize;
-  const progressTotal =
-    status === "collecting" || status === "discovering"
-      ? expectedSize && expectedSize > totalMembers
-        ? expectedSize
-        : totalMembers
-      : totalMembers;
+  const { totalMembers, progressTotal, completedMemberIds, completedCount } =
+    computeProgressData(
+      sessionData.members,
+      sessionData.session.expectedGroupSize,
+      status,
+      venueVotedCount,
+    );
 
-  // Completed members by status phase
-  const memberIds = sessionData.members.map((m) => m.id);
-  const completedMemberIds = new Set<string>();
-  if (status === "voting") {
-    // venueVotedCount is the total; we don't know *which* members voted (anonymous)
-    // For the ring we just use counts, completedMemberIds stays empty during voting
-  } else if (status === "confirmed" || status === "completed") {
-    memberIds.forEach((id) => completedMemberIds.add(id));
-  } else {
-    // collecting/discovering: all members who have joined are "completed"
-    memberIds.forEach((id) => completedMemberIds.add(id));
-  }
-
-  const completedCount =
-    status === "voting"
-      ? venueVotedCount
-      : status === "confirmed" || status === "completed"
-        ? totalMembers
-        : totalMembers; // collecting/discovering: joined count = completed
-
-  // For voting: pass dummy pending members (names hidden by WaitingOnList)
-  const pendingMembersForList =
-    status === "voting"
-      ? sessionData.members.slice(0, totalMembers - venueVotedCount)
-      : [];
+  const pendingMembersForList = computePendingMembers(
+    sessionData.members,
+    totalMembers,
+    venueVotedCount,
+    status,
+  );
 
   return (
     <RealtimeDashboardWrapper sessionId={sessionId}>

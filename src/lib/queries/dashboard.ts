@@ -86,6 +86,27 @@ export async function getDatesWithVoteCounts(
   return { dates, votedMemberCount };
 }
 
+function buildReactionMap(
+  reactionRows: { venueId: string; emoji: string; count: number; hasMyReaction: boolean }[],
+): Record<string, Record<string, { count: number; hasMyReaction: boolean }>> {
+  const map: Record<string, Record<string, { count: number; hasMyReaction: boolean }>> = {};
+  for (const r of reactionRows) {
+    if (!map[r.venueId]) map[r.venueId] = {};
+    map[r.venueId][r.emoji] = { count: r.count, hasMyReaction: r.hasMyReaction };
+  }
+  return map;
+}
+
+function buildVoteCountMap(
+  voteRows: { venueId: string | null; count: number }[],
+): Record<string, number> {
+  const map: Record<string, number> = {};
+  for (const v of voteRows) {
+    if (v.venueId) map[v.venueId] = v.count;
+  }
+  return map;
+}
+
 export async function getVenuesForSession(sessionId: string, memberId?: string) {
   const venueList = await db
     .select({
@@ -108,76 +129,59 @@ export async function getVenuesForSession(sessionId: string, memberId?: string) 
 
   const venueIds = venueList.map((v) => v.id);
 
-  // Reaction counts per emoji per venue
-  const reactionRows = await db
-    .select({
-      venueId: venueReactions.venueId,
-      emoji: venueReactions.emoji,
-      count: sql<number>`count(*)::int`,
-      hasMyReaction: memberId
-        ? sql<boolean>`bool_or(${venueReactions.memberId} = ${memberId})`
-        : sql<boolean>`false`,
-    })
-    .from(venueReactions)
-    .where(inArray(venueReactions.venueId, venueIds))
-    .groupBy(venueReactions.venueId, venueReactions.emoji);
-
-  // Vote counts per venue (aggregate only — never expose who voted for what)
-  const voteRows = await db
-    .select({
-      venueId: venueVotes.venueId,
-      count: sql<number>`count(*)::int`,
-    })
-    .from(venueVotes)
-    .where(
-      and(
-        eq(venueVotes.sessionId, sessionId),
-        sql`${venueVotes.venueId} IS NOT NULL`,
-      ),
-    )
-    .groupBy(venueVotes.venueId);
-
-  // Current member's vote (venueId or isTerserah)
-  let myVote: { venueId: string | null; isTerserah: boolean } | null = null;
-  if (memberId) {
-    const [mv] = await db
+  // Parallelize all three supplementary queries
+  const [reactionRows, voteRows, myVoteRow] = await Promise.all([
+    db
+      .select({
+        venueId: venueReactions.venueId,
+        emoji: venueReactions.emoji,
+        count: sql<number>`count(*)::int`,
+        hasMyReaction: memberId
+          ? sql<boolean>`bool_or(${venueReactions.memberId} = ${memberId})`
+          : sql<boolean>`false`,
+      })
+      .from(venueReactions)
+      .where(inArray(venueReactions.venueId, venueIds))
+      .groupBy(venueReactions.venueId, venueReactions.emoji),
+    db
       .select({
         venueId: venueVotes.venueId,
-        isTerserah: venueVotes.isTerserah,
+        count: sql<number>`count(*)::int`,
       })
       .from(venueVotes)
       .where(
         and(
           eq(venueVotes.sessionId, sessionId),
-          eq(venueVotes.memberId, memberId),
+          sql`${venueVotes.venueId} IS NOT NULL`,
         ),
       )
-      .limit(1);
-    myVote = mv ?? null;
-  }
+      .groupBy(venueVotes.venueId),
+    memberId
+      ? db
+          .select({
+            venueId: venueVotes.venueId,
+            isTerserah: venueVotes.isTerserah,
+          })
+          .from(venueVotes)
+          .where(
+            and(
+              eq(venueVotes.sessionId, sessionId),
+              eq(venueVotes.memberId, memberId),
+            ),
+          )
+          .limit(1)
+          .then((rows) => rows[0] ?? null)
+      : Promise.resolve(null),
+  ]);
 
-  const reactionMap: Record<
-    string,
-    Record<string, { count: number; hasMyReaction: boolean }>
-  > = {};
-  for (const r of reactionRows) {
-    if (!reactionMap[r.venueId]) reactionMap[r.venueId] = {};
-    reactionMap[r.venueId][r.emoji] = {
-      count: r.count,
-      hasMyReaction: r.hasMyReaction,
-    };
-  }
-
-  const voteCountMap: Record<string, number> = {};
-  for (const v of voteRows) {
-    if (v.venueId) voteCountMap[v.venueId] = v.count;
-  }
+  const reactionMap = buildReactionMap(reactionRows);
+  const voteCountMap = buildVoteCountMap(voteRows);
 
   return venueList.map((v) => ({
     ...v,
     reactions: reactionMap[v.id] ?? {},
     voteCount: voteCountMap[v.id] ?? 0,
-    isMyVote: myVote?.venueId === v.id,
+    isMyVote: myVoteRow?.venueId === v.id,
   }));
 }
 

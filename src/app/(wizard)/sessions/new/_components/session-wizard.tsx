@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback, useTransition } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { createSession } from "@/lib/actions/sessions";
 import { slideVariants } from "@/lib/motion-variants";
+import { useWizard } from "@/lib/hooks/use-wizard";
 import { StepSessionName } from "./step-session-name";
 import { StepSessionMode } from "./step-session-mode";
 import { StepOfficeLocation } from "./step-office-location";
@@ -19,7 +20,7 @@ interface WizardState {
   name: string;
   mode: SessionMode | null;
   officeLocation: string;
-  selectedDates: string[]; // "YYYY-MM-DD"
+  selectedDates: string[];
 }
 
 const defaultState: WizardState = {
@@ -29,53 +30,27 @@ const defaultState: WizardState = {
   selectedDates: [],
 };
 
-function loadState(): WizardState {
-  if (typeof window === "undefined") return defaultState;
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultState;
-    return { ...defaultState, ...JSON.parse(raw) };
-  } catch {
-    return defaultState;
-  }
-}
-
-function saveState(state: WizardState) {
-  try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    // quota exceeded — ignore
-  }
-}
-
-function clearState() {
-  try {
-    sessionStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // ignore
-  }
-}
-
-
 export function SessionWizard() {
   const router = useRouter();
-  const [state, setState] = useState<WizardState>(defaultState);
-  const [step, setStep] = useState(0);
-  const [direction, setDirection] = useState(1);
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const [mounted, setMounted] = useState(false);
 
-  // Hydrate from sessionStorage on mount
-  useEffect(() => {
-    setState(loadState());
-    setMounted(true);
-  }, []);
-
-  // Persist state on every change (after mount)
-  useEffect(() => {
-    if (mounted) saveState(state);
-  }, [state, mounted]);
+  const {
+    state,
+    step,
+    direction,
+    error,
+    mounted,
+    isPending,
+    goNext,
+    goBack,
+    updateState,
+    setError,
+    clearStorage,
+    startTransition,
+  } = useWizard<WizardState>({
+    storageKey: STORAGE_KEY,
+    totalSteps: 3, // base; actual varies by mode
+    defaultState,
+  });
 
   const isWorkMode = state.mode === "work";
   const totalSteps = isWorkMode ? 4 : 3;
@@ -86,59 +61,12 @@ export function SessionWizard() {
   const getStepIndex = useCallback(
     (logicalStep: number) => {
       if (isWorkMode) return logicalStep;
-      // Personal: skip office step (logical 2 → dates)
       return logicalStep >= 2 ? logicalStep + 1 : logicalStep;
     },
     [isWorkMode],
   );
 
   const currentComponent = getStepIndex(step);
-
-  // Browser history integration
-  useEffect(() => {
-    if (!mounted) return;
-
-    const handlePopState = () => {
-      if (step > 0) {
-        setDirection(-1);
-        setStep((s) => s - 1);
-      } else {
-        router.push("/home");
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [step, mounted, router]);
-
-  const goNext = useCallback(() => {
-    setDirection(1);
-    setStep((s) => {
-      const next = s + 1;
-      history.pushState({ wizardStep: next }, "");
-      return next;
-    });
-    setError(null);
-  }, []);
-
-  const goBack = useCallback(() => {
-    setDirection(-1);
-    setStep((s) => {
-      if (s > 0) {
-        history.back();
-        return s - 1;
-      }
-      router.push("/home");
-      return s;
-    });
-  }, [router]);
-
-  const updateState = useCallback(
-    (patch: Partial<WizardState>) => {
-      setState((prev) => ({ ...prev, ...patch }));
-    },
-    [],
-  );
 
   const handleSubmit = useCallback(() => {
     if (!state.name.trim() || !state.mode || state.selectedDates.length === 0)
@@ -155,19 +83,18 @@ export function SessionWizard() {
       });
 
       if (result.ok) {
-        clearState();
+        clearStorage();
         router.push(`/sessions/${result.sessionId}/success`);
       } else {
         setError(result.error);
       }
     });
-  }, [state, router]);
+  }, [state, router, setError, clearStorage, startTransition]);
 
   if (!mounted) return null;
 
   return (
     <div className="flex min-h-dvh flex-col">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <button
           type="button"
@@ -177,10 +104,9 @@ export function SessionWizard() {
           {step === 0 ? "Batal" : "Balik"}
         </button>
         <WizardProgress current={step} total={totalSteps} />
-        <div className="w-10" /> {/* spacer */}
+        <div className="w-10" />
       </div>
 
-      {/* Step content */}
       <div className="relative flex flex-1 flex-col overflow-hidden px-6 py-8">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div

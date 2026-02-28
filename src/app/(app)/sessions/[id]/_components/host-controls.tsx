@@ -4,8 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { advanceSessionStatus } from "@/lib/actions/session-status";
 import { discoverVenues, retryDiscoverVenues } from "@/lib/actions/venues";
-import { copyToClipboard, buildVotingOpenCard } from "@/lib/share-utils";
-import { ConfirmSessionSheet } from "./confirm-session-sheet";
+import { copyToClipboard } from "@/lib/share-utils";
+import { HostCollectingCTA } from "./host-collecting-cta";
+import { HostDiscoveringCTA } from "./host-discovering-cta";
+import { HostVotingPanel } from "./host-voting-panel";
+import { HostConfirmedCTA } from "./host-confirmed-cta";
 
 interface Venue {
   id: string;
@@ -42,17 +45,8 @@ export function HostControls({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [discoveryFailed, setDiscoveryFailed] = useState(false);
-  const [showVotingBanner, setShowVotingBanner] = useState(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return !sessionStorage.getItem(`bookburr-voting-share-${sessionId}`);
-    } catch {
-      return true;
-    }
-  });
 
   if (status === "completed") return null;
 
@@ -65,7 +59,6 @@ export function HostControls({
       setError(result.error);
     } else {
       router.refresh();
-      // Fire venue discovery non-blocking after advancing to "discovering"
       if (status === "collecting") {
         discoverVenues(sessionId).then((r) => {
           if (!r.ok) setDiscoveryFailed(true);
@@ -135,134 +128,47 @@ export function HostControls({
     );
   };
 
-  /* ── Collecting ── */
   if (status === "collecting") {
-    if (memberCount < 2) {
-      return (
-        <div className="rounded-2xl border border-dashed border-foreground/20 bg-foreground/[0.03] px-5 py-5 flex flex-col gap-3">
-          <p className="text-sm font-medium text-foreground/70">
-            🙏 Tunggu minimal 1 orang lagi join dulu ya! Abis itu lu bisa mulai
-            cari venue.
-          </p>
-          <button
-            type="button"
-            onClick={handleInvite}
-            className="flex items-center justify-center gap-2 rounded-xl border border-foreground/20 py-2.5 text-sm font-semibold text-foreground"
-          >
-            {inviteCopied ? "✓ Link tersalin!" : "🔗 Invite Temen"}
-          </button>
-        </div>
-      );
-    }
-    return renderCTA("Mulai Cari Venue →", "Lagi nyari... 🔍", handleAdvance, "gold");
-  }
-
-  /* ── Discovering ── */
-  if (status === "discovering") {
-    if (discoveryFailed) {
-      return (
-        <div className="rounded-2xl border border-coral/30 bg-coral/5 px-5 py-5 flex flex-col gap-3">
-          <p className="text-sm font-medium text-foreground/70">
-            😬 Gagal nyari venue otomatis. Coba lagi?
-          </p>
-          <button
-            type="button"
-            onClick={handleRetryDiscovery}
-            className="flex items-center justify-center gap-2 rounded-xl border border-coral/30 py-2.5 text-sm font-semibold text-coral"
-          >
-            🔄 Cari Ulang
-          </button>
-        </div>
-      );
-    }
-    if (venueCount < 1) {
-      return (
-        <div className="rounded-2xl border border-dashed border-foreground/20 bg-foreground/[0.03] px-5 py-5">
-          <p className="text-sm font-medium text-foreground/70">
-            🍛 Belum ada venue nih, tambahin dulu ya!
-          </p>
-        </div>
-      );
-    }
-    return renderCTA("Buka Voting →", "Lagi proses... ⏳", handleAdvance, "gold");
-  }
-
-  /* ── Voting ── */
-  if (status === "voting") {
-    const votingShareUrl = buildVotingOpenCard({
-      sessionName,
-      venueCount,
-      shareUrl,
-    });
-
-    const dismissVotingBanner = () => {
-      setShowVotingBanner(false);
-      try {
-        sessionStorage.setItem(`bookburr-voting-share-${sessionId}`, "1");
-      } catch {
-        // ignore
-      }
-    };
-
     return (
-      <>
-        {showVotingBanner && (
-          <div className="rounded-2xl border border-teal/20 bg-teal/5 px-4 py-3 flex items-center gap-3">
-            <a
-              href={votingShareUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 text-sm font-medium text-foreground"
-            >
-              Share voting ke grup WhatsApp
-            </a>
-            <button
-              type="button"
-              onClick={dismissVotingBanner}
-              className="text-xs text-foreground/40"
-            >
-              Tutup
-            </button>
-          </div>
-        )}
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-foreground/50">Lu yang pegang kendali nih</p>
-          {error && <p className="text-xs text-coral">{error}</p>}
-          <button
-            type="button"
-            onClick={() => setShowConfirm(true)}
-            disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-coral py-3.5 text-sm font-semibold text-white transition-opacity active:opacity-70 disabled:opacity-50"
-          >
-            Confirm Venue 🎉
-          </button>
-        </div>
-
-        {showConfirm && (
-          <ConfirmSessionSheet
-            sessionId={sessionId}
-            sessionName={sessionName}
-            dates={dates}
-            venues={venues}
-            onClose={() => setShowConfirm(false)}
-            onConfirmed={() => {
-              setShowConfirm(false);
-              router.refresh();
-            }}
-          />
-        )}
-      </>
+      <HostCollectingCTA
+        memberCount={memberCount}
+        inviteCopied={inviteCopied}
+        onInvite={handleInvite}
+        onAdvance={handleAdvance}
+        renderCTA={renderCTA}
+      />
     );
   }
 
-  /* ── Confirmed ── */
-  if (status === "confirmed") {
-    return renderCTA(
-      "Tandai Selesai",
-      "Lagi proses...",
-      handleAdvance,
-      "ghost",
+  if (status === "discovering") {
+    return (
+      <HostDiscoveringCTA
+        discoveryFailed={discoveryFailed}
+        venueCount={venueCount}
+        onRetryDiscovery={handleRetryDiscovery}
+        onAdvance={handleAdvance}
+        renderCTA={renderCTA}
+      />
     );
+  }
+
+  if (status === "voting") {
+    return (
+      <HostVotingPanel
+        sessionId={sessionId}
+        sessionName={sessionName}
+        venueCount={venueCount}
+        shareUrl={shareUrl}
+        dates={dates}
+        venues={venues}
+        loading={loading}
+        error={error}
+      />
+    );
+  }
+
+  if (status === "confirmed") {
+    return <HostConfirmedCTA onAdvance={handleAdvance} renderCTA={renderCTA} />;
   }
 
   return null;

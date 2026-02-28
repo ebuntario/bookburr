@@ -1,8 +1,7 @@
 "use server";
 
 import { nanoid } from "nanoid";
-import { eq, and, inArray } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { eq, and, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   bukberSessions,
@@ -17,34 +16,66 @@ import type { PreferenceLevel } from "@/lib/constants";
 import { calculateFlexibilityScore } from "@/lib/algorithms/scoring";
 import { revalidatePath } from "next/cache";
 import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
+import { requireAuth, mapActionError, type ActionResult, type Tx } from "./helpers";
 
-type ActionResult = { ok: true } | { ok: false; error: string };
+interface MemberWithUser {
+  memberId: string;
+  referenceLocation: unknown;
+  maritalStatus: string | null;
+}
+
+async function recalcFlexibilityScore(
+  tx: Tx,
+  member: MemberWithUser,
+  votes: { preferenceLevel: PreferenceLevel }[],
+  totalDates: number,
+): Promise<void> {
+  const availableDates = votes.filter(
+    (v) => v.preferenceLevel === "strongly_prefer" || v.preferenceLevel === "can_do",
+  ).length;
+
+  const newFlexScore = calculateFlexibilityScore({
+    maritalStatus: member.maritalStatus,
+    hasLocation: member.referenceLocation != null,
+    totalDates,
+    availableDates,
+  });
+
+  await tx
+    .update(sessionMembers)
+    .set({ flexibilityScore: newFlexScore })
+    .where(eq(sessionMembers.id, member.memberId));
+}
+
+const UPDATE_VOTES_ERRORS: Record<string, string> = {
+  UNAUTHORIZED: "unauthorized",
+  SESSION_NOT_FOUND: "Session ga ketemu",
+  VOTES_LOCKED: "Votes udah dikunci, ga bisa edit lagi",
+  NOT_MEMBER: "Lu belum join session ini",
+  INVALID_DATES: "Tanggal ga valid",
+};
 
 export async function updateDateVotes(input: {
   sessionId: string;
   votes: { dateOptionId: string; preferenceLevel: PreferenceLevel }[];
 }): Promise<ActionResult> {
-  const authSession = await auth();
-  const userId = authSession?.user?.id;
-  if (!userId) return { ok: false, error: "unauthorized" };
-
   const { sessionId, votes } = input;
 
   try {
+    const userId = await requireAuth();
+
     await db.transaction(async (tx) => {
-      // Validate session + status
       const [session] = await tx
         .select({ id: bukberSessions.id, status: bukberSessions.status })
         .from(bukberSessions)
         .where(eq(bukberSessions.id, sessionId))
         .limit(1);
 
-      if (!session) throw new Error("session_not_found");
+      if (!session) throw new Error("SESSION_NOT_FOUND");
       if (session.status !== "collecting" && session.status !== "discovering") {
-        throw new Error("votes_locked");
+        throw new Error("VOTES_LOCKED");
       }
 
-      // Get member + user info in one query
       const [memberWithUser] = await tx
         .select({
           memberId: sessionMembers.id,
@@ -61,9 +92,8 @@ export async function updateDateVotes(input: {
         )
         .limit(1);
 
-      if (!memberWithUser) throw new Error("not_member");
+      if (!memberWithUser) throw new Error("NOT_MEMBER");
 
-      // Get all date IDs for this session (to handle deletions)
       const allDates = await tx
         .select({ id: dateOptions.id })
         .from(dateOptions)
@@ -72,23 +102,24 @@ export async function updateDateVotes(input: {
       const allDateIds = allDates.map((d) => d.id);
       const submittedDateIds = votes.map((v) => v.dateOptionId);
 
-      // Validate all submitted dateOptionIds belong to this session
       const invalid = submittedDateIds.filter((id) => !allDateIds.includes(id));
-      if (invalid.length > 0) throw new Error("invalid_dates");
+      if (invalid.length > 0) throw new Error("INVALID_DATES");
 
-      // Upsert submitted votes
-      for (const v of votes) {
+      // Batch upsert all submitted votes
+      if (votes.length > 0) {
         await tx
           .insert(dateVotes)
-          .values({
-            id: nanoid(),
-            dateOptionId: v.dateOptionId,
-            memberId: memberWithUser.memberId,
-            preferenceLevel: v.preferenceLevel,
-          })
+          .values(
+            votes.map((v) => ({
+              id: nanoid(),
+              dateOptionId: v.dateOptionId,
+              memberId: memberWithUser.memberId,
+              preferenceLevel: v.preferenceLevel,
+            })),
+          )
           .onConflictDoUpdate({
             target: [dateVotes.dateOptionId, dateVotes.memberId],
-            set: { preferenceLevel: v.preferenceLevel },
+            set: { preferenceLevel: sql`excluded.preference_level` },
           });
       }
 
@@ -103,26 +134,8 @@ export async function updateDateVotes(input: {
         );
       }
 
-      // Recalculate flexibility_score for this member
-      const availableDates = votes.filter(
-        (v) =>
-          v.preferenceLevel === "strongly_prefer" ||
-          v.preferenceLevel === "can_do",
-      ).length;
+      await recalcFlexibilityScore(tx, memberWithUser, votes, allDateIds.length);
 
-      const newFlexScore = calculateFlexibilityScore({
-        maritalStatus: memberWithUser.maritalStatus,
-        hasLocation: memberWithUser.referenceLocation != null,
-        totalDates: allDateIds.length,
-        availableDates,
-      });
-
-      await tx
-        .update(sessionMembers)
-        .set({ flexibilityScore: newFlexScore })
-        .where(eq(sessionMembers.id, memberWithUser.memberId));
-
-      // Write activity feed entry
       await tx.insert(activityFeed).values({
         id: nanoid(),
         sessionId,
@@ -133,19 +146,9 @@ export async function updateDateVotes(input: {
     });
 
     revalidatePath(`/sessions/${sessionId}`);
-    // Broadcast non-blocking
     broadcastSessionEvent({ event: "votes_updated", sessionId }).catch(() => {});
     return { ok: true };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "unknown";
-    if (message === "session_not_found")
-      return { ok: false, error: "Session ga ketemu" };
-    if (message === "votes_locked")
-      return { ok: false, error: "Votes udah dikunci, ga bisa edit lagi" };
-    if (message === "not_member")
-      return { ok: false, error: "Lu belum join session ini" };
-    if (message === "invalid_dates")
-      return { ok: false, error: "Tanggal ga valid" };
-    throw err;
+    return mapActionError(err, UPDATE_VOTES_ERRORS);
   }
 }

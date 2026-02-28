@@ -78,6 +78,14 @@ export const SESSION_STATUS_TRANSITIONS: Record<
 
 export const FLEXIBILITY_SCORE_MIN = 0.1;
 
+/** Google Places price_level → estimated IDR per person */
+export const PRICE_ESTIMATES: Record<number, number> = {
+  1: 50_000,
+  2: 100_000,
+  3: 200_000,
+  4: 400_000,
+};
+
 export const MARITAL_STATUS = {
   single: "single",
   married: "married",

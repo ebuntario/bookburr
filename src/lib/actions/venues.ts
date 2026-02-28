@@ -21,6 +21,110 @@ import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
+// ── discoverVenues helpers ──────────────────────────────────────────────────
+
+interface DiscoverMember {
+  flexibilityScore: number | null;
+  referenceLocation: unknown;
+  budgetCeiling: number | null;
+  sessionCuisinePreferences: unknown;
+  proximityTolerance: number | null;
+}
+
+function resolveSearchLocation(
+  session: { officeLocation: unknown },
+  members: DiscoverMember[],
+  centroid: { lat: number; lng: number } | null,
+): { lat: number; lng: number } | null {
+  if (centroid) return centroid;
+  const office = session.officeLocation as { lat?: number; lng?: number } | null;
+  if (office?.lat && office?.lng) return { lat: office.lat, lng: office.lng };
+  const firstWithLoc = members.find((m) => m.referenceLocation != null);
+  if (firstWithLoc) return firstWithLoc.referenceLocation as { lat: number; lng: number };
+  return null;
+}
+
+interface GooglePlaceResult {
+  place_id: string;
+  name: string;
+  rating?: number;
+  price_level?: number;
+  types?: string[];
+  geometry?: { location: { lat: number; lng: number } };
+}
+
+async function fetchNearbyPlaces(
+  location: { lat: number; lng: number },
+  apiKey: string,
+): Promise<GooglePlaceResult[]> {
+  const placesUrl =
+    `https://maps.googleapis.com/maps/api/place/nearbysearch/json` +
+    `?location=${location.lat},${location.lng}` +
+    `&radius=3000&type=restaurant&key=${apiKey}`;
+
+  const placesRes = await fetch(placesUrl, { cache: "no-store" });
+  if (!placesRes.ok) throw new Error("PLACES_API_ERROR");
+  const placesData = (await placesRes.json()) as { results?: GooglePlaceResult[] };
+  return placesData.results ?? [];
+}
+
+function buildVenueInserts(
+  results: GooglePlaceResult[],
+  members: DiscoverMember[],
+  centroid: { lat: number; lng: number } | null,
+  sessionId: string,
+) {
+  const memberData = members.map((m) => ({
+    referenceLocation: m.referenceLocation as { lat: number; lng: number } | null,
+    budgetCeiling: m.budgetCeiling,
+    sessionCuisinePreferences: m.sessionCuisinePreferences as string[] | null,
+  }));
+
+  return results.slice(0, 10).map((place) => {
+    const location = place.geometry?.location
+      ? { lat: place.geometry.location.lat, lng: place.geometry.location.lng }
+      : null;
+
+    const compositeScore = calculateVenueScore(
+      {
+        location,
+        rating: place.rating ?? null,
+        priceLevel: place.price_level ?? null,
+        cuisineType: place.types?.[0] ?? null,
+        socialLinkUrl: null,
+        suggestedByMemberId: null,
+      },
+      memberData,
+      centroid,
+    );
+
+    return {
+      id: nanoid(),
+      sessionId,
+      googlePlaceId: place.place_id,
+      name: place.name,
+      location,
+      rating: place.rating ?? null,
+      priceLevel: place.price_level ?? null,
+      compositeScore,
+      suggestedByMemberId: null,
+    };
+  });
+}
+
+async function insertNoResultsActivity(
+  sessionId: string,
+  message: string,
+): Promise<void> {
+  await db.insert(activityFeed).values({
+    id: nanoid(),
+    sessionId,
+    type: ACTIVITY_TYPE.system_recommendation,
+    metadata: { message },
+  });
+  revalidatePath(`/sessions/${sessionId}`);
+}
+
 // ── Suggest Venue ─────────────────────────────────────────────────────────────
 
 export async function suggestVenue(params: {
@@ -97,15 +201,6 @@ export async function suggestVenue(params: {
 
 // ── Discover Venues ────────────────────────────────────────────────────────────
 
-interface GooglePlaceResult {
-  place_id: string;
-  name: string;
-  rating?: number;
-  price_level?: number;
-  types?: string[];
-  geometry?: { location: { lat: number; lng: number } };
-}
-
 export async function discoverVenues(sessionId: string): Promise<ActionResult & { count?: number; skipped?: boolean }> {
   const authSession = await auth();
   const userId = authSession?.user?.id;
@@ -133,11 +228,8 @@ export async function discoverVenues(sessionId: string): Promise<ActionResult & 
   if (existing.length > 0) return { ok: true, skipped: true };
 
   const apiKey = env.GOOGLE_PLACES_API_KEY;
-  if (!apiKey) {
-    return { ok: false, error: "Google Places API ga dikonfigurasi" };
-  }
+  if (!apiKey) return { ok: false, error: "Google Places API ga dikonfigurasi" };
 
-  // Fetch members with location data for centroid calculation
   const members = await db
     .select({
       flexibilityScore: sessionMembers.flexibilityScore,
@@ -156,96 +248,25 @@ export async function discoverVenues(sessionId: string): Promise<ActionResult & 
     })),
   );
 
-  // Fallback: office location (work mode) → first member with location
-  let searchLocation = centroid;
+  const searchLocation = resolveSearchLocation(session, members, centroid);
   if (!searchLocation) {
-    const office = session.officeLocation as { lat?: number; lng?: number } | null;
-    if (office?.lat && office?.lng) {
-      searchLocation = { lat: office.lat, lng: office.lng };
-    } else {
-      const firstWithLoc = members.find((m) => m.referenceLocation != null);
-      if (firstWithLoc) {
-        searchLocation = firstWithLoc.referenceLocation as { lat: number; lng: number };
-      }
-    }
-  }
-
-  if (!searchLocation) {
-    await db.insert(activityFeed).values({
-      id: nanoid(),
-      sessionId,
-      type: ACTIVITY_TYPE.system_recommendation,
-      metadata: { message: "Ga ada data lokasi, venue discovery diskip" },
-    });
-    revalidatePath(`/sessions/${sessionId}`);
+    await insertNoResultsActivity(sessionId, "Ga ada data lokasi, venue discovery diskip");
     return { ok: true, skipped: true };
   }
 
-  // Google Places Nearby Search
-  const placesUrl =
-    `https://maps.googleapis.com/maps/api/place/nearbysearch/json` +
-    `?location=${searchLocation.lat},${searchLocation.lng}` +
-    `&radius=3000&type=restaurant&key=${apiKey}`;
-
-  let placesData: { results?: GooglePlaceResult[] };
+  let results: GooglePlaceResult[];
   try {
-    const placesRes = await fetch(placesUrl, { cache: "no-store" });
-    if (!placesRes.ok) throw new Error("places_api_error");
-    placesData = (await placesRes.json()) as { results?: GooglePlaceResult[] };
+    results = await fetchNearbyPlaces(searchLocation, apiKey);
   } catch {
     return { ok: false, error: "Google Places request gagal, coba lagi ya" };
   }
 
-  const results = placesData.results ?? [];
-
   if (results.length === 0) {
-    await db.insert(activityFeed).values({
-      id: nanoid(),
-      sessionId,
-      type: ACTIVITY_TYPE.system_recommendation,
-      metadata: { message: "Ga ketemu venue di sekitar lokasi" },
-    });
-    revalidatePath(`/sessions/${sessionId}`);
+    await insertNoResultsActivity(sessionId, "Ga ketemu venue di sekitar lokasi");
     return { ok: true, count: 0 };
   }
 
-  const memberData = members.map((m) => ({
-    referenceLocation: m.referenceLocation as { lat: number; lng: number } | null,
-    budgetCeiling: m.budgetCeiling,
-    sessionCuisinePreferences: m.sessionCuisinePreferences as string[] | null,
-  }));
-
-  const venueInserts = results.slice(0, 10).map((place) => {
-    const location = place.geometry?.location
-      ? { lat: place.geometry.location.lat, lng: place.geometry.location.lng }
-      : null;
-
-    const compositeScore = calculateVenueScore(
-      {
-        location,
-        rating: place.rating ?? null,
-        priceLevel: place.price_level ?? null,
-        cuisineType: place.types?.[0] ?? null,
-        socialLinkUrl: null,
-        suggestedByMemberId: null,
-      },
-      memberData,
-      centroid,
-    );
-
-    return {
-      id: nanoid(),
-      sessionId,
-      googlePlaceId: place.place_id,
-      name: place.name,
-      location,
-      rating: place.rating ?? null,
-      priceLevel: place.price_level ?? null,
-      compositeScore,
-      suggestedByMemberId: null,
-    };
-  });
-
+  const venueInserts = buildVenueInserts(results, members, centroid, sessionId);
   await db.insert(venues).values(venueInserts);
 
   await db.insert(activityFeed).values({
@@ -256,6 +277,7 @@ export async function discoverVenues(sessionId: string): Promise<ActionResult & 
   });
 
   revalidatePath(`/sessions/${sessionId}`);
+  broadcastSessionEvent({ event: "venues_discovered", sessionId }).catch(() => {});
   return { ok: true, count: venueInserts.length };
 }
 

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useTransition } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { joinSession } from "@/lib/actions/members";
 import { PREFERENCE_LEVEL } from "@/lib/constants";
 import type { PreferenceLevel } from "@/lib/constants";
 import { slideVariants } from "@/lib/motion-variants";
+import { useWizard } from "@/lib/hooks/use-wizard";
 import { WizardProgress } from "@/app/(wizard)/sessions/new/_components/wizard-progress";
 import { WizardErrorToast } from "@/components/wizard-error-toast";
 import { StepDateVotes } from "./step-date-votes";
@@ -37,80 +38,32 @@ const TOTAL_STEPS = 3;
 
 export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWizardProps) {
   const router = useRouter();
-  const storageKey = `bookburr-join-${session.id}`;
 
-  const [state, setState] = useState<JoinWizardState>(defaultState);
-  const [step, setStep] = useState(0);
-  const [direction, setDirection] = useState(1);
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const [mounted, setMounted] = useState(false);
+  const {
+    state,
+    step,
+    direction,
+    error,
+    mounted,
+    isPending,
+    goNext,
+    goBack,
+    updateState,
+    setError,
+    clearStorage,
+    startTransition,
+  } = useWizard<JoinWizardState>({
+    storageKey: `bookburr-join-${session.id}`,
+    totalSteps: TOTAL_STEPS,
+    defaultState,
+  });
+
   const [pendingUnvotedConfirm, setPendingUnvotedConfirm] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(storageKey);
-      if (raw) setState({ ...defaultState, ...JSON.parse(raw) });
-    } catch {
-      // ignore
-    }
-    setMounted(true);
-  }, [storageKey]);
-
-  useEffect(() => {
-    if (!mounted) return;
-    try {
-      sessionStorage.setItem(storageKey, JSON.stringify(state));
-    } catch {
-      // quota exceeded — ignore
-    }
-  }, [state, mounted, storageKey]);
-
-  useEffect(() => {
-    if (!mounted) return;
-
-    const handlePopState = () => {
-      if (step > 0) {
-        setDirection(-1);
-        setStep((s) => s - 1);
-      } else {
-        router.push("/home");
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [step, mounted, router]);
-
-  const goNext = useCallback(() => {
-    setDirection(1);
-    setStep((s) => {
-      const next = s + 1;
-      history.pushState({ wizardStep: next }, "");
-      return next;
-    });
-    setError(null);
-  }, []);
-
-  const goBack = useCallback(() => {
-    setDirection(-1);
-    if (step > 0) {
-      history.back();
-      setStep((s) => s - 1);
-    } else {
-      router.push("/home");
-    }
-  }, [step, router]);
-
-  const updateState = useCallback((patch: Partial<JoinWizardState>) => {
-    setState((prev) => ({ ...prev, ...patch }));
-  }, []);
 
   const executeSubmit = useCallback(() => {
     setError(null);
     setPendingUnvotedConfirm(false);
     startTransition(async () => {
-      // Unvoted dates default to "can_do" (not "unavailable") so they don't tank date scores
       const votes = dateOptions.map((d) => ({
         dateOptionId: d.id,
         preferenceLevel: state.votes[d.id] || PREFERENCE_LEVEL.can_do,
@@ -126,17 +79,13 @@ export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWiz
       });
 
       if (result.ok) {
-        try {
-          sessionStorage.removeItem(storageKey);
-        } catch {
-          // ignore
-        }
+        clearStorage();
         router.push(`/sessions/${session.id}`);
       } else {
         setError(result.error);
       }
     });
-  }, [state, session.id, dateOptions, storageKey, router]);
+  }, [state, session.id, dateOptions, clearStorage, router, setError, startTransition]);
 
   const handleSubmit = useCallback(() => {
     const unvotedCount = dateOptions.filter((d) => !state.votes[d.id]).length;
@@ -151,7 +100,6 @@ export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWiz
 
   return (
     <div className="flex min-h-dvh flex-col">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <button
           type="button"
@@ -164,7 +112,6 @@ export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWiz
         <div className="w-10" />
       </div>
 
-      {/* Step content */}
       <div className="relative flex flex-1 flex-col overflow-hidden px-6 py-8">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
@@ -209,7 +156,6 @@ export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWiz
           </motion.div>
         </AnimatePresence>
 
-        {/* Unvoted dates confirmation */}
         <AnimatePresence>
           {pendingUnvotedConfirm && (
             <motion.div

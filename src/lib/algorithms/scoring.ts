@@ -109,6 +109,14 @@ export function calculateCentroid(
 
 // ── Venue scoring ─────────────────────────────────────────────────────────────
 
+import {
+  calcProximityScore,
+  calcRatingScore,
+  calcPriceFitScore,
+  calcCuisineMatchScore,
+  calcSocialProofScore,
+} from "./venue-sub-scores";
+
 interface VenueForScore {
   location: { lat: number; lng: number } | null;
   rating: number | null;
@@ -133,63 +141,11 @@ export function calculateVenueScore(
   members: MemberForVenueScore[],
   centroid: { lat: number; lng: number } | null,
 ): number {
-  // Proximity (0–1): 0–2km = 1.0, linear decay to 0 at 10km
-  let proximityScore = 0.5;
-  if (venue.location && centroid) {
-    const distKm = haversineKm(
-      centroid.lat,
-      centroid.lng,
-      venue.location.lat,
-      venue.location.lng,
-    );
-    proximityScore = Math.max(0, 1 - distKm / 10);
-  }
-
-  // Rating (0–1): Google rating / 5
-  const ratingScore = venue.rating != null ? venue.rating / 5 : 0.5;
-
-  // Price fit (0–1): fraction of members whose budget covers the venue
-  let priceFitScore = 0.5;
-  const membersWithBudget = members.filter((m) => m.budgetCeiling != null);
-  if (venue.priceLevel != null && membersWithBudget.length > 0) {
-    const PRICE_ESTIMATES: Record<number, number> = {
-      1: 50_000,
-      2: 100_000,
-      3: 200_000,
-      4: 400_000,
-    };
-    const estimatedCost = PRICE_ESTIMATES[venue.priceLevel] ?? 100_000;
-    const fits = membersWithBudget.filter((m) => m.budgetCeiling! >= estimatedCost);
-    priceFitScore = fits.length / membersWithBudget.length;
-  }
-
-  // Cuisine match (0–1)
-  let cuisineScore = 0.5;
-  if (venue.cuisineType) {
-    const membersWithPref = members.filter(
-      (m) => m.sessionCuisinePreferences && m.sessionCuisinePreferences.length > 0,
-    );
-    if (membersWithPref.length > 0) {
-      const matches = membersWithPref.filter((m) =>
-        m.sessionCuisinePreferences!.some(
-          (c) => c.toLowerCase() === venue.cuisineType!.toLowerCase(),
-        ),
-      );
-      cuisineScore = matches.length / membersWithPref.length;
-    }
-  }
-
-  // Social proof (0–1): base 0.5 + 0.25 for social link + 0.25 for member suggestion
-  const socialProofScore =
-    0.5 +
-    (venue.socialLinkUrl ? 0.25 : 0) +
-    (venue.suggestedByMemberId ? 0.25 : 0);
-
   return (
-    proximityScore * 0.3 +
-    ratingScore * 0.2 +
-    priceFitScore * 0.2 +
-    cuisineScore * 0.15 +
-    socialProofScore * 0.15
+    calcProximityScore(venue, centroid) * 0.3 +
+    calcRatingScore(venue.rating) * 0.2 +
+    calcPriceFitScore(venue, members) * 0.2 +
+    calcCuisineMatchScore(venue, members) * 0.15 +
+    calcSocialProofScore(venue) * 0.15
   );
 }

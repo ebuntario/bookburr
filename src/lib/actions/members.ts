@@ -3,7 +3,6 @@
 import { nanoid } from "nanoid";
 import { eq, and, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   bukberSessions,
@@ -19,6 +18,7 @@ import {
   SESSION_STATUS,
 } from "@/lib/constants";
 import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
+import { requireAuth, mapActionError, type Tx } from "./helpers";
 import type { PreferenceLevel } from "@/lib/constants";
 
 interface JoinSessionInput {
@@ -37,18 +37,14 @@ type JoinResult =
 const VALID_PREFERENCE_LEVELS = new Set(Object.values(PREFERENCE_LEVEL));
 const MAX_BUDGET = 10_000_000;
 
-export async function joinSession(
+function validateJoinInput(
   input: JoinSessionInput,
-): Promise<JoinResult> {
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return { ok: false, error: "unauthorized" };
-
-  if (!input.sessionId) return { ok: false, error: "Session ID nggak valid" };
+): string | null {
+  if (!input.sessionId) return "Session ID nggak valid";
 
   for (const vote of input.votes) {
     if (!VALID_PREFERENCE_LEVELS.has(vote.preferenceLevel)) {
-      return { ok: false, error: "Preference level nggak valid" };
+      return "Preference level nggak valid";
     }
   }
 
@@ -58,15 +54,59 @@ export async function joinSession(
       input.budgetCeiling <= 0 ||
       input.budgetCeiling > MAX_BUDGET
     ) {
-      return { ok: false, error: "Budget nggak valid" };
+      return "Budget nggak valid";
     }
   }
 
+  return null;
+}
+
+async function validateDateOptions(
+  tx: Tx,
+  sessionId: string,
+  votes: JoinSessionInput["votes"],
+): Promise<void> {
+  if (votes.length === 0) return;
+  const voteIds = votes.map((v) => v.dateOptionId);
+  const uniqueVoteIds = [...new Set(voteIds)];
+  const validDates = await tx
+    .select({ id: dateOptions.id })
+    .from(dateOptions)
+    .where(
+      and(
+        eq(dateOptions.sessionId, sessionId),
+        inArray(dateOptions.id, uniqueVoteIds),
+      ),
+    );
+  if (validDates.length !== uniqueVoteIds.length) {
+    throw new Error("INVALID_DATE_OPTIONS");
+  }
+}
+
+function buildLocationObject(input: JoinSessionInput) {
+  return input.referenceLocation
+    ? { address: input.referenceLocation, lat: input.lat, lng: input.lng }
+    : null;
+}
+
+const JOIN_ERRORS: Record<string, string> = {
+  UNAUTHORIZED: "unauthorized",
+  SESSION_NOT_FOUND: "Bukber nggak ditemukan",
+  SESSION_CLOSED: "Bukber udah ditutup, nggak bisa join lagi",
+  INVALID_DATE_OPTIONS: "Data tanggal nggak valid",
+};
+
+export async function joinSession(
+  input: JoinSessionInput,
+): Promise<JoinResult> {
+  const validationError = validateJoinInput(input);
+  if (validationError) return { ok: false, error: validationError };
+
   try {
+    const userId = await requireAuth();
     const memberId = nanoid();
 
     await db.transaction(async (tx) => {
-      // Re-check session status inside transaction (prevents TOCTOU)
       const [bukber] = await tx
         .select({ status: bukberSessions.status })
         .from(bukberSessions)
@@ -81,40 +121,17 @@ export async function joinSession(
         throw new Error("SESSION_CLOSED");
       }
 
-      // Validate all dateOptionIds belong to this session
-      if (input.votes.length > 0) {
-        const voteIds = input.votes.map((v) => v.dateOptionId);
-        const uniqueVoteIds = [...new Set(voteIds)];
-        const validDates = await tx
-          .select({ id: dateOptions.id })
-          .from(dateOptions)
-          .where(
-            and(
-              eq(dateOptions.sessionId, input.sessionId),
-              inArray(dateOptions.id, uniqueVoteIds),
-            ),
-          );
-        if (validDates.length !== uniqueVoteIds.length) {
-          throw new Error("INVALID_DATE_OPTIONS");
-        }
-      }
-
-      // Insert member
-      const location =
-        input.referenceLocation
-          ? { address: input.referenceLocation, lat: input.lat, lng: input.lng }
-          : null;
+      await validateDateOptions(tx, input.sessionId, input.votes);
 
       await tx.insert(sessionMembers).values({
         id: memberId,
         sessionId: input.sessionId,
         userId,
         joinedVia: JOINED_VIA.web,
-        referenceLocation: location,
+        referenceLocation: buildLocationObject(input),
         budgetCeiling: input.budgetCeiling ?? null,
       });
 
-      // Bulk insert date votes
       if (input.votes.length > 0) {
         await tx.insert(dateVotes).values(
           input.votes.map((v) => ({
@@ -126,7 +143,6 @@ export async function joinSession(
         );
       }
 
-      // Activity feed
       await tx.insert(activityFeed).values({
         id: nanoid(),
         sessionId: input.sessionId,
@@ -139,21 +155,11 @@ export async function joinSession(
     broadcastSessionEvent({ event: "member_joined", sessionId: input.sessionId }).catch(() => {});
     return { ok: true, sessionId: input.sessionId };
   } catch (err: unknown) {
+    // Handle race condition: UNIQUE violation means already joined
     const pgErr = err as { code?: string };
-
-    // Handle race condition: UNIQUE violation on session_members means already joined
     if (pgErr.code === "23505") {
       return { ok: true, sessionId: input.sessionId };
     }
-
-    const msg = err instanceof Error ? err.message : "";
-    if (msg === "SESSION_NOT_FOUND")
-      return { ok: false, error: "Bukber nggak ditemukan" };
-    if (msg === "SESSION_CLOSED")
-      return { ok: false, error: "Bukber udah ditutup, nggak bisa join lagi" };
-    if (msg === "INVALID_DATE_OPTIONS")
-      return { ok: false, error: "Data tanggal nggak valid" };
-
-    throw err;
+    return mapActionError(err, JOIN_ERRORS) as JoinResult;
   }
 }
