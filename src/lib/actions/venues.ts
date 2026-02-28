@@ -15,6 +15,7 @@ import {
 } from "@/lib/db/schema";
 import { ACTIVITY_TYPE, VENUE_EMOJI } from "@/lib/constants";
 import { env } from "@/lib/env";
+import { logError } from "@/lib/logger";
 import { detectPlatform, fetchSocialLinkMetadata } from "@/lib/social-embed";
 import { calculateCentroid, calculateVenueScore } from "@/lib/algorithms/scoring";
 import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
@@ -257,7 +258,8 @@ export async function discoverVenues(sessionId: string): Promise<ActionResult & 
   let results: GooglePlaceResult[];
   try {
     results = await fetchNearbyPlaces(searchLocation, apiKey);
-  } catch {
+  } catch (err) {
+    logError("discoverVenues:fetchNearbyPlaces", err, { sessionId });
     return { ok: false, error: "Google Places request gagal, coba lagi ya" };
   }
 

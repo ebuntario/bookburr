@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
+import { logWarn, logError } from "@/lib/logger";
 import {
   bukberSessions,
   sessionMembers,
@@ -52,9 +53,7 @@ async function sendEmailBatch(
 ): Promise<void> {
   const BATCH_SIZE = 10;
   if (emails.length > 20) {
-    console.warn(
-      `[calendar-invite] Sending to ${emails.length} recipients — may hit Resend rate limits`,
-    );
+    logWarn("sendEmailBatch", `Sending to ${emails.length} recipients — may hit Resend rate limits`);
   }
 
   for (let i = 0; i < emails.length; i += BATCH_SIZE) {
@@ -160,6 +159,6 @@ export async function sendCalendarInvitesForSession(
       icsContent,
     });
   } catch (err) {
-    console.error("[calendar-invite] Failed to send:", err);
+    logError("sendCalendarInvitesForSession", err, { sessionId });
   }
 }

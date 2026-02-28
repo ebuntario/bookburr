@@ -20,6 +20,7 @@ import {
   type ActionResult,
   type Tx,
 } from "./helpers";
+import { logError } from "@/lib/logger";
 
 async function validateAdvancePrerequisites(
   tx: Tx,
@@ -164,7 +165,7 @@ export async function confirmSession(input: {
     );
     sendCalendarInvitesForSession(sessionId, venueId, dateOptionId).catch(
       (err) => {
-        console.error("[confirmSession] calendar invite failed:", err);
+        logError("confirmSession:calendarInvite", err, { sessionId });
       },
     );
     return { ok: true };

@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sessionMembers, activityFeed } from "@/lib/db/schema";
 import type { ActivityType } from "@/lib/constants";
+import { logError } from "@/lib/logger";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -25,6 +26,7 @@ export function mapActionError(
   if (message in errorMap) {
     return { ok: false, error: errorMap[message] };
   }
+  logError("mapActionError", err, { unmapped: message });
   throw err;
 }
 
