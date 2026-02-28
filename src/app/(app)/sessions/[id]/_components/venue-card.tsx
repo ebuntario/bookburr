@@ -120,6 +120,8 @@ export function VenueCard({
           platform={socialLinkPlatform}
           metadata={meta}
           url={socialLinkUrl}
+          venueId={id}
+          sessionId={sessionId}
         />
       )}
 

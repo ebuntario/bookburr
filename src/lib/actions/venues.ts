@@ -152,6 +152,11 @@ export async function suggestVenue(params: {
 
   if (!member) return { ok: false, error: "Lu bukan anggota session ini" };
 
+  // Security: reject non-https URLs to prevent XSS via javascript: or data: schemes
+  if (params.socialLinkUrl && !params.socialLinkUrl.startsWith("https://")) {
+    return { ok: false, error: "Link harus https://" };
+  }
+
   const [session] = await db
     .select({ status: bukberSessions.status })
     .from(bukberSessions)
