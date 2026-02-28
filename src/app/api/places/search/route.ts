@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { sessionMembers } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { env } from "@/lib/env";
+import { placesRatelimit } from "@/lib/rate-limit";
 
 interface GooglePlace {
   place_id: string;
@@ -20,12 +21,34 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Rate limit by userId
+  if (placesRatelimit) {
+    const { success, reset } = await placesRatelimit.limit(session.user.id);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Slow down bestie, terlalu banyak request. Coba lagi sebentar ya." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil((reset - Date.now()) / 1000)) },
+        },
+      );
+    }
+  }
+
   const { searchParams } = request.nextUrl;
   const query = searchParams.get("q");
   const sessionId = searchParams.get("sessionId");
 
   if (!query || !sessionId) {
     return NextResponse.json({ error: "Missing q or sessionId" }, { status: 400 });
+  }
+
+  // Input validation
+  if (query.length > 200) {
+    return NextResponse.json({ error: "Query terlalu panjang" }, { status: 400 });
+  }
+  if (sessionId.length > 30) {
+    return NextResponse.json({ error: "sessionId ga valid" }, { status: 400 });
   }
 
   // Verify membership
@@ -68,5 +91,7 @@ export async function GET(request: NextRequest) {
     location: p.geometry?.location,
   }));
 
-  return NextResponse.json({ results });
+  return NextResponse.json({ results }, {
+    headers: { "Cache-Control": "private, max-age=300" },
+  });
 }
