@@ -20,7 +20,10 @@ export async function fetchSocialLinkMetadata(
 async function fetchTikTokMetadata(url: string): Promise<SocialLinkMetadata> {
   try {
     const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`;
-    const res = await fetch(oembedUrl, { next: { revalidate: 3600 } });
+    const res = await fetch(oembedUrl, {
+      next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(5000),
+    });
     if (!res.ok) return {};
     const data = (await res.json()) as {
       title?: string;
@@ -39,22 +42,50 @@ async function fetchTikTokMetadata(url: string): Promise<SocialLinkMetadata> {
   }
 }
 
+function extractOgTag(html: string, property: string): string | undefined {
+  // Standard: <meta property="og:x" content="...">
+  const standard = html.match(
+    new RegExp(`<meta[^>]+property="${property}"[^>]+content="([^"]+)"`, "i"),
+  )?.[1];
+  if (standard) return standard;
+
+  // Reversed: <meta content="..." property="og:x">
+  return html.match(
+    new RegExp(`<meta[^>]+content="([^"]+)"[^>]+property="${property}"`, "i"),
+  )?.[1];
+}
+
 async function fetchInstagramMetadata(url: string): Promise<SocialLinkMetadata> {
-  try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Twitterbot/1.0" },
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return {};
-    const html = await res.text();
-    const ogTitle = html.match(
-      /<meta[^>]+property="og:title"[^>]+content="([^"]+)"/,
-    )?.[1];
-    const ogImage = html.match(
-      /<meta[^>]+property="og:image"[^>]+content="([^"]+)"/,
-    )?.[1];
-    return { title: ogTitle, thumbnail_url: ogImage };
-  } catch {
-    return {};
+  // Try facebookexternalhit UA first (best success rate for Instagram)
+  for (const userAgent of [
+    "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+    "Twitterbot/1.0",
+  ]) {
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": userAgent },
+        next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) continue;
+      const html = await res.text();
+
+      const ogTitle = extractOgTag(html, "og:title");
+      const ogImage = extractOgTag(html, "og:image");
+      const ogDescription = extractOgTag(html, "og:description");
+
+      if (ogTitle || ogImage) {
+        // Extract @author from description if present
+        const authorMatch = ogDescription?.match(/@([\w.]+)/);
+        return {
+          title: ogTitle,
+          thumbnail_url: ogImage,
+          author_name: authorMatch ? `@${authorMatch[1]}` : undefined,
+        };
+      }
+    } catch {
+      // Try next UA
+    }
   }
+  return {};
 }
