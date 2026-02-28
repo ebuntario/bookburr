@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 BookBurr is in **active development**. Core scaffolding is complete: auth, database, session creation wizard, home page, and share screen are implemented. The app is runnable locally.
 
-**What's been built (BOO-14 through BOO-19):**
+**What's been built (BOO-14 through BOO-32):**
 - Email magic link auth (NextAuth v5 + Resend)
 - Full database schema (Neon PostgreSQL + Drizzle ORM)
 - Session creation wizard (typeform-style, 3–4 steps with Framer Motion transitions)
@@ -17,15 +17,25 @@ BookBurr is in **active development**. Core scaffolding is complete: auth, datab
 - PWA manifest + icons
 - Middleware-based route protection with `callbackUrl` preservation
 - Attendee join flow — 3-step typeform wizard (date votes, location, budget)
+- Session detail/dashboard page — full implementation with two-waterfall data fetch pattern
+- Date voting results UI with optimistic updates + score badges
+- Activity feed UI with cursor-based pagination + `activityPreview` on dashboard
+- Session state machine + host controls (`collecting → discovering → voting → confirmed`)
+- Profile page — profile form with marital status, dietary, cuisine preferences; stats
+- Venue discovery via Google Places Nearby Search + composite scoring algorithm
+- Venue cards with social embed preview, emoji reactions, vote/terserah buttons
+- Real-time updates via Supabase broadcast channels (`useRealtimeSession` hook, `RealtimeDashboardWrapper`)
+- Celebration overlay component (confetti on venue confirmation)
+- Invite button + share panel with invite code / QR code
+- Cross-session date conflict warnings in join wizard (BOO-29)
+- Group progress ring with individual avatar segments + waiting-on list (BOO-30)
+- Google Calendar .ics invites on session confirmation (BOO-31)
+- WhatsApp shareable cards for invitation, voting open, confirmation moments (BOO-32)
 
 **What's NOT built yet:**
-- Session detail/dashboard page (stub at `src/app/(app)/sessions/[id]/page.tsx`)
-- Date/venue voting UI (post-join, within the session dashboard)
-- Activity feed (data model + `activityFeed` writes exist, no UI)
-- Venue discovery + Google Places integration
-- Real-time updates (Supabase Realtime)
-- WhatsApp bot
-- Profile page (stub)
+- WhatsApp bot (join flow, core questions, reminders, voting, multi-session)
+- TikTok/Instagram social link unfurling (schema + `social-embed-preview.tsx` exist; fetching real oEmbed metadata not wired up)
+- Phone number / WhatsApp registration in profile (contact sharing)
 
 ## What This App Is
 
@@ -54,7 +64,7 @@ BookBurr is in **active development**. Core scaffolding is complete: auth, datab
 | Package Manager | Bun | — |
 | Hosting | Vercel | — |
 
-**Planned but not yet integrated:** Supabase Realtime, Google Places API, Google Maps JS, Google Calendar API, TikTok oEmbed, Lottie, WhatsApp Business API.
+**Planned but not yet integrated:** TikTok oEmbed, Lottie, WhatsApp Business API.
 
 **Dev commands:**
 ```bash
@@ -112,9 +122,21 @@ src/
 │   ├── env.ts                  # Environment variable validation
 │   ├── constants.ts            # All enum-like constants (as const maps)
 │   ├── actions/
+│   │   ├── helpers.ts          # requireAuth, mapActionError, lockSessionForUpdate, insertHostActivity
 │   │   ├── sessions.ts         # createSession() server action
-│   │   └── members.ts          # joinSession() server action
-│   ├── queries/sessions.ts     # getSessionsByUserId(), getSessionById(), getSessionWithDates(), getMemberByUserAndSession()
+│   │   ├── members.ts          # joinSession() server action
+│   │   ├── session-status.ts   # advanceSessionStatus(), confirmSession()
+│   │   ├── date-votes.ts       # updateDateVotes()
+│   │   └── venues.ts           # suggestVenue(), discoverVenues(), reactToVenue(), voteForVenue()
+│   ├── algorithms/
+│   │   ├── scoring.ts          # calculateFlexibilityScore, calculateCentroid, calculateVenueScore
+│   │   └── venue-sub-scores.ts # calcProximityScore, calcRatingScore, calcPriceFitScore, etc.
+│   ├── hooks/
+│   │   ├── use-wizard.ts       # Shared wizard step/state/history hook
+│   │   └── use-realtime-session.ts # Supabase Realtime subscription hook
+│   ├── queries/
+│   │   ├── sessions.ts         # getSessionsByUserId(), getSessionById(), getMemberByUserAndSession()
+│   │   └── dashboard.ts        # getSessionWithMembers(), getDatesWithVoteCounts(), getVenuesForSession()
 │   └── db/
 │       ├── index.ts            # Neon Pool + Drizzle instance (singleton)
 │       └── schema.ts           # Drizzle ORM schema (mirrors db/schema.sql)
@@ -136,7 +158,7 @@ drizzle/
 - **Route groups:** `(app)` has shared header layout; `(wizard)` is full-screen without header. Login pages are outside both groups.
 - **Route-specific components:** Use `_components/` subdirectory under each route, not a global `components/` folder.
 - **Server-first data fetching:** Use RSC + async server components for reads. `@tanstack/react-query` is available for client-side needs but RSC is preferred.
-- **Server actions:** All mutations go through `src/lib/actions/`. Each action validates input, runs DB operations, and revalidates paths.
+- **Server actions:** All mutations go through `src/lib/actions/`. Each action validates input, runs DB operations, and revalidates paths. Shared helpers (`requireAuth`, `mapActionError`, `lockSessionForUpdate`, `insertHostActivity`) live in `src/lib/actions/helpers.ts`.
 - **Constants:** All domain enums live in `src/lib/constants.ts` as `as const` maps. Always import from there, never hardcode strings.
 - **IDs:** All primary keys are `text` type generated with `nanoid()`, not UUIDs.
 - **Timestamps:** `timestamp with time zone` in SQL, Drizzle `mode: "date"` for JS Date objects.
@@ -166,7 +188,7 @@ Users join sessions via **web** (link/QR code) or **WhatsApp bot** (invite code)
 The home screen is a session list, not a single session view. Users juggle multiple concurrent bukber groups.
 
 ### Real-Time Activity Feed
-Planned via **Supabase Realtime**. Feed entries slide in from top (300ms fade). Vote counts animate with odometer-style rolls. Milestone thresholds trigger confetti bursts. The activity_feed table and ACTIVITY_TYPE constants are defined but no UI exists yet.
+Implemented via **Supabase Realtime** broadcast channels. Server actions fire `broadcastSessionEvent()` (fire-and-forget). Client subscribes via `useRealtimeSession` hook inside `RealtimeDashboardWrapper`. Feed entries slide in from top (300ms fade). Activity preview on dashboard with cursor-based pagination for full feed.
 
 ---
 
