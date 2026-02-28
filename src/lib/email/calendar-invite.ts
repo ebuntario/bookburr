@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
 import {
   bukberSessions,
   sessionMembers,
@@ -79,11 +80,9 @@ async function sendEmailBatch(
 }
 
 async function sendCalendarInvites(input: CalendarInviteInput): Promise<void> {
-  const apiKey = process.env.AUTH_RESEND_KEY;
-  if (!apiKey) return;
-
+  const apiKey = env.AUTH_RESEND_KEY;
   const resend = new Resend(apiKey);
-  const from = process.env.AUTH_EMAIL_FROM ?? "BookBurr <noreply@bookburr.com>";
+  const from = env.AUTH_EMAIL_FROM;
   const html = buildCalendarEmailHtml(input);
   const icsBuffer = Buffer.from(input.icsContent, "utf-8");
   const subject = `Bukber: ${input.sessionName} — ${formatDate(input.date)}`;

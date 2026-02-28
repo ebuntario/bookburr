@@ -9,10 +9,10 @@ export const env = {
     return requireEnv("DATABASE_URL");
   },
   get AUTH_SECRET() {
-    return process.env.AUTH_SECRET ?? "";
+    return requireEnv("AUTH_SECRET");
   },
   get AUTH_RESEND_KEY() {
-    return process.env.AUTH_RESEND_KEY ?? "";
+    return requireEnv("AUTH_RESEND_KEY");
   },
   get AUTH_EMAIL_FROM() {
     return process.env.AUTH_EMAIL_FROM ?? "BookBurr <noreply@bookburr.com>";
