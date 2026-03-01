@@ -1,5 +1,8 @@
-import type { SessionStatus, SessionMode } from "@/lib/constants";
-import { STATUS_CONFIG, MODE_ICON } from "@/lib/ui-config";
+import Link from "next/link";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import type { SessionStatus } from "@/lib/constants";
+import { STATUS_CONFIG } from "@/lib/ui-config";
+import { ModeIcon } from "@/components/mode-icon";
 
 interface SessionHeaderProps {
   name: string;
@@ -11,13 +14,15 @@ interface SessionHeaderProps {
 export function SessionHeader({ name, mode, status, isHost }: SessionHeaderProps) {
   const statusConfig =
     STATUS_CONFIG[status as SessionStatus] ?? STATUS_CONFIG.collecting;
-  const modeIcon = MODE_ICON[mode as SessionMode] ?? "🫂";
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-2xl shrink-0">{modeIcon}</span>
+          <Link href="/home" className="shrink-0 rounded-lg p-1 -ml-1 text-foreground/50 transition-colors active:bg-foreground/5">
+            <ArrowLeftIcon className="h-5 w-5" />
+          </Link>
+          <ModeIcon mode={mode} className="h-6 w-6 shrink-0 text-foreground/60" />
           <h2 className="text-xl font-bold text-foreground leading-tight truncate">
             {name}
           </h2>

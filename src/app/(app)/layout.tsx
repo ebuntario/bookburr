@@ -12,7 +12,7 @@ export default async function AppLayout({
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="flex items-center justify-between border-b border-foreground/10 px-4 py-3">
-        <h1 className="text-xl font-bold text-gold">BookBurr</h1>
+        <Link href="/home" className="text-xl font-bold text-gold">BookBurr</Link>
         <Link href="/profile">
           {session?.user?.image ? (
             <Image

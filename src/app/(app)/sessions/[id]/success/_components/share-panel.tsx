@@ -4,11 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@heroui/react";
+import { ArrowRightIcon } from "@heroicons/react/24/outline";
+import { SparklesIcon } from "@heroicons/react/24/solid";
 import {
   copyToClipboard,
   buildInvitationCard,
   nativeShare,
 } from "@/lib/share-utils";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 
 interface SharePanelProps {
   sessionName: string;
@@ -45,7 +48,7 @@ export function SharePanel({
     >
       {/* Celebration */}
       <div className="flex flex-col items-center gap-3 text-center">
-        <span className="text-5xl">🎉</span>
+        <SparklesIcon className="h-12 w-12 text-gold" />
         <h1 className="text-3xl font-bold text-foreground">
           Bukber lu siap!
         </h1>
@@ -85,7 +88,7 @@ export function SharePanel({
           rel="noopener noreferrer"
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-green py-3 font-semibold text-white"
         >
-          <span>💬</span> Share via WhatsApp
+          <WhatsAppIcon className="h-5 w-5" /> Share via WhatsApp
         </a>
 
         {typeof navigator !== "undefined" && "share" in navigator && (
@@ -102,9 +105,9 @@ export function SharePanel({
       {/* Dashboard link */}
       <Link
         href={`/sessions/${sessionId}`}
-        className="mt-4 text-sm font-semibold text-gold underline underline-offset-4"
+        className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-gold/15 px-6 py-3 text-sm font-semibold text-gold transition-colors active:bg-gold/25"
       >
-        Ke Dashboard Bukber →
+        Ke Dashboard Bukber <ArrowRightIcon className="h-4 w-4" />
       </Link>
     </motion.div>
   );

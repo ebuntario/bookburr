@@ -1,3 +1,13 @@
+import {
+  SparklesIcon,
+  HandRaisedIcon,
+  CheckBadgeIcon,
+  MapPinIcon,
+  ArrowPathIcon,
+  TrophyIcon,
+  DocumentTextIcon,
+} from "@heroicons/react/24/outline";
+
 export interface ActivityEntryData {
   id: string;
   type: string;
@@ -10,34 +20,34 @@ export interface ActivityEntryData {
 
 const ACTIVITY_CONFIG: Record<
   string,
-  { icon: string; getMessage: (actor: string, m: Record<string, string>) => string }
+  { icon: React.ComponentType<{ className?: string }>; getMessage: (actor: string, m: Record<string, string>) => string }
 > = {
   session_created: {
-    icon: "🎉",
+    icon: SparklesIcon,
     getMessage: (actor) => `${actor} bikin bukber`,
   },
   joined: {
-    icon: "👋",
+    icon: HandRaisedIcon,
     getMessage: (actor) => `${actor} baru join!`,
   },
   voted: {
-    icon: "🗳️",
+    icon: CheckBadgeIcon,
     getMessage: (actor) => `${actor} udah vote`,
   },
   suggested_venue: {
-    icon: "📍",
+    icon: MapPinIcon,
     getMessage: (actor, m) => `${actor} nemu ${m.venueName ?? "venue baru"}`,
   },
   status_changed: {
-    icon: "🔄",
+    icon: ArrowPathIcon,
     getMessage: (_actor, m) => `Status berubah: ${m.to ?? ""}`,
   },
   milestone: {
-    icon: "🎯",
+    icon: TrophyIcon,
     getMessage: (_actor, m) => m.message ?? "Milestone!",
   },
   confirmed: {
-    icon: "🎉",
+    icon: SparklesIcon,
     getMessage: (_actor, m) =>
       `Bukber confirmed di ${m.venueName ?? "sini"}!`,
   },
@@ -71,7 +81,7 @@ export function ActivityEntry({ entry, compact = false }: ActivityEntryProps) {
   const actor = getDisplayName(entry.actorName, entry.actorEmail);
   const m = (entry.metadata as Record<string, string>) ?? {};
   const config = ACTIVITY_CONFIG[entry.type] ?? {
-    icon: "📝",
+    icon: DocumentTextIcon,
     getMessage: (a: string) => `${a} melakukan sesuatu`,
   };
   const text = config.getMessage(actor, m);
@@ -91,8 +101,8 @@ export function ActivityEntry({ entry, compact = false }: ActivityEntryProps) {
             className="h-7 w-7 rounded-full object-cover"
           />
         ) : (
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground/10 text-sm">
-            {config.icon}
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground/10">
+            <config.icon className="h-3.5 w-3.5 text-foreground/60" />
           </div>
         )}
       </div>

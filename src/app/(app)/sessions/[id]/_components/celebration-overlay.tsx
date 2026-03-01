@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { SparklesIcon } from "@heroicons/react/24/solid";
 import { buildConfirmationCard } from "@/lib/share-utils";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 
 interface CelebrationOverlayProps {
   venueName: string;
@@ -78,7 +80,7 @@ export function CelebrationOverlay({
         className="relative z-10 w-full max-w-sm rounded-2xl bg-[#FFF8F0] p-6 text-center shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="mb-3 text-4xl">🎉</p>
+        <SparklesIcon className="mx-auto mb-3 h-10 w-10 text-gold" />
         <h2 className="text-xl font-bold text-foreground">Kita sepakat!</h2>
         <p className="mt-2 text-sm text-foreground/70">
           Bukber di{" "}
@@ -99,7 +101,7 @@ export function CelebrationOverlay({
             className="flex items-center justify-center gap-2 rounded-xl bg-green py-3 text-sm font-semibold text-white"
             onClick={(e) => e.stopPropagation()}
           >
-            💬 Share ke WhatsApp
+            <WhatsAppIcon className="h-5 w-5" /> Share ke WhatsApp
           </a>
           <button
             type="button"

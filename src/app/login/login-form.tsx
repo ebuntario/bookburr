@@ -21,10 +21,17 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
   if (submitted) {
     return (
       <div className="flex flex-col items-center gap-3 text-center">
-        <p className="text-lg font-medium">Cek email lu ya!</p>
+        <p className="text-lg font-medium">Cek email kamu!</p>
         <p className="text-foreground/60">
-          Kita udah kirim magic link ke {email}
+          Link login sudah dikirim ke {email}
         </p>
+        <button
+          type="button"
+          onClick={() => setSubmitted(false)}
+          className="text-sm text-foreground/50 underline underline-offset-4 transition-colors active:text-foreground/70"
+        >
+          Ganti email
+        </button>
       </div>
     );
   }
@@ -36,7 +43,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
         <Input
           id="email"
           type="email"
-          placeholder="lu@email.com"
+          placeholder="nama@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -50,7 +57,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
         isDisabled={!email}
         fullWidth
       >
-        Masuk pake Email
+        Masuk dengan Email
       </Button>
     </form>
   );

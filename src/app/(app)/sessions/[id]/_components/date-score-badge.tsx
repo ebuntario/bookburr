@@ -1,7 +1,9 @@
+import { SparklesIcon } from "@heroicons/react/24/solid";
+
 export function DateScoreBadge() {
   return (
-    <span className="shrink-0 rounded-full bg-gold/15 px-2 py-0.5 text-xs font-semibold text-gold">
-      ⭐ Pilihan Terbaik
+    <span className="flex items-center gap-1 shrink-0 rounded-full bg-gold/15 px-2 py-0.5 text-xs font-semibold text-gold">
+      <SparklesIcon className="h-3 w-3" /> Pilihan Terbaik
     </span>
   );
 }

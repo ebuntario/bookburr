@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getSessionsByUserId } from "@/lib/queries/sessions";
 import { SessionCard } from "./_components/session-card";
+import { SessionCardList, SessionCardItem } from "./_components/session-card-list";
 import { EmptyState } from "./_components/empty-state";
 
 export default async function HomePage() {
@@ -29,21 +30,22 @@ export default async function HomePage() {
       {sessions.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="flex flex-col gap-3">
+        <SessionCardList>
           {sessions.map((s) => (
-            <SessionCard
-              key={s.id}
-              id={s.id}
-              name={s.name}
-              mode={s.mode}
-              status={s.status}
-              memberCount={s.memberCount}
-              createdAt={s.createdAt.toISOString()}
-              earliestDate={s.earliestDate}
-              latestDate={s.latestDate}
-            />
+            <SessionCardItem key={s.id}>
+              <SessionCard
+                id={s.id}
+                name={s.name}
+                mode={s.mode}
+                status={s.status}
+                memberCount={s.memberCount}
+                createdAt={s.createdAt.toISOString()}
+                earliestDate={s.earliestDate}
+                latestDate={s.latestDate}
+              />
+            </SessionCardItem>
           ))}
-        </div>
+        </SessionCardList>
       )}
     </div>
   );

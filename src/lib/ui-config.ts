@@ -1,4 +1,4 @@
-import type { SessionStatus, SessionMode } from "@/lib/constants";
+import type { SessionStatus } from "@/lib/constants";
 
 export const STATUS_CONFIG: Record<
   SessionStatus,
@@ -15,9 +15,4 @@ export const STATUS_CONFIG: Record<
     label: "Selesai",
     className: "bg-foreground/10 text-foreground/50",
   },
-};
-
-export const MODE_ICON: Record<SessionMode, string> = {
-  personal: "🫂",
-  work: "💼",
 };

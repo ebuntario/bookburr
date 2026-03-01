@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { Card } from "@heroui/react";
-import type { SessionStatus, SessionMode } from "@/lib/constants";
-import { STATUS_CONFIG, MODE_ICON } from "@/lib/ui-config";
+import type { SessionStatus } from "@/lib/constants";
+import { STATUS_CONFIG } from "@/lib/ui-config";
+import { ModeIcon } from "@/components/mode-icon";
 
 interface SessionCardProps {
   id: string;
@@ -40,7 +41,6 @@ export function SessionCard({
 }: SessionCardProps) {
   const statusConfig =
     STATUS_CONFIG[status as SessionStatus] ?? STATUS_CONFIG.collecting;
-  const modeIcon = MODE_ICON[mode as SessionMode] ?? "🫂";
   const dateRange = formatDateRange(earliestDate, latestDate);
   const dateDisplay = dateRange ?? new Date(createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
 
@@ -49,7 +49,7 @@ export function SessionCard({
       <Card className="rounded-2xl border border-foreground/10 bg-white p-0 transition-shadow hover:shadow-md">
         <Card.Header className="flex items-center justify-between px-5 pt-4 pb-1">
           <div className="flex items-center gap-2">
-            <span className="text-lg">{modeIcon}</span>
+            <ModeIcon mode={mode} className="h-5 w-5 text-foreground/60" />
             <h3 className="font-semibold text-foreground">{name}</h3>
           </div>
           <span

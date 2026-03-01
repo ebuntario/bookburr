@@ -248,7 +248,9 @@ All votes hidden from peers until host confirms. `is_terserah` on VenueVotes = "
 One question per screen, full-screen, smooth slide-left transitions (Framer Motion). Core attendee flow is exactly 3 questions (date, location, budget). Session creation wizard is 3 steps (personal) or 4 steps (work mode adds office location). Uses `sessionStorage` for persistence + browser history integration.
 
 ### Jaksel Copy
-All UI copy is in Jaksel (Jakarta Selatan slang). Refer to copy tables in `docs/prd.md`. Do not substitute with standard Bahasa Indonesia or English.
+Product experience copy (session names, CTAs, status labels, activity feed, onboarding wizard) is in Jaksel (Jakarta Selatan slang). Refer to copy tables in `docs/prd.md`.
+
+**System flows** (auth/login, error pages, profile form labels/helpers, sign-out) use **proper Bahasa Indonesia** — not Jaksel. This keeps system-level copy accessible and professional while preserving the app's personality in product-facing surfaces.
 
 ### Visual Design Tokens
 ```

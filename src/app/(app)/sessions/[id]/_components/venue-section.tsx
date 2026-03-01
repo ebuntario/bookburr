@@ -54,11 +54,11 @@ export function VenueSection({
         <div className="rounded-2xl border border-dashed border-foreground/20 px-5 py-6 text-center">
           {isHost ? (
             <p className="text-sm text-foreground/50">
-              Abis semua orang join, lu bisa mulai cari venue 👆
+              Abis semua orang join, lu bisa mulai cari venue
             </p>
           ) : (
             <p className="text-sm text-foreground/50">
-              Host lagi ngumpulin orang dulu, sabar ya 🙏
+              Host lagi ngumpulin orang dulu, sabar ya
               <br />
               Venue bakal muncul abis itu
             </p>
@@ -96,7 +96,7 @@ export function VenueSection({
           <p className="text-sm text-foreground/50">
             Aduh, lagi susah nyari tempat nih.
             <br />
-            Lu bisa suggest langsung! 👇
+            Lu bisa suggest langsung!
           </p>
         </div>
         {canSuggest && <SuggestVenueFab sessionId={sessionId} />}

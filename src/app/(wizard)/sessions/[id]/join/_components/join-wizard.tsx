@@ -53,7 +53,7 @@ function UnvotedConfirmModal({
       className="absolute inset-x-6 bottom-6 flex flex-col gap-3 rounded-xl border border-foreground/10 bg-white p-4 text-center shadow-lg"
     >
       <p className="text-sm text-foreground">
-        Lu belum pilih untuk {unvotedCount} tanggal. Gue anggap bisa ya? 😊
+        Lu belum pilih untuk {unvotedCount} tanggal. Gue anggap bisa ya?
       </p>
       <div className="flex gap-2">
         <button

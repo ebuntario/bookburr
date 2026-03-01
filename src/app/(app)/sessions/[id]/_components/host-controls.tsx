@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { advanceSessionStatus } from "@/lib/actions/session-status";
 import { discoverVenues, retryDiscoverVenues } from "@/lib/actions/venues";
 import { copyToClipboard } from "@/lib/share-utils";
@@ -117,21 +119,22 @@ export function HostControls({
       <div className="flex flex-col gap-2">
         <p className="text-sm text-foreground/50">Lu yang pegang kendali nih</p>
         {error && <p className="text-xs text-coral">{error}</p>}
-        <button
+        <motion.button
           type="button"
           onClick={onPress}
           disabled={loading}
-          className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-opacity active:opacity-70 disabled:opacity-50 ${variantClass}`}
+          whileTap={{ scale: 0.97 }}
+          className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-opacity disabled:opacity-50 ${variantClass}`}
         >
           {loading ? (
             <>
-              <span className="inline-block animate-spin">⟳</span>{" "}
+              <ArrowPathIcon className="h-4 w-4 animate-spin" />{" "}
               {loadingLabel}
             </>
           ) : (
             label
           )}
-        </button>
+        </motion.button>
       </div>
     );
   };

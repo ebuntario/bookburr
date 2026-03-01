@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@heroui/react";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 export default function WizardError({
   reset,
@@ -11,10 +12,10 @@ export default function WizardError({
 }) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-cream px-6">
-      <p className="text-5xl">🧙</p>
-      <h1 className="text-xl font-bold text-foreground">Wizardnya error, coba lagi ya bestie</h1>
+      <ExclamationTriangleIcon className="h-12 w-12 text-foreground/30" />
+      <h1 className="text-xl font-bold text-foreground">Terjadi Kesalahan</h1>
       <p className="text-center text-sm text-foreground/60">
-        Langkah ini gagal. Bisa coba lagi atau balik ke home.
+        Langkah ini gagal. Silakan coba lagi atau kembali ke beranda.
       </p>
       <div className="flex gap-3">
         <Button className="bg-gold text-white font-semibold" onPress={reset}>
@@ -24,7 +25,7 @@ export default function WizardError({
           href="/home"
           className="flex items-center rounded-xl border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground"
         >
-          Balik ke Home
+          Kembali ke Beranda
         </Link>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckIcon } from "@heroicons/react/24/outline";
 import { voteForVenue } from "@/lib/actions/venues";
 
 interface TerserahButtonProps {
@@ -44,7 +45,7 @@ export function TerserahButton({ sessionId, isTerserah: initialIsTerserah }: Ter
         .filter(Boolean)
         .join(" ")}
     >
-      {isTerserah ? "✓ Ikut aja dipilih!" : "Ga ada preferensi? Ikut aja 😊"}
+      {isTerserah ? <><CheckIcon className="h-4 w-4 inline" /> Ikut aja dipilih!</> : "Ga ada preferensi? Ikut aja"}
     </button>
   );
 }

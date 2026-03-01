@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { buildVotingOpenCard } from "@/lib/share-utils";
 import { ConfirmSessionSheet } from "./confirm-session-sheet";
 import type { ConfirmableVenue, ConfirmableDateOption } from "./types";
@@ -83,7 +84,7 @@ export function HostVotingPanel({
           disabled={loading}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-coral py-3.5 text-sm font-semibold text-white transition-opacity active:opacity-70 disabled:opacity-50"
         >
-          Confirm Venue 🎉
+          <CheckCircleIcon className="h-5 w-5" /> Confirm Venue
         </button>
       </div>
 

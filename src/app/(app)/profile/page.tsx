@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { auth } from "@/lib/auth";
 import { getUserProfile, getUserStats } from "@/lib/queries/profile";
 import { ProfileForm } from "./_components/profile-form";
@@ -24,6 +26,11 @@ export default async function ProfilePage() {
 
   return (
     <div className="flex flex-col gap-6 pb-24">
+      <Link href="/home" className="flex items-center gap-1.5 text-sm font-medium text-foreground/50 transition-colors active:text-foreground/70 w-fit">
+        <ArrowLeftIcon className="h-4 w-4" />
+        Kembali
+      </Link>
+
       {/* Avatar + name header */}
       <div className="flex flex-col items-center gap-3 pt-2">
         {profile.image ? (

@@ -1,6 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  CheckCircleIcon,
+  CheckIcon,
+  MegaphoneIcon,
+} from "@heroicons/react/24/outline";
+import { SparklesIcon } from "@heroicons/react/24/solid";
 import { confirmSession } from "@/lib/actions/session-status";
 import { CelebrationOverlay } from "./celebration-overlay";
 import { formatDateShort } from "@/lib/format-utils";
@@ -57,7 +64,7 @@ function SelectableList<T extends { id: string }>({
               </span>
             )}
           </div>
-          {selectedId === item.id && <span className="text-gold shrink-0 ml-2">✓</span>}
+          {selectedId === item.id && <CheckIcon className="h-5 w-5 text-gold shrink-0 ml-2" />}
         </button>
       ))}
     </div>
@@ -125,7 +132,7 @@ function SelectionStep({
 
       <SelectableList
         label="Venue"
-        emptyMessage="Belum ada venue nih. Tambahin dulu ya! 🍛"
+        emptyMessage="Belum ada venue nih. Tambahin dulu ya!"
         items={venues}
         selectedId={selectedVenueId}
         onSelect={onSelectVenue}
@@ -137,7 +144,7 @@ function SelectionStep({
             </span>
             <span className="text-xs text-foreground/50">
               {v.voteCount} vote{v.voteCount !== 1 ? "s" : ""}
-              {v.compositeScore > 0 && <> · ⭐ {v.compositeScore.toFixed(1)}</>}
+              {v.compositeScore > 0 && <> · <SparklesIcon className="h-3 w-3 inline text-gold" /> {v.compositeScore.toFixed(1)}</>}
             </span>
           </>
         )}
@@ -183,7 +190,7 @@ function SelectionStep({
         }
         className="flex w-full items-center justify-center rounded-xl bg-gold py-3.5 text-sm font-semibold text-background disabled:opacity-40"
       >
-        Ya, confirm ini! 🎉
+        <CheckCircleIcon className="h-5 w-5 inline" /> Ya, confirm ini!
       </button>
     </div>
   );
@@ -212,7 +219,7 @@ function ConfirmationDialog({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-center">
-          <p className="mb-2 text-2xl">📣</p>
+          <MegaphoneIcon className="mx-auto mb-2 h-8 w-8 text-coral" />
           <h3 className="text-base font-bold text-foreground">Yakin nih?</h3>
           <p className="mt-1 text-sm text-foreground/60">
             Semua orang bakal dikabarin kalau bukber udah fix.
@@ -227,7 +234,7 @@ function ConfirmationDialog({
           disabled={loading}
           className="flex w-full items-center justify-center rounded-xl bg-coral py-3.5 text-sm font-semibold text-white disabled:opacity-50"
         >
-          {loading ? "Lagi proses..." : "Confirm 🎉"}
+          {loading ? "Lagi proses..." : <><CheckCircleIcon className="h-5 w-5 inline" /> Confirm</>}
         </button>
         <button
           type="button"
@@ -329,11 +336,19 @@ export function ConfirmSessionSheet({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end"
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 z-50 flex items-end bg-foreground/30"
       onClick={step === 1 ? onClose : undefined}
     >
       {step === 1 ? (
+        <motion.div
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="w-full"
+        >
         <SelectionStep
           venues={sortedVenues}
           dates={sortedDates}
@@ -347,6 +362,7 @@ export function ConfirmSessionSheet({
           onNext={() => setStep(2)}
           onClose={onClose}
         />
+        </motion.div>
       ) : (
         <ConfirmationDialog
           loading={loading}
@@ -355,6 +371,6 @@ export function ConfirmSessionSheet({
           onBack={() => setStep(1)}
         />
       )}
-    </div>
+    </motion.div>
   );
 }

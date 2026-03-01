@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card } from "@heroui/react";
+import { UserGroupIcon, BriefcaseIcon } from "@heroicons/react/24/outline";
 import type { SessionMode } from "@/lib/constants";
 
 interface StepSessionModeProps {
@@ -39,7 +40,7 @@ export function StepSessionMode({
             >
               <Card.Header className="px-5 pt-5 pb-1">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">🫂</span>
+                  <UserGroupIcon className="h-7 w-7 text-foreground/70" />
                   <span className="text-lg font-semibold">Personal</span>
                 </div>
               </Card.Header>
@@ -66,7 +67,7 @@ export function StepSessionMode({
             >
               <Card.Header className="px-5 pt-5 pb-1">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">💼</span>
+                  <BriefcaseIcon className="h-7 w-7 text-foreground/70" />
                   <span className="text-lg font-semibold">Work</span>
                 </div>
               </Card.Header>

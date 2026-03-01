@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { UserIcon, UsersIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { updateProfile } from "@/lib/actions/profile";
 import { MARITAL_STATUS } from "@/lib/constants";
 
@@ -105,12 +106,12 @@ export function ProfileForm({
       {/* Marital Status */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-semibold text-foreground">
-          Status
+          Status Pernikahan
         </label>
         <div className="flex gap-2">
           {[
-            { value: MARITAL_STATUS.single, label: "💙 Belum nikah" },
-            { value: MARITAL_STATUS.married, label: "💛 Udah nikah" },
+            { value: MARITAL_STATUS.single, label: "Single", Icon: UserIcon },
+            { value: MARITAL_STATUS.married, label: "Menikah", Icon: UsersIcon },
           ].map((opt) => (
             <button
               key={opt.value}
@@ -120,25 +121,26 @@ export function ProfileForm({
                   maritalStatus === opt.value ? null : opt.value,
                 )
               }
-              className={`flex-1 rounded-xl border py-2.5 text-sm font-medium transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm font-medium transition-all ${
                 maritalStatus === opt.value
                   ? "border-gold bg-gold/15 text-gold"
                   : "border-foreground/15 bg-white text-foreground/60"
               }`}
             >
+              <opt.Icon className="h-4 w-4" />
               {opt.label}
             </button>
           ))}
         </div>
         <p className="text-xs text-foreground/40">
-          Biar algoritma tahu seberapa fleksibel lu
+          Membantu algoritma menentukan fleksibilitas jadwal kamu
         </p>
       </div>
 
       {/* Dietary Preferences */}
       <div className="flex flex-col gap-2">
         <label className="text-sm font-semibold text-foreground">
-          Dietary Preferences
+          Pantangan Makanan
         </label>
         <div className="flex flex-wrap gap-2">
           {DIETARY_OPTIONS.map((opt) => (
@@ -157,14 +159,14 @@ export function ProfileForm({
           ))}
         </div>
         <p className="text-xs text-foreground/40">
-          Biar ga ada venue yang ga cocok buat lu
+          Agar venue yang tidak sesuai bisa difilter
         </p>
       </div>
 
       {/* Cuisine Preferences */}
       <div className="flex flex-col gap-2">
         <label className="text-sm font-semibold text-foreground">
-          Suka Masakan Apa?
+          Preferensi Masakan
         </label>
         <div className="flex flex-wrap gap-2">
           {CUISINE_OPTIONS.map((opt) => (
@@ -183,7 +185,7 @@ export function ProfileForm({
           ))}
         </div>
         <p className="text-xs text-foreground/40">
-          Buat nyari venue yang sesuai selera
+          Untuk mencocokkan venue dengan selera kamu
         </p>
       </div>
 
@@ -195,7 +197,7 @@ export function ProfileForm({
         disabled={saving}
         className="flex w-full items-center justify-center rounded-xl bg-gold py-3.5 text-sm font-semibold text-background transition-opacity active:opacity-70 disabled:opacity-50"
       >
-        {saving ? "Lagi nyimpen..." : saved ? "✓ Tersimpan!" : "Simpan"}
+        {saving ? "Menyimpan..." : saved ? <><CheckIcon className="h-4 w-4 inline" /> Tersimpan!</> : "Simpan"}
       </button>
     </div>
   );

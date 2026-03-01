@@ -1,3 +1,4 @@
+import { SparklesIcon } from "@heroicons/react/24/solid";
 import { SocialEmbedPreview } from "./social-embed-preview";
 import { EmojiReactionBar } from "./emoji-reaction-bar";
 import { VenueVoteButton } from "./venue-vote-button";
@@ -77,8 +78,8 @@ export function VenueCard({
         </p>
         <div className="flex shrink-0 items-center gap-2">
           {isBestPick && (
-            <span className="rounded-full bg-gold/15 px-2 py-0.5 text-xs font-semibold text-gold">
-              ✨ Top Pick
+            <span className="flex items-center gap-1 rounded-full bg-gold/15 px-2 py-0.5 text-xs font-semibold text-gold">
+              <SparklesIcon className="h-3 w-3" /> Top Pick
             </span>
           )}
           {isVotingPhase && (

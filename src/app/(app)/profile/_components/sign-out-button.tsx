@@ -9,7 +9,7 @@ export function SignOutButton() {
       onClick={() => signOut({ callbackUrl: "/login" })}
       className="w-full rounded-xl border border-foreground/15 py-3 text-sm font-semibold text-foreground/50 transition-colors active:bg-foreground/5"
     >
-      Logout dulu ya
+      Keluar
     </button>
   );
 }

@@ -1,12 +1,13 @@
 import Link from "next/link";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 export default function NotFound() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-cream px-6">
-      <p className="text-6xl">🫠</p>
-      <h1 className="text-2xl font-bold text-foreground">404 — Halaman ga ketemu</h1>
+      <MagnifyingGlassIcon className="h-14 w-14 text-foreground/30" />
+      <h1 className="text-2xl font-bold text-foreground">Halaman Tidak Ditemukan</h1>
       <p className="text-center text-sm text-foreground/60">
-        Kayaknya halamannya udah pindah atau emang ga ada deh.
+        Halaman yang kamu cari tidak tersedia.
       </p>
       <Link
         href="/home"
