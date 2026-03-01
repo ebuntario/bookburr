@@ -1,6 +1,6 @@
 import { eq, sql, desc, and, asc, ne, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { bukberSessions, sessionMembers, dateOptions } from "@/lib/db/schema";
+import { bukberSessions, sessionMembers, dateOptions, users } from "@/lib/db/schema";
 
 // date "YYYY-MM-DD" strings for display
 type DateRange = { earliestDate: string | null; latestDate: string | null };
@@ -83,6 +83,24 @@ export async function getMemberByUserAndSession(
     .limit(1);
 
   return member ?? null;
+}
+
+/** Lightweight query for OG metadata (no auth needed). */
+export async function getSessionOgData(sessionId: string) {
+  const [row] = await db
+    .select({
+      name: bukberSessions.name,
+      hostName: users.name,
+      memberCount: sql<number>`(SELECT count(*)::int FROM ${sessionMembers} WHERE ${sessionMembers.sessionId} = ${bukberSessions.id})`,
+      earliestDate: sql<string | null>`(SELECT min(${dateOptions.date}) FROM ${dateOptions} WHERE ${dateOptions.sessionId} = ${bukberSessions.id})`,
+      latestDate: sql<string | null>`(SELECT max(${dateOptions.date}) FROM ${dateOptions} WHERE ${dateOptions.sessionId} = ${bukberSessions.id})`,
+    })
+    .from(bukberSessions)
+    .innerJoin(users, eq(bukberSessions.hostId, users.id))
+    .where(eq(bukberSessions.id, sessionId))
+    .limit(1);
+
+  return row ?? null;
 }
 
 /**
