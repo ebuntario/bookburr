@@ -28,11 +28,7 @@ export const metadata: Metadata = {
   description: "Koordinasi bukber anti ribet",
   manifest: "/manifest.json",
   icons: {
-    icon: [
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
-    ],
+    icon: { url: "/icon.svg", type: "image/svg+xml" },
     apple: [
       { url: "/apple-icon-57x57.png", sizes: "57x57" },
       { url: "/apple-icon-60x60.png", sizes: "60x60" },
