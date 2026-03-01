@@ -75,15 +75,26 @@ export async function getDatesWithVoteCounts(
     .groupBy(dateOptions.id, dateOptions.date)
     .orderBy(asc(dateOptions.date));
 
-  const [{ votedMemberCount }] = await db
-    .select({
-      votedMemberCount: sql<number>`count(distinct ${dateVotes.memberId})::int`,
-    })
-    .from(dateVotes)
-    .innerJoin(dateOptions, eq(dateVotes.dateOptionId, dateOptions.id))
-    .where(eq(dateOptions.sessionId, sessionId));
+  const [votedMemberRows, [{ votedMemberCount }]] = await Promise.all([
+    db
+      .selectDistinct({ memberId: dateVotes.memberId })
+      .from(dateVotes)
+      .innerJoin(dateOptions, eq(dateVotes.dateOptionId, dateOptions.id))
+      .where(eq(dateOptions.sessionId, sessionId)),
+    db
+      .select({
+        votedMemberCount: sql<number>`count(distinct ${dateVotes.memberId})::int`,
+      })
+      .from(dateVotes)
+      .innerJoin(dateOptions, eq(dateVotes.dateOptionId, dateOptions.id))
+      .where(eq(dateOptions.sessionId, sessionId)),
+  ]);
 
-  return { dates, votedMemberCount };
+  return {
+    dates,
+    votedMemberCount,
+    votedMemberIds: votedMemberRows.map((r) => r.memberId),
+  };
 }
 
 function buildReactionMap(

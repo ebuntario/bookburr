@@ -4,18 +4,7 @@ import { useState } from "react";
 import { confirmSession } from "@/lib/actions/session-status";
 import { CelebrationOverlay } from "./celebration-overlay";
 import { formatDateShort } from "@/lib/format-utils";
-
-interface Venue {
-  id: string;
-  name: string;
-  compositeScore: number;
-  location?: unknown;
-}
-
-interface DateOption {
-  id: string;
-  date: string;
-}
+import type { ConfirmableVenue, ConfirmableDateOption } from "./types";
 
 // ── SelectableList sub-component ───────────────────────────────────────────
 
@@ -26,13 +15,15 @@ function SelectableList<T extends { id: string }>({
   selectedId,
   onSelect,
   renderLabel,
+  bestId,
 }: {
   label: string;
   emptyMessage: string;
   items: T[];
   selectedId: string;
   onSelect: (id: string) => void;
-  renderLabel: (item: T) => string;
+  renderLabel: (item: T) => React.ReactNode;
+  bestId?: string;
 }) {
   if (items.length === 0) {
     return (
@@ -58,13 +49,29 @@ function SelectableList<T extends { id: string }>({
               : "border-foreground/15 bg-white"
           }`}
         >
-          <span className="text-sm font-medium text-foreground">
+          <div className="flex flex-col gap-0.5 min-w-0 flex-1">
             {renderLabel(item)}
-          </span>
-          {selectedId === item.id && <span className="text-gold">✓</span>}
+            {bestId === item.id && (
+              <span className="inline-block w-fit rounded-md bg-gold/15 px-1.5 py-0.5 text-[10px] font-semibold text-gold">
+                Pilihan Terbaik
+              </span>
+            )}
+          </div>
+          {selectedId === item.id && <span className="text-gold shrink-0 ml-2">✓</span>}
         </button>
       ))}
     </div>
+  );
+}
+
+// ── ConsensusWarning sub-component ─────────────────────────────────────────
+
+function ConsensusWarning({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <p className="rounded-xl bg-gold/10 px-3 py-2 text-xs text-foreground/70">
+      Eh ini bukan yang paling banyak dipilih loh — yakin mau?
+    </p>
   );
 }
 
@@ -75,22 +82,29 @@ function SelectionStep({
   dates,
   selectedVenueId,
   selectedDateId,
+  bestVenueId,
+  bestDateId,
   error,
   onSelectVenue,
   onSelectDate,
   onNext,
   onClose,
 }: {
-  venues: Venue[];
-  dates: DateOption[];
+  venues: ConfirmableVenue[];
+  dates: ConfirmableDateOption[];
   selectedVenueId: string;
   selectedDateId: string;
+  bestVenueId: string;
+  bestDateId: string;
   error: string | null;
   onSelectVenue: (id: string) => void;
   onSelectDate: (id: string) => void;
   onNext: () => void;
   onClose: () => void;
 }) {
+  const venueNotBest = selectedVenueId && selectedVenueId !== bestVenueId;
+  const dateNotBest = selectedDateId && selectedDateId !== bestDateId;
+
   return (
     <div
       className="w-full rounded-t-2xl bg-[#FFF8F0] px-5 pb-8 pt-5 shadow-xl flex flex-col gap-4 max-h-[85dvh] overflow-y-auto"
@@ -115,8 +129,21 @@ function SelectionStep({
         items={venues}
         selectedId={selectedVenueId}
         onSelect={onSelectVenue}
-        renderLabel={(v) => v.name}
+        bestId={bestVenueId}
+        renderLabel={(v) => (
+          <>
+            <span className="text-sm font-medium text-foreground truncate">
+              {v.name}
+            </span>
+            <span className="text-xs text-foreground/50">
+              {v.voteCount} vote{v.voteCount !== 1 ? "s" : ""}
+              {v.compositeScore > 0 && <> · ⭐ {v.compositeScore.toFixed(1)}</>}
+            </span>
+          </>
+        )}
       />
+
+      <ConsensusWarning show={!!venueNotBest} />
 
       <SelectableList
         label="Tanggal"
@@ -124,8 +151,24 @@ function SelectionStep({
         items={dates}
         selectedId={selectedDateId}
         onSelect={onSelectDate}
-        renderLabel={(d) => formatDateShort(d.date)}
+        bestId={bestDateId}
+        renderLabel={(d) => (
+          <>
+            <span className="text-sm font-medium text-foreground">
+              {formatDateShort(d.date)}
+            </span>
+            <span className="text-xs">
+              <span className="text-gold">{d.stronglyPrefer} bisa banget</span>
+              {" · "}
+              <span className="text-teal">{d.canDo} bisa</span>
+              {" · "}
+              <span className="text-coral">{d.unavailable} gabisa</span>
+            </span>
+          </>
+        )}
       />
+
+      <ConsensusWarning show={!!dateNotBest} />
 
       {error && <p className="text-xs text-coral">{error}</p>}
 
@@ -201,7 +244,7 @@ function ConfirmationDialog({
 
 // ── Main component ─────────────────────────────────────────────────────────
 
-function buildGoogleMapsUrl(venue: Venue | undefined): string | undefined {
+function buildGoogleMapsUrl(venue: ConfirmableVenue | undefined): string | undefined {
   const loc = venue?.location as { lat?: number; lng?: number } | null;
   return loc?.lat && loc?.lng
     ? `https://maps.google.com/?q=${loc.lat},${loc.lng}`
@@ -211,8 +254,8 @@ function buildGoogleMapsUrl(venue: Venue | undefined): string | undefined {
 interface ConfirmSessionSheetProps {
   sessionId: string;
   sessionName: string;
-  venues: Venue[];
-  dates: DateOption[];
+  venues: ConfirmableVenue[];
+  dates: ConfirmableDateOption[];
   onClose: () => void;
   onConfirmed: () => void;
 }
@@ -225,8 +268,16 @@ export function ConfirmSessionSheet({
   onClose,
   onConfirmed,
 }: ConfirmSessionSheetProps) {
-  const [selectedVenueId, setSelectedVenueId] = useState(venues[0]?.id ?? "");
-  const [selectedDateId, setSelectedDateId] = useState(dates[0]?.id ?? "");
+  const sortedVenues = [...venues].sort(
+    (a, b) => b.compositeScore - a.compositeScore,
+  );
+  const sortedDates = [...dates].sort((a, b) => b.dateScore - a.dateScore);
+
+  const bestVenueId = sortedVenues[0]?.id ?? "";
+  const bestDateId = sortedDates[0]?.id ?? "";
+
+  const [selectedVenueId, setSelectedVenueId] = useState(bestVenueId);
+  const [selectedDateId, setSelectedDateId] = useState(bestDateId);
   const [step, setStep] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -252,8 +303,8 @@ export function ConfirmSessionSheet({
       setStep(1);
       return;
     }
-    const venue = venues.find((v) => v.id === selectedVenueId);
-    const date = dates.find((d) => d.id === selectedDateId);
+    const venue = sortedVenues.find((v) => v.id === selectedVenueId);
+    const date = sortedDates.find((d) => d.id === selectedDateId);
     setConfirmedInfo({
       venueName: venue?.name ?? "venue",
       dateStr: date ? formatDateShort(date.date) : "",
@@ -284,10 +335,12 @@ export function ConfirmSessionSheet({
     >
       {step === 1 ? (
         <SelectionStep
-          venues={venues}
-          dates={dates}
+          venues={sortedVenues}
+          dates={sortedDates}
           selectedVenueId={selectedVenueId}
           selectedDateId={selectedDateId}
+          bestVenueId={bestVenueId}
+          bestDateId={bestDateId}
           error={error}
           onSelectVenue={setSelectedVenueId}
           onSelectDate={setSelectedDateId}

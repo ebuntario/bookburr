@@ -14,11 +14,17 @@ interface Venue {
   id: string;
   name: string;
   compositeScore: number;
+  location?: unknown;
+  voteCount: number;
 }
 
 interface DateOption {
   id: string;
   date: string;
+  dateScore: number;
+  stronglyPrefer: number;
+  canDo: number;
+  unavailable: number;
 }
 
 interface HostControlsProps {
@@ -30,6 +36,7 @@ interface HostControlsProps {
   shareUrl: string;
   dates: DateOption[];
   venues: Venue[];
+  hasViableDates: boolean;
 }
 
 export function HostControls({
@@ -41,6 +48,7 @@ export function HostControls({
   shareUrl,
   dates,
   venues,
+  hasViableDates,
 }: HostControlsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -132,6 +140,7 @@ export function HostControls({
     return (
       <HostCollectingCTA
         memberCount={memberCount}
+        hasViableDates={hasViableDates}
         inviteCopied={inviteCopied}
         onInvite={handleInvite}
         onAdvance={handleAdvance}

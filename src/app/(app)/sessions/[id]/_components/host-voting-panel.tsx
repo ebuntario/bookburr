@@ -4,25 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { buildVotingOpenCard } from "@/lib/share-utils";
 import { ConfirmSessionSheet } from "./confirm-session-sheet";
-
-interface Venue {
-  id: string;
-  name: string;
-  compositeScore: number;
-}
-
-interface DateOption {
-  id: string;
-  date: string;
-}
+import type { ConfirmableVenue, ConfirmableDateOption } from "./types";
 
 interface HostVotingPanelProps {
   sessionId: string;
   sessionName: string;
   venueCount: number;
   shareUrl: string;
-  dates: DateOption[];
-  venues: Venue[];
+  dates: ConfirmableDateOption[];
+  venues: ConfirmableVenue[];
   loading: boolean;
   error: string | null;
 }

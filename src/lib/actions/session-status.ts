@@ -1,12 +1,13 @@
 "use server";
 
-import { eq, and, count } from "drizzle-orm";
+import { eq, and, count, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   bukberSessions,
   sessionMembers,
   venues,
   dateOptions,
+  dateVotes,
 } from "@/lib/db/schema";
 import { SESSION_STATUS_TRANSITIONS, ACTIVITY_TYPE } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
@@ -33,6 +34,20 @@ async function validateAdvancePrerequisites(
       .from(sessionMembers)
       .where(eq(sessionMembers.sessionId, sessionId));
     if (memberCount < 2) throw new Error("NEED_MORE_MEMBERS");
+
+    const [{ viableDateCount }] = await tx
+      .select({
+        viableDateCount: sql<number>`count(distinct ${dateOptions.id})::int`,
+      })
+      .from(dateOptions)
+      .innerJoin(dateVotes, eq(dateVotes.dateOptionId, dateOptions.id))
+      .where(
+        and(
+          eq(dateOptions.sessionId, sessionId),
+          sql`${dateVotes.preferenceLevel} IN ('strongly_prefer', 'can_do')`,
+        ),
+      );
+    if (viableDateCount < 1) throw new Error("NEED_VIABLE_DATE");
   }
 
   if (status === "discovering") {
@@ -51,6 +66,7 @@ const ADVANCE_ERRORS: Record<string, string> = {
   NO_TRANSITION: "Status udah final",
   NEED_MORE_MEMBERS: "Butuh minimal 2 orang dulu",
   NEED_VENUES: "Tambahin venue dulu ya",
+  NEED_VIABLE_DATE: "Belum ada tanggal yang minimal 1 orang bisa",
 };
 
 export async function advanceSessionStatus(

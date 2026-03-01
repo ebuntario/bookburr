@@ -212,6 +212,7 @@ interface DateVotingResultsProps {
   totalMembers: number;
   votedMemberCount: number;
   status: string;
+  topVenueName?: string;
 }
 
 export function DateVotingResults({
@@ -220,6 +221,7 @@ export function DateVotingResults({
   totalMembers,
   votedMemberCount,
   status,
+  topVenueName,
 }: DateVotingResultsProps) {
   const [localVotes, setLocalVotes] = useState<
     Record<string, PreferenceLevel | null>
@@ -231,6 +233,25 @@ export function DateVotingResults({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [successDateId, setSuccessDateId] = useState<string | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return !!sessionStorage.getItem(`bookburr-revisit-dates-${sessionId}`);
+    } catch {
+      return false;
+    }
+  });
+
+  const showRevisitBanner = status === "discovering" && !bannerDismissed;
+
+  const dismissBanner = () => {
+    setBannerDismissed(true);
+    try {
+      sessionStorage.setItem(`bookburr-revisit-dates-${sessionId}`, "1");
+    } catch {
+      // ignore
+    }
+  };
 
   const canEdit = status === "collecting" || status === "discovering";
 
@@ -281,6 +302,29 @@ export function DateVotingResults({
           {votedMemberCount}/{totalMembers} udah vote
         </p>
       </div>
+
+      {showRevisitBanner && (
+        <div className="rounded-xl border border-teal/20 bg-teal/5 px-4 py-3 flex flex-col gap-1">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-sm text-foreground/70">
+              Venue udah ketemu! Cek lagi tanggal lu — siapa tau berubah pikiran
+              setelah tau tempatnya.
+            </p>
+            <button
+              type="button"
+              onClick={dismissBanner}
+              className="shrink-0 text-xs text-foreground/40"
+            >
+              Tutup
+            </button>
+          </div>
+          {topVenueName && (
+            <p className="text-xs text-foreground/50">
+              Top venue: {topVenueName}
+            </p>
+          )}
+        </div>
+      )}
 
       {error && (
         <div className="rounded-xl bg-coral/10 px-3 py-2 text-xs text-coral">

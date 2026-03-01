@@ -65,17 +65,20 @@ export default async function SessionDashboardPage({
   const hostName = hostMember?.name ?? undefined;
   const dateRange = computeDateRange(datesData.dates);
 
-  const { totalMembers, progressTotal, completedMemberIds, completedCount } =
+  const dateVotedMemberIds = new Set(datesData.votedMemberIds);
+
+  const { progressTotal, completedMemberIds, completedCount } =
     computeProgressData(
       sessionData.members,
       sessionData.session.expectedGroupSize,
       status,
       venueVotedCount,
+      dateVotedMemberIds,
     );
 
   const pendingMembersForList = computePendingMembers(
     sessionData.members,
-    totalMembers,
+    completedMemberIds,
     venueVotedCount,
     status,
   );
@@ -113,6 +116,7 @@ export default async function SessionDashboardPage({
           totalMembers={sessionData.members.length}
           votedMemberCount={datesData.votedMemberCount}
           status={status}
+          topVenueName={venuesData[0]?.name}
         />
       )}
 
@@ -132,8 +136,11 @@ export default async function SessionDashboardPage({
           memberCount={sessionData.members.length}
           venueCount={venuesData.length}
           shareUrl={shareUrl}
-          dates={datesData.dates.map((d) => ({ id: d.id, date: d.date }))}
+          dates={datesData.dates}
           venues={venuesData}
+          hasViableDates={datesData.dates.some(
+            (d) => d.stronglyPrefer > 0 || d.canDo > 0,
+          )}
         />
       )}
 

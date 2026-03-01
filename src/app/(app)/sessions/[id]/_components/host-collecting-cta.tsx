@@ -2,6 +2,7 @@
 
 interface HostCollectingCTAProps {
   memberCount: number;
+  hasViableDates: boolean;
   inviteCopied: boolean;
   onInvite: () => void;
   onAdvance: () => void;
@@ -15,6 +16,7 @@ interface HostCollectingCTAProps {
 
 export function HostCollectingCTA({
   memberCount,
+  hasViableDates,
   inviteCopied,
   onInvite,
   onAdvance,
@@ -37,5 +39,23 @@ export function HostCollectingCTA({
       </div>
     );
   }
+
+  if (!hasViableDates) {
+    return (
+      <div className="rounded-2xl border border-dashed border-foreground/20 bg-foreground/[0.03] px-5 py-5 flex flex-col gap-3">
+        <p className="text-sm font-medium text-foreground/70">
+          Belum ada tanggal yang orang bisa — share ke yang lain dulu.
+        </p>
+        <button
+          type="button"
+          onClick={onInvite}
+          className="flex items-center justify-center gap-2 rounded-xl border border-foreground/20 py-2.5 text-sm font-semibold text-foreground"
+        >
+          {inviteCopied ? "✓ Link tersalin!" : "🔗 Invite Temen"}
+        </button>
+      </div>
+    );
+  }
+
   return renderCTA("Mulai Cari Venue →", "Lagi nyari... 🔍", onAdvance, "gold");
 }
