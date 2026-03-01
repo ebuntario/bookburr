@@ -18,7 +18,7 @@ export function StepSessionMode({
   return (
     <div className="flex flex-1 flex-col justify-between">
       <div className="flex flex-col gap-4">
-        <h2 className="text-2xl font-bold text-foreground">
+        <h2 className="text-2xl font-heading font-semibold text-foreground">
           Tipe bukber-nya apa?
         </h2>
         <p className="text-foreground/60">
@@ -34,14 +34,14 @@ export function StepSessionMode({
             <Card
               className={`rounded-2xl border-2 p-0 transition-colors ${
                 value === "personal"
-                  ? "border-gold bg-gold/5"
+                  ? "border-primary bg-primary/5"
                   : "border-foreground/10 bg-white"
               }`}
             >
               <Card.Header className="px-5 pt-5 pb-1">
                 <div className="flex items-center gap-3">
                   <UserGroupIcon className="h-7 w-7 text-foreground/70" />
-                  <span className="text-lg font-semibold">Personal</span>
+                  <span className="text-lg font-medium">Personal</span>
                 </div>
               </Card.Header>
               <Card.Content className="px-5 pb-5">
@@ -61,14 +61,14 @@ export function StepSessionMode({
             <Card
               className={`rounded-2xl border-2 p-0 transition-colors ${
                 value === "work"
-                  ? "border-gold bg-gold/5"
+                  ? "border-primary bg-primary/5"
                   : "border-foreground/10 bg-white"
               }`}
             >
               <Card.Header className="px-5 pt-5 pb-1">
                 <div className="flex items-center gap-3">
                   <BriefcaseIcon className="h-7 w-7 text-foreground/70" />
-                  <span className="text-lg font-semibold">Work</span>
+                  <span className="text-lg font-medium">Work</span>
                 </div>
               </Card.Header>
               <Card.Content className="px-5 pb-5">
@@ -85,7 +85,7 @@ export function StepSessionMode({
         <Button
           onPress={onNext}
           isDisabled={!value}
-          className="w-full rounded-xl bg-coral py-3 font-semibold text-white disabled:opacity-40"
+          className="w-full rounded-xl bg-danger py-3 font-medium text-white disabled:opacity-40"
         >
           Lanjut
         </Button>

@@ -18,16 +18,16 @@ export function ProfileStats({ totalSessions, sessionsHosted }: ProfileStatsProp
     >
       <motion.div
         variants={staggerItem}
-        className="flex flex-col gap-1 rounded-2xl bg-gold/10 px-4 py-4"
+        className="flex flex-col gap-1 rounded-2xl bg-primary/10 px-4 py-4"
       >
-        <p className="text-2xl font-bold text-gold">{totalSessions}</p>
+        <p className="text-2xl font-heading font-semibold text-primary">{totalSessions}</p>
         <p className="text-xs text-foreground/60">bukber total</p>
       </motion.div>
       <motion.div
         variants={staggerItem}
-        className="flex flex-col gap-1 rounded-2xl bg-green/10 px-4 py-4"
+        className="flex flex-col gap-1 rounded-2xl bg-success/10 px-4 py-4"
       >
-        <p className="text-2xl font-bold text-green">{sessionsHosted}</p>
+        <p className="text-2xl font-heading font-semibold text-success">{sessionsHosted}</p>
         <p className="text-xs text-foreground/60">bukber lu yang host</p>
       </motion.div>
     </motion.div>

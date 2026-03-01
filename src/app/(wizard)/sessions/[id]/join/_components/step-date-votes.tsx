@@ -28,7 +28,7 @@ const PILL_CONFIG: Record<
 > = {
   [PREFERENCE_LEVEL.strongly_prefer]: {
     label: "Bisa banget!",
-    selected: "bg-gold text-white border-gold",
+    selected: "bg-primary text-white border-primary",
     unselected: "border-foreground/20 text-foreground/60",
   },
   [PREFERENCE_LEVEL.can_do]: {
@@ -38,7 +38,7 @@ const PILL_CONFIG: Record<
   },
   [PREFERENCE_LEVEL.unavailable]: {
     label: "Ga",
-    selected: "bg-coral text-white border-coral",
+    selected: "bg-danger text-white border-danger",
     unselected: "border-foreground/20 text-foreground/60",
   },
 };
@@ -76,7 +76,7 @@ export function StepDateVotes({
     <div className="flex flex-1 flex-col gap-6">
       <div className="flex flex-col gap-1">
         <p className="text-sm text-foreground/50">Join {sessionName}</p>
-        <h2 className="text-2xl font-bold">Kapan lu bisa?</h2>
+        <h2 className="text-2xl font-heading font-semibold">Kapan lu bisa?</h2>
         <p className="text-sm text-foreground/60">
           Pilih buat setiap tanggal yang ada
         </p>
@@ -100,10 +100,10 @@ export function StepDateVotes({
               {conflicts && conflicts.length > 0 && (
                 <motion.div
                   {...fadeUp}
-                  className="mb-2 rounded-lg border border-coral/20 bg-coral/10 px-3 py-2"
+                  className="mb-2 rounded-lg border border-danger/20 bg-danger/10 px-3 py-2"
                 >
                   {conflicts.map((name) => (
-                    <p key={name} className="text-xs text-coral">
+                    <p key={name} className="text-xs text-danger">
                       Heads up bestie, lu udah ada bukber &ldquo;{name}&rdquo; di tanggal ini
                     </p>
                   ))}
@@ -141,7 +141,7 @@ export function StepDateVotes({
         onPress={onNext}
         isDisabled={!hasAvailable && dateOptions.length > 0}
         size="lg"
-        className="w-full bg-coral font-semibold text-white disabled:opacity-40"
+        className="w-full bg-danger font-medium text-white disabled:opacity-40"
       >
         Lanjut
       </Button>

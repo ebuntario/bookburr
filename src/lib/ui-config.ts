@@ -7,10 +7,10 @@ export const STATUS_CONFIG: Record<
   collecting: { label: "Lagi Ngumpulin", className: "bg-teal/15 text-teal" },
   discovering: {
     label: "Lagi Nyari Resto",
-    className: "bg-gold/15 text-gold",
+    className: "bg-primary/15 text-primary",
   },
-  voting: { label: "Lagi Voting", className: "bg-coral/15 text-coral" },
-  confirmed: { label: "Udah Fix!", className: "bg-green/15 text-green" },
+  voting: { label: "Lagi Voting", className: "bg-danger/15 text-danger" },
+  confirmed: { label: "Udah Fix!", className: "bg-success/15 text-success" },
   completed: {
     label: "Selesai",
     className: "bg-foreground/10 text-foreground/50",

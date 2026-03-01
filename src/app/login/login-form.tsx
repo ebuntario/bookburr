@@ -53,7 +53,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
       <Button
         type="submit"
         size="lg"
-        className="bg-gold font-semibold text-white"
+        className="bg-primary font-medium text-white"
         isDisabled={!email}
         fullWidth
       >

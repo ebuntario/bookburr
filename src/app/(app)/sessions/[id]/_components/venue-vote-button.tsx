@@ -56,9 +56,9 @@ export function VenueVoteButton({
       animate={isMyVote ? successPulse.animate : { scale: 1 }}
       transition={{ duration: durations.normal }}
       className={[
-        "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all",
+        "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all",
         isMyVote
-          ? "border-gold bg-gold text-background"
+          ? "border-primary bg-primary text-background"
           : "border-foreground/20 text-foreground/60",
         submitting && "opacity-60",
       ]

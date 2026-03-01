@@ -50,7 +50,7 @@ export function VenueSection({
     // Collecting phase
     return (
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold text-foreground/60">Venue</h3>
+        <h3 className="text-sm font-medium text-foreground/60">Venue</h3>
         <div className="rounded-2xl border border-dashed border-foreground/20 px-5 py-6 text-center">
           {isHost ? (
             <p className="text-sm text-foreground/50">
@@ -71,7 +71,7 @@ export function VenueSection({
   if (status === "discovering" && venues.length === 0) {
     return (
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold text-foreground/60">Venue</h3>
+        <h3 className="text-sm font-medium text-foreground/60">Venue</h3>
         <div className="flex flex-col gap-3">
           {[1, 2, 3].map((i) => (
             <div
@@ -91,7 +91,7 @@ export function VenueSection({
   if (venues.length === 0) {
     return (
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold text-foreground/60">Venue</h3>
+        <h3 className="text-sm font-medium text-foreground/60">Venue</h3>
         <div className="rounded-2xl border border-dashed border-foreground/20 px-5 py-6 text-center">
           <p className="text-sm text-foreground/50">
             Aduh, lagi susah nyari tempat nih.
@@ -107,7 +107,7 @@ export function VenueSection({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground/60">Venue</h3>
+        <h3 className="text-sm font-medium text-foreground/60">Venue</h3>
         <p className="text-xs text-foreground/40">{venues.length} tempat</p>
       </div>
 

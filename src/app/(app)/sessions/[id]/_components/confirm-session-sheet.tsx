@@ -43,7 +43,7 @@ function SelectableList<T extends { id: string }>({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
+      <p className="text-xs font-medium uppercase tracking-wide text-foreground/50">
         {label}
       </p>
       {items.map((item) => (
@@ -53,19 +53,19 @@ function SelectableList<T extends { id: string }>({
           onClick={() => onSelect(item.id)}
           className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-all ${
             selectedId === item.id
-              ? "border-gold bg-gold/10"
+              ? "border-primary bg-primary/10"
               : "border-foreground/15 bg-white"
           }`}
         >
           <div className="flex flex-col gap-0.5 min-w-0 flex-1">
             {renderLabel(item)}
             {bestId === item.id && (
-              <span className="inline-block w-fit rounded-md bg-gold/15 px-1.5 py-0.5 text-[10px] font-semibold text-gold">
+              <span className="inline-block w-fit rounded-md bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary">
                 Pilihan Terbaik
               </span>
             )}
           </div>
-          {selectedId === item.id && <CheckIcon className="h-5 w-5 text-gold shrink-0 ml-2" />}
+          {selectedId === item.id && <CheckIcon className="h-5 w-5 text-primary shrink-0 ml-2" />}
         </button>
       ))}
     </div>
@@ -77,7 +77,7 @@ function SelectableList<T extends { id: string }>({
 function ConsensusWarning({ show }: { show: boolean }) {
   if (!show) return null;
   return (
-    <p className="rounded-xl bg-gold/10 px-3 py-2 text-xs text-foreground/70">
+    <p className="rounded-xl bg-primary/10 px-3 py-2 text-xs text-foreground/70">
       Eh ini bukan yang paling banyak dipilih loh — yakin mau?
     </p>
   );
@@ -115,11 +115,11 @@ function SelectionStep({
 
   return (
     <div
-      className="w-full rounded-t-2xl bg-[#FFF8F0] px-5 pb-8 pt-5 shadow-xl flex flex-col gap-4 max-h-[85dvh] overflow-y-auto"
+      className="w-full rounded-t-2xl bg-white px-5 pb-8 pt-5 shadow-xl flex flex-col gap-4 max-h-[85dvh] overflow-y-auto"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-bold text-foreground">
+        <h3 className="text-base font-heading font-medium text-foreground">
           Pilih Venue &amp; Tanggal
         </h3>
         <button
@@ -145,7 +145,7 @@ function SelectionStep({
             </span>
             <span className="text-xs text-foreground/50">
               {v.voteCount} vote{v.voteCount !== 1 ? "s" : ""}
-              {v.compositeScore > 0 && <> · <SparklesIcon className="h-3 w-3 inline text-gold" /> {v.compositeScore.toFixed(1)}</>}
+              {v.compositeScore > 0 && <> · <SparklesIcon className="h-3 w-3 inline text-primary" /> {v.compositeScore.toFixed(1)}</>}
             </span>
           </>
         )}
@@ -166,11 +166,11 @@ function SelectionStep({
               {formatDateShort(d.date)}
             </span>
             <span className="text-xs">
-              <span className="text-gold">{d.stronglyPrefer} bisa banget</span>
+              <span className="text-primary">{d.stronglyPrefer} bisa banget</span>
               {" · "}
               <span className="text-teal">{d.canDo} bisa</span>
               {" · "}
-              <span className="text-coral">{d.unavailable} gabisa</span>
+              <span className="text-danger">{d.unavailable} gabisa</span>
             </span>
           </>
         )}
@@ -178,7 +178,7 @@ function SelectionStep({
 
       <ConsensusWarning show={!!dateNotBest} />
 
-      {error && <p className="text-xs text-coral">{error}</p>}
+      {error && <p className="text-xs text-danger">{error}</p>}
 
       <button
         type="button"
@@ -189,7 +189,7 @@ function SelectionStep({
           venues.length === 0 ||
           dates.length === 0
         }
-        className="flex w-full items-center justify-center rounded-xl bg-gold py-3.5 text-sm font-semibold text-background disabled:opacity-40"
+        className="flex w-full items-center justify-center rounded-xl bg-primary py-3.5 text-sm font-medium text-background disabled:opacity-40"
       >
         <CheckCircleIcon className="h-5 w-5 inline" /> Ya, confirm ini!
       </button>
@@ -216,24 +216,24 @@ function ConfirmationDialog({
       onClick={onBack}
     >
       <div
-        className="w-full max-w-sm rounded-2xl bg-[#FFF8F0] p-6 flex flex-col gap-4"
+        className="w-full max-w-sm rounded-2xl bg-white p-6 flex flex-col gap-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-center">
-          <MegaphoneIcon className="mx-auto mb-2 h-8 w-8 text-coral" />
-          <h3 className="text-base font-bold text-foreground">Yakin nih?</h3>
+          <MegaphoneIcon className="mx-auto mb-2 h-8 w-8 text-danger" />
+          <h3 className="text-base font-heading font-medium text-foreground">Yakin nih?</h3>
           <p className="mt-1 text-sm text-foreground/60">
             Semua orang bakal dikabarin kalau bukber udah fix.
           </p>
         </div>
 
-        {error && <p className="text-center text-xs text-coral">{error}</p>}
+        {error && <p className="text-center text-xs text-danger">{error}</p>}
 
         <button
           type="button"
           onClick={onConfirm}
           disabled={loading}
-          className="flex w-full items-center justify-center rounded-xl bg-coral py-3.5 text-sm font-semibold text-white disabled:opacity-50"
+          className="flex w-full items-center justify-center rounded-xl bg-danger py-3.5 text-sm font-medium text-white disabled:opacity-50"
         >
           {loading ? "Lagi proses..." : <><CheckCircleIcon className="h-5 w-5 inline" /> Confirm</>}
         </button>

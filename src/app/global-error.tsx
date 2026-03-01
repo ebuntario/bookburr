@@ -11,7 +11,7 @@ export default function GlobalError({
       <body
         style={{
           fontFamily: "sans-serif",
-          backgroundColor: "#FFF8F0",
+          backgroundColor: "#FFFFFF",
           display: "flex",
           minHeight: "100dvh",
           flexDirection: "column",
@@ -44,7 +44,7 @@ export default function GlobalError({
           <button
             onClick={reset}
             style={{
-              backgroundColor: "#D4A843",
+              backgroundColor: "#F14641",
               color: "#fff",
               border: "none",
               borderRadius: "12px",

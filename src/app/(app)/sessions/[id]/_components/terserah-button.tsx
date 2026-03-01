@@ -38,7 +38,7 @@ export function TerserahButton({ sessionId, isTerserah: initialIsTerserah }: Ter
       className={[
         "flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3.5 text-sm transition-all",
         isTerserah
-          ? "border-teal/40 bg-teal/10 font-semibold text-teal"
+          ? "border-teal/40 bg-teal/10 font-medium text-teal"
           : "border-foreground/15 text-foreground/50",
         submitting && "opacity-60",
       ]

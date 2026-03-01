@@ -23,7 +23,7 @@ export function StepOfficeLocation({
   return (
     <div className="flex flex-1 flex-col justify-between">
       <div className="flex flex-col gap-4">
-        <h2 className="text-2xl font-bold text-foreground">
+        <h2 className="text-2xl font-heading font-semibold text-foreground">
           Kantor-nya di mana?
         </h2>
         <p className="text-foreground/60">
@@ -42,7 +42,7 @@ export function StepOfficeLocation({
             onKeyDown={(e) => {
               if (e.key === "Enter") onNext();
             }}
-            className="rounded-xl border border-foreground/20 bg-white px-4 py-3 text-lg outline-none focus:border-gold"
+            className="rounded-xl border border-foreground/20 bg-white px-4 py-3 text-lg outline-none focus:border-primary"
           />
         </TextField>
       </div>
@@ -50,7 +50,7 @@ export function StepOfficeLocation({
       <div className="flex flex-col gap-3 pb-6 pt-8">
         <Button
           onPress={onNext}
-          className="w-full rounded-xl bg-coral py-3 font-semibold text-white"
+          className="w-full rounded-xl bg-danger py-3 font-medium text-white"
         >
           Lanjut
         </Button>

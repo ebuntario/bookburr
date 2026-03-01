@@ -50,7 +50,7 @@ export function SessionCard({
         <Card.Header className="flex items-center justify-between px-5 pt-4 pb-1">
           <div className="flex items-center gap-2">
             <ModeIcon mode={mode} className="h-5 w-5 text-foreground/60" />
-            <h3 className="font-semibold text-foreground">{name}</h3>
+            <h3 className="font-heading font-medium text-foreground">{name}</h3>
           </div>
           <span
             className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusConfig.className}`}

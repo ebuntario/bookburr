@@ -26,7 +26,7 @@ export function WaitingOnList({ pendingMembers, status }: WaitingOnListProps) {
     return (
       <motion.div
         {...fadeIn}
-        className="rounded-xl border border-gold/20 bg-gold/5 px-4 py-3"
+        className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3"
       >
         <p className="text-sm text-foreground/60">
           {pendingMembers.length} orang belum vote
@@ -54,7 +54,7 @@ export function WaitingOnList({ pendingMembers, status }: WaitingOnListProps) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="rounded-xl border border-gold/20 bg-gold/5 px-4 py-3"
+      className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3"
     >
       <p className="text-sm text-foreground/70">{text}</p>
     </motion.div>

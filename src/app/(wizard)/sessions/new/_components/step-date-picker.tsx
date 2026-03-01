@@ -96,7 +96,7 @@ export function StepDatePicker({
   return (
     <div className="flex flex-1 flex-col justify-between">
       <div className="flex flex-col gap-4">
-        <h2 className="text-2xl font-bold text-foreground">
+        <h2 className="text-2xl font-heading font-semibold text-foreground">
           Kapan aja bisa bukber?
         </h2>
         <p className="text-foreground/60">
@@ -114,7 +114,7 @@ export function StepDatePicker({
           >
             ←
           </button>
-          <span className="font-semibold text-foreground">
+          <span className="font-medium text-foreground">
             {MONTH_NAMES[viewMonth]} {viewYear}
           </span>
           <button
@@ -162,7 +162,7 @@ export function StepDatePicker({
                   isPast
                     ? "cursor-default text-foreground/20"
                     : isSelected
-                      ? "bg-gold text-white"
+                      ? "bg-primary text-white"
                       : "text-foreground hover:bg-foreground/5"
                 }`}
               >
@@ -174,7 +174,7 @@ export function StepDatePicker({
 
         {/* Counter */}
         {selectedDates.length > 0 && (
-          <p className="text-center text-sm font-medium text-gold">
+          <p className="text-center text-sm font-medium text-primary">
             {selectedDates.length} tanggal dipilih
           </p>
         )}
@@ -184,7 +184,7 @@ export function StepDatePicker({
         <Button
           onPress={onSubmit}
           isDisabled={selectedDates.length === 0 || isPending}
-          className="w-full rounded-xl bg-coral py-3 font-semibold text-white disabled:opacity-40"
+          className="w-full rounded-xl bg-danger py-3 font-medium text-white disabled:opacity-40"
         >
           {isPending ? (
             <span className="flex items-center justify-center gap-2">

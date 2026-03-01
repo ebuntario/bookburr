@@ -12,7 +12,9 @@ export default async function AppLayout({
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="flex items-center justify-between border-b border-foreground/10 px-4 py-3">
-        <Link href="/home" className="text-xl font-bold text-gold">BookBurr</Link>
+        <Link href="/home">
+          <Image src="/brand/wordmark-color.svg" alt="BookBurr" width={120} height={20} priority />
+        </Link>
         <Link href="/profile">
           {session?.user?.image ? (
             <Image
@@ -23,8 +25,8 @@ export default async function AppLayout({
               className="rounded-full"
             />
           ) : (
-            <div className="h-8 w-8 rounded-full bg-gold/20 flex items-center justify-center">
-              <span className="text-xs font-bold text-gold">
+            <div className="h-8 w-8 rounded-full bg-foreground/10 flex items-center justify-center">
+              <span className="text-xs font-medium text-foreground/70">
                 {(session?.user?.name ?? session?.user?.email ?? "U")[0].toUpperCase()}
               </span>
             </div>

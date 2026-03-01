@@ -18,7 +18,7 @@ export function ActivityPreview({ sessionId, activities }: ActivityPreviewProps)
     return (
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-foreground/60">
+          <h3 className="text-sm font-medium text-foreground/60">
             Aktivitas Terkini
           </h3>
           <button
@@ -37,14 +37,14 @@ export function ActivityPreview({ sessionId, activities }: ActivityPreviewProps)
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground/60">
+        <h3 className="text-sm font-medium text-foreground/60">
           Aktivitas Terkini
         </h3>
         {activities.length >= 5 && (
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            className="text-xs font-medium text-gold"
+            className="text-xs font-medium text-primary"
           >
             Lihat semua
           </button>

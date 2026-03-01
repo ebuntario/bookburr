@@ -48,8 +48,8 @@ export function SharePanel({
     >
       {/* Celebration */}
       <div className="flex flex-col items-center gap-3 text-center">
-        <SparklesIcon className="h-12 w-12 text-gold" />
-        <h1 className="text-3xl font-bold text-foreground">
+        <SparklesIcon className="h-12 w-12 text-primary" />
+        <h1 className="text-3xl font-heading font-semibold text-foreground">
           Bukber lu siap!
         </h1>
         <p className="text-foreground/60">
@@ -58,9 +58,9 @@ export function SharePanel({
       </div>
 
       {/* Session name */}
-      <div className="rounded-2xl bg-gold/10 px-6 py-4 text-center">
+      <div className="rounded-2xl bg-primary/10 px-6 py-4 text-center">
         <p className="text-sm text-foreground/50">Nama bukber</p>
-        <p className="text-lg font-bold text-foreground">{sessionName}</p>
+        <p className="text-lg font-heading font-semibold text-foreground">{sessionName}</p>
       </div>
 
       {/* Invite link */}
@@ -73,7 +73,7 @@ export function SharePanel({
           <Button
             size="sm"
             onPress={handleCopyLink}
-            className="shrink-0 rounded-lg bg-gold px-3 py-1.5 text-xs font-semibold text-white"
+            className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white"
           >
             {linkCopied ? "Tersalin!" : "Copy"}
           </Button>
@@ -86,7 +86,7 @@ export function SharePanel({
           href={whatsappHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-green py-3 font-semibold text-white"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-success py-3 font-medium text-white"
         >
           <WhatsAppIcon className="h-5 w-5" /> Share via WhatsApp
         </a>
@@ -95,7 +95,7 @@ export function SharePanel({
           <Button
             onPress={handleNativeShare}
             variant="outline"
-            className="w-full rounded-xl border-foreground/20 py-3 font-semibold text-foreground"
+            className="w-full rounded-xl border-foreground/20 py-3 font-medium text-foreground"
           >
             Share lainnya...
           </Button>
@@ -105,7 +105,7 @@ export function SharePanel({
       {/* Dashboard link */}
       <Link
         href={`/sessions/${sessionId}`}
-        className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-gold/15 px-6 py-3 text-sm font-semibold text-gold transition-colors active:bg-gold/25"
+        className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-primary/15 px-6 py-3 text-sm font-medium text-primary transition-colors active:bg-primary/25"
       >
         Ke Dashboard Bukber <ArrowRightIcon className="h-4 w-4" />
       </Link>

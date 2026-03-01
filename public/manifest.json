@@ -4,8 +4,8 @@
   "description": "Koordinasi bukber anti ribet",
   "start_url": "/home",
   "display": "standalone",
-  "background_color": "#FFF8F0",
-  "theme_color": "#D4A843",
+  "background_color": "#FFFFFF",
+  "theme_color": "#F14641",
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }

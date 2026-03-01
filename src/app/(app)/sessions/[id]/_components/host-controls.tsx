@@ -88,21 +88,21 @@ export function HostControls({
     variant: "gold" | "coral" | "ghost" = "gold",
   ) => {
     const variantClass = {
-      gold: "bg-gold text-background",
-      coral: "bg-coral text-white",
+      gold: "bg-primary text-background",
+      coral: "bg-danger text-white",
       ghost: "border border-foreground/20 text-foreground/60",
     }[variant];
 
     return (
       <div className="flex flex-col gap-2">
         <p className="text-sm text-foreground/50">Lu yang pegang kendali nih</p>
-        {error && <p className="text-xs text-coral">{error}</p>}
+        {error && <p className="text-xs text-danger">{error}</p>}
         <motion.button
           type="button"
           onClick={onPress}
           disabled={loading}
           whileTap={tapScale}
-          className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-opacity disabled:opacity-50 ${variantClass}`}
+          className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-medium transition-opacity disabled:opacity-50 ${variantClass}`}
         >
           {loading ? (
             <>

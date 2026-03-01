@@ -23,12 +23,12 @@ export function SessionHeader({ name, mode, status, isHost }: SessionHeaderProps
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <ModeIcon mode={mode} className="h-6 w-6 shrink-0 text-foreground/60" />
-          <h2 className="text-xl font-bold text-foreground leading-tight truncate">
+          <h2 className="text-xl font-heading font-semibold text-foreground leading-tight truncate">
             {name}
           </h2>
         </div>
         {isHost && (
-          <span className="shrink-0 rounded-full bg-gold/15 px-2 py-0.5 text-xs font-semibold text-gold">
+          <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
             Host
           </span>
         )}

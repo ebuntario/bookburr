@@ -21,16 +21,16 @@ export function StatusProgress({ status }: { status: string }) {
             <div
               className={`h-2.5 w-2.5 shrink-0 rounded-full transition-all ${
                 i < activeIndex
-                  ? "bg-green"
+                  ? "bg-success"
                   : i === activeIndex
-                    ? "bg-gold shadow-[0_0_0_3px_rgba(212,168,67,0.25)]"
+                    ? "bg-primary ring-3 ring-primary/25"
                     : "bg-foreground/15"
               }`}
             />
             {i < STEPS.length - 1 && (
               <div
                 className={`h-px flex-1 ${
-                  i < activeIndex ? "bg-green/50" : "bg-foreground/10"
+                  i < activeIndex ? "bg-success/50" : "bg-foreground/10"
                 }`}
               />
             )}

@@ -41,8 +41,8 @@ export default async function ProfilePage() {
             className="h-16 w-16 rounded-full object-cover"
           />
         ) : (
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gold/20">
-            <span className="text-2xl font-bold text-gold">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-foreground/10">
+            <span className="text-2xl font-heading font-semibold text-foreground/70">
               {(
                 profile.name ??
                 profile.email?.split("@")[0] ??
@@ -52,7 +52,7 @@ export default async function ProfilePage() {
           </div>
         )}
         <div className="text-center">
-          <p className="text-base font-bold text-foreground">
+          <p className="text-base font-heading font-medium text-foreground">
             {profile.name ?? profile.email?.split("@")[0] ?? "Anon"}
           </p>
           <p className="text-xs text-foreground/50">{profile.email}</p>

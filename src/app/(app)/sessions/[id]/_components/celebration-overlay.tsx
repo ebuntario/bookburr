@@ -77,14 +77,14 @@ export function CelebrationOverlay({
         initial={{ scale: 0.85, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ ...springs.bouncy, delay: 0.15 }}
-        className="relative z-10 w-full max-w-sm rounded-2xl bg-[#FFF8F0] p-6 text-center shadow-2xl"
+        className="relative z-10 w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <SparklesIcon className="mx-auto mb-3 h-10 w-10 text-gold" />
-        <h2 className="text-xl font-bold text-foreground">Kita sepakat!</h2>
+        <SparklesIcon className="mx-auto mb-3 h-10 w-10 text-primary" />
+        <h2 className="text-xl font-heading font-semibold text-foreground">Kita sepakat!</h2>
         <p className="mt-2 text-sm text-foreground/70">
           Bukber di{" "}
-          <strong className="text-gold">{venueName}</strong>
+          <strong className="text-primary">{venueName}</strong>
           {dateStr && (
             <>
               ,{" "}
@@ -98,7 +98,7 @@ export function CelebrationOverlay({
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 rounded-xl bg-green py-3 text-sm font-semibold text-white"
+            className="flex items-center justify-center gap-2 rounded-xl bg-success py-3 text-sm font-medium text-white"
             onClick={(e) => e.stopPropagation()}
           >
             <WhatsAppIcon className="h-5 w-5" /> Share ke WhatsApp

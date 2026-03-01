@@ -45,7 +45,7 @@ export function StepLocation({
   return (
     <div className="flex flex-1 flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-bold">
+        <h2 className="text-2xl font-heading font-semibold">
           Bukber deket mana enaknya buat lu?
         </h2>
         <p className="text-sm text-foreground/60">
@@ -96,7 +96,7 @@ export function StepLocation({
         </button>
 
         {geoError && (
-          <p className="text-sm text-coral">{geoError}</p>
+          <p className="text-sm text-danger">{geoError}</p>
         )}
 
         {lat != null && lng != null && value === "Lokasi lu sekarang" && (
@@ -109,7 +109,7 @@ export function StepLocation({
           onPress={onNext}
           isDisabled={!canContinue}
           size="lg"
-          className="w-full bg-coral font-semibold text-white disabled:opacity-40"
+          className="w-full bg-danger font-medium text-white disabled:opacity-40"
         >
           Lanjut
         </Button>

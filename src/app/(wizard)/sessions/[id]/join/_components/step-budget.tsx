@@ -44,7 +44,7 @@ export function StepBudget({
   return (
     <div className="flex flex-1 flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-bold">Budget per orang berapa?</h2>
+        <h2 className="text-2xl font-heading font-semibold">Budget per orang berapa?</h2>
         <p className="text-sm text-foreground/60">
           Biar venue-nya sesuai kantong
         </p>
@@ -61,9 +61,9 @@ export function StepBudget({
                 type="button"
                 onClick={() => handlePreset(preset.value)}
                 className={[
-                  "min-h-[56px] rounded-2xl border px-4 py-3 text-sm font-semibold transition-all",
+                  "min-h-[56px] rounded-2xl border px-4 py-3 text-sm font-medium transition-all",
                   selected
-                    ? "border-gold bg-gold/5 text-gold"
+                    ? "border-primary bg-primary/5 text-primary"
                     : "border-foreground/15 text-foreground/70",
                 ].join(" ")}
               >
@@ -97,7 +97,7 @@ export function StepBudget({
           onPress={onSubmit}
           isDisabled={isPending}
           size="lg"
-          className="w-full bg-coral font-semibold text-white disabled:opacity-40"
+          className="w-full bg-danger font-medium text-white disabled:opacity-40"
         >
           {isPending ? <Spinner size="sm" color="current" /> : "Join Bukber!"}
         </Button>

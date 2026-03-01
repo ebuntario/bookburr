@@ -122,11 +122,11 @@ export function InviteButton({
         <button
           type="button"
           onClick={handleCopyLink}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-foreground/15 bg-white px-4 py-3 text-sm font-semibold text-foreground transition-colors active:bg-foreground/5"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-foreground/15 bg-white px-4 py-3 text-sm font-medium text-foreground transition-colors active:bg-foreground/5"
         >
           {copied ? (
             <>
-              <CheckIcon className="h-4 w-4 text-green" />
+              <CheckIcon className="h-4 w-4 text-success" />
               Link tersalin!
             </>
           ) : (
@@ -150,7 +150,7 @@ export function InviteButton({
       <BottomSheet open={showSheet} onClose={() => setShowSheet(false)}>
         <div className="flex flex-col gap-4 p-6 pb-8">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">{sheetTitle}</h3>
+            <h3 className="font-heading font-medium text-foreground">{sheetTitle}</h3>
             <button
               type="button"
               onClick={() => setShowSheet(false)}
@@ -164,7 +164,7 @@ export function InviteButton({
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 rounded-xl bg-green py-3 font-semibold text-white"
+            className="flex items-center justify-center gap-2 rounded-xl bg-success py-3 font-medium text-white"
             onClick={() => setShowSheet(false)}
           >
             <WhatsAppIcon className="h-5 w-5" /> Share via WhatsApp
@@ -176,7 +176,7 @@ export function InviteButton({
               handleCopyLink();
               setShowSheet(false);
             }}
-            className="flex items-center justify-center gap-2 rounded-xl border border-foreground/20 py-3 font-semibold text-foreground"
+            className="flex items-center justify-center gap-2 rounded-xl border border-foreground/20 py-3 font-medium text-foreground"
           >
             Copy Link
           </button>
@@ -201,9 +201,9 @@ export function InviteButton({
               className="text-center"
             >
               <p className="text-xs text-foreground/40">Kode join</p>
-              <p className="font-mono text-lg font-bold tracking-widest text-foreground">
+              <p className="font-mono text-lg font-heading font-semibold tracking-widest text-foreground">
                 {codeCopied ? (
-                  <span className="text-green">Kode tersalin!</span>
+                  <span className="text-success">Kode tersalin!</span>
                 ) : (
                   inviteCode
                 )}

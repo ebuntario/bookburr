@@ -12,9 +12,9 @@ export default function AppError({
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
       <ExclamationTriangleIcon className="h-10 w-10 text-foreground/30" />
-      <h2 className="text-2xl font-semibold">Terjadi Kesalahan</h2>
+      <h2 className="text-2xl font-heading font-semibold">Terjadi Kesalahan</h2>
       <p className="text-foreground/60">Terjadi kesalahan. Silakan coba lagi.</p>
-      <Button className="bg-gold text-white" onPress={reset}>
+      <Button className="bg-primary text-white" onPress={reset}>
         Coba Lagi
       </Button>
     </div>

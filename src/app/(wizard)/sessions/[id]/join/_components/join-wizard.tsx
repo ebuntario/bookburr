@@ -64,7 +64,7 @@ function UnvotedConfirmModal({
         <button
           type="button"
           onClick={onConfirm}
-          className="flex-1 rounded-lg bg-gold py-2 text-sm font-semibold text-white"
+          className="flex-1 rounded-lg bg-primary py-2 text-sm font-medium text-white"
         >
           Yep, lanjut!
         </button>

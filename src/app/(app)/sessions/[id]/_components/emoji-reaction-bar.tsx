@@ -75,7 +75,7 @@ export function EmojiReactionBar({
             className={[
               "flex items-center gap-1 rounded-full border px-2 py-1 text-xs transition-all",
               mine
-                ? "border-gold/40 bg-gold/10 font-medium"
+                ? "border-primary/40 bg-primary/10 font-medium"
                 : "border-foreground/10 bg-foreground/5",
               !canReact && "cursor-default",
             ]

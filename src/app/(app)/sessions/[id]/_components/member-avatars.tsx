@@ -1,10 +1,10 @@
 const MAX_VISIBLE = 6;
 
 const AVATAR_COLORS = [
-  "bg-gold",
+  "bg-primary",
   "bg-teal",
-  "bg-coral",
-  "bg-green",
+  "bg-danger",
+  "bg-success",
 ] as const;
 
 function getAvatarColor(userId: string): string {
@@ -47,7 +47,7 @@ export function MemberAvatars({ members }: MemberAvatarsProps) {
           return (
             <div
               key={member.id}
-              className="relative h-8 w-8 rounded-full border-2 border-cream flex items-center justify-center shrink-0"
+              className="relative h-8 w-8 rounded-full border-2 border-white flex items-center justify-center shrink-0"
               style={{ marginLeft: i === 0 ? 0 : -8, zIndex: MAX_VISIBLE - i }}
               title={displayName}
             >
@@ -62,7 +62,7 @@ export function MemberAvatars({ members }: MemberAvatarsProps) {
                 <div
                   className={`h-full w-full rounded-full flex items-center justify-center ${color}`}
                 >
-                  <span className="text-xs font-bold text-white">{initial}</span>
+                  <span className="text-xs font-medium text-white">{initial}</span>
                 </div>
               )}
             </div>
@@ -71,11 +71,11 @@ export function MemberAvatars({ members }: MemberAvatarsProps) {
 
         {overflow > 0 && (
           <div
-            className="relative h-8 w-8 rounded-full border-2 border-cream bg-foreground/10 flex items-center justify-center shrink-0"
+            className="relative h-8 w-8 rounded-full border-2 border-white bg-foreground/10 flex items-center justify-center shrink-0"
             style={{ marginLeft: -8 }}
             aria-label={`${overflow} anggota lainnya`}
           >
-            <span className="text-xs font-semibold text-foreground/60">
+            <span className="text-xs font-medium text-foreground/60">
               +{overflow}
             </span>
           </div>

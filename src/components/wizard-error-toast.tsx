@@ -17,7 +17,7 @@ export function WizardErrorToast({
       {error && (
         <motion.div
           {...toastSlideUp}
-          className="absolute inset-x-6 bottom-6 rounded-xl bg-coral/10 px-4 py-3 text-center text-sm text-coral"
+          className="absolute inset-x-6 bottom-6 rounded-xl bg-danger/10 px-4 py-3 text-center text-sm text-danger"
         >
           {error === "unauthorized"
             ? "Lu belum login nih"

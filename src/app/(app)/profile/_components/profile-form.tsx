@@ -82,7 +82,7 @@ export function ProfileForm({
     <div className="flex flex-col gap-6">
       {/* Name */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-foreground" htmlFor="profile-name">
+        <label className="text-sm font-medium text-foreground" htmlFor="profile-name">
           Nama
         </label>
         <input
@@ -90,14 +90,14 @@ export function ProfileForm({
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Nama lu..."
-          className="w-full rounded-xl border border-foreground/15 bg-white px-4 py-3 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-2 focus:ring-gold/40"
+          placeholder=""
+          className="w-full rounded-xl border border-foreground/15 bg-white px-4 py-3 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-2 focus:ring-primary/40"
         />
       </div>
 
       {/* Email (read-only) */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-foreground">Email</label>
+        <label className="text-sm font-medium text-foreground">Email</label>
         <div className="w-full rounded-xl border border-foreground/10 bg-foreground/5 px-4 py-3 text-sm text-foreground/50">
           {email}
         </div>
@@ -105,7 +105,7 @@ export function ProfileForm({
 
       {/* Marital Status */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-foreground">
+        <label className="text-sm font-medium text-foreground">
           Status Pernikahan
         </label>
         <div className="flex gap-2">
@@ -123,7 +123,7 @@ export function ProfileForm({
               }
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm font-medium transition-all ${
                 maritalStatus === opt.value
-                  ? "border-gold bg-gold/15 text-gold"
+                  ? "border-primary bg-primary/15 text-primary"
                   : "border-foreground/15 bg-white text-foreground/60"
               }`}
             >
@@ -139,7 +139,7 @@ export function ProfileForm({
 
       {/* Dietary Preferences */}
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-semibold text-foreground">
+        <label className="text-sm font-medium text-foreground">
           Pantangan Makanan
         </label>
         <div className="flex flex-wrap gap-2">
@@ -165,7 +165,7 @@ export function ProfileForm({
 
       {/* Cuisine Preferences */}
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-semibold text-foreground">
+        <label className="text-sm font-medium text-foreground">
           Preferensi Masakan
         </label>
         <div className="flex flex-wrap gap-2">
@@ -176,7 +176,7 @@ export function ProfileForm({
               onClick={() => setCuisine(toggleItem(cuisine, opt.value))}
               className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
                 cuisine.includes(opt.value)
-                  ? "border-coral bg-coral/15 text-coral"
+                  ? "border-danger bg-danger/15 text-danger"
                   : "border-foreground/15 bg-white text-foreground/60"
               }`}
             >
@@ -189,13 +189,13 @@ export function ProfileForm({
         </p>
       </div>
 
-      {error && <p className="text-xs text-coral">{error}</p>}
+      {error && <p className="text-xs text-danger">{error}</p>}
 
       <button
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="flex w-full items-center justify-center rounded-xl bg-gold py-3.5 text-sm font-semibold text-background transition-opacity active:opacity-70 disabled:opacity-50"
+        className="flex w-full items-center justify-center rounded-xl bg-primary py-3.5 text-sm font-medium text-background transition-opacity active:opacity-70 disabled:opacity-50"
       >
         {saving ? "Menyimpan..." : saved ? <><CheckIcon className="h-4 w-4 inline" /> Tersimpan!</> : "Simpan"}
       </button>

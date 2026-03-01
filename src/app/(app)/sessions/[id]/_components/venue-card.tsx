@@ -31,7 +31,7 @@ function RatingStars({ rating }: { rating: number }) {
   const full = Math.floor(rating);
   const half = rating % 1 >= 0.5;
   return (
-    <span className="text-gold text-xs">
+    <span className="text-primary text-xs">
       {"★".repeat(full)}
       {half ? "½" : ""}
       {"☆".repeat(Math.max(0, 5 - full - (half ? 1 : 0)))}
@@ -73,12 +73,12 @@ export function VenueCard({
     <div className="flex flex-col gap-3 rounded-2xl border border-foreground/10 bg-white px-4 py-3.5">
       {/* Header: name + best pick badge + vote button */}
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold leading-tight text-foreground">
+        <p className="text-sm font-heading font-medium leading-tight text-foreground">
           {name}
         </p>
         <div className="flex shrink-0 items-center gap-2">
           {isBestPick && (
-            <span className="flex items-center gap-1 rounded-full bg-gold/15 px-2 py-0.5 text-xs font-semibold text-gold">
+            <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
               <SparklesIcon className="h-3 w-3" /> Top Pick
             </span>
           )}

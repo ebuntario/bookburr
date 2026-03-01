@@ -33,7 +33,7 @@ export function ActivityFeed({ sessionId, initialEntries }: ActivityFeedProps) {
   if (entries.length === 0) {
     return (
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold text-foreground/60">
+        <h3 className="text-sm font-medium text-foreground/60">
           Aktivitas
         </h3>
         <p className="text-sm text-foreground/40 text-center py-4">
@@ -45,7 +45,7 @@ export function ActivityFeed({ sessionId, initialEntries }: ActivityFeedProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-sm font-semibold text-foreground/60">Aktivitas</h3>
+      <h3 className="text-sm font-medium text-foreground/60">Aktivitas</h3>
 
       <div className="flex flex-col divide-y divide-foreground/8 rounded-2xl border border-foreground/10 bg-white overflow-hidden">
         <AnimatePresence initial={false}>
@@ -67,7 +67,7 @@ export function ActivityFeed({ sessionId, initialEntries }: ActivityFeedProps) {
           type="button"
           onClick={handleLoadMore}
           disabled={loading}
-          className="text-center text-sm text-gold font-medium py-1 disabled:opacity-40"
+          className="text-center text-sm text-primary font-medium py-1 disabled:opacity-40"
         >
           {loading ? "Lagi loading..." : "Lihat lebih banyak"}
         </button>

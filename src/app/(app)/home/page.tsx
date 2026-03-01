@@ -16,11 +16,11 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Bukber Lu</h2>
+        <h2 className="text-2xl font-heading font-semibold">List Bukber</h2>
         {sessions.length > 0 && (
           <Link
             href="/sessions/new"
-            className="rounded-full bg-coral px-4 py-2 text-sm font-semibold text-white"
+            className="rounded-full bg-danger px-4 py-2 text-sm font-medium text-white"
           >
             + Bikin
           </Link>

@@ -6,10 +6,10 @@ import { springs } from "@/lib/motion-variants";
 const MAX_AVATARS = 6;
 
 const AVATAR_COLORS = [
-  "bg-gold",
+  "bg-primary",
   "bg-teal",
-  "bg-coral",
-  "bg-green",
+  "bg-danger",
+  "bg-success",
 ] as const;
 
 function getAvatarColor(userId: string): string {
@@ -34,11 +34,11 @@ interface SessionProgressProps {
 }
 
 const RING_COLORS: Record<string, string> = {
-  collecting: "var(--color-gold)",
-  discovering: "var(--color-gold)",
+  collecting: "var(--color-primary)",
+  discovering: "var(--color-primary)",
   voting: "var(--color-teal)",
-  confirmed: "var(--color-green)",
-  completed: "var(--color-green)",
+  confirmed: "var(--color-success)",
+  completed: "var(--color-success)",
 };
 
 const RADIUS = 48;
@@ -102,7 +102,7 @@ export function SessionProgress({
 
         {/* Center text */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-lg font-bold text-foreground">
+          <span className="text-lg font-heading font-semibold text-foreground">
             {completedCount}/{totalCount}
           </span>
         </div>
@@ -124,7 +124,7 @@ export function SessionProgress({
               style={{ left: cx, top: cy }}
             >
               <div
-                className={`relative h-7 w-7 rounded-full border-2 border-cream flex items-center justify-center ${!isCompleted ? "animate-gentle-pulse" : ""}`}
+                className={`relative h-7 w-7 rounded-full border-2 border-white flex items-center justify-center ${!isCompleted ? "animate-gentle-pulse" : ""}`}
               >
                 {member.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -137,13 +137,13 @@ export function SessionProgress({
                   <div
                     className={`h-full w-full rounded-full flex items-center justify-center ${color}`}
                   >
-                    <span className="text-[10px] font-bold text-white">
+                    <span className="text-[10px] font-medium text-white">
                       {initial}
                     </span>
                   </div>
                 )}
                 {isCompleted && (
-                  <div className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full bg-green flex items-center justify-center border border-cream">
+                  <div className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full bg-success flex items-center justify-center border border-white">
                     <span className="text-[7px] text-white">&#10003;</span>
                   </div>
                 )}

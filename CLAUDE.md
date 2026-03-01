@@ -254,14 +254,19 @@ Product experience copy (session names, CTAs, status labels, activity feed, onbo
 
 ### Visual Design Tokens
 ```
-Primary:     #D4A843  (warm gold)
-Secondary:   #1B5E3C  (deep green)
-Background:  #FFF8F0  (cream/ivory)
-Accent CTA:  #FF6B6B  (coral)
-Accent 2:    #2DD4BF  (teal)
-Font:        Plus Jakarta Sans
+Primary:     #F14641  (logo red)
+Success:     #1B5E3C  (deep green)
+Danger:      #FF6B6B  (coral)
+Teal:        #2DD4BF  (teal accent)
+Background:  #FFFFFF  (white)
+Surface:     #F9FAFB  (light gray)
+Foreground:  #2D2D2D  (charcoal)
+Headings:    Baloo 2 (500, 600)
+Body:        Inter (400, 500)
+Logo:        Resnick (local .ttf, 400)
 ```
 Theme tokens are defined in `src/app/globals.css` using oklch() format within `@theme`.
+Brand assets live in `public/brand/` (SVG + PNG). Logo font (Resnick) is at `src/app/fonts/Resnick.ttf`.
 
 ---
 
@@ -328,7 +333,7 @@ For **any database change**, follow the schema-first migration skill at `.agents
 - Wrap client components in `<Suspense>` with fallbacks
 - Mobile-first responsive design
 - HeroUI v3 compound components for UI primitives
-- Plus Jakarta Sans font
+- Baloo 2 (headings) + Inter (body) + Resnick (logo) fonts
 - Route-specific components in `_components/` subdirectories, not global `components/`
 - Server actions in `src/lib/actions/`, queries in `src/lib/queries/`
 - All domain constants imported from `src/lib/constants.ts`
@@ -337,7 +342,7 @@ For **any database change**, follow the schema-first migration skill at `.agents
 
 Avoid generic "AI-generated" UI. No symmetrical hero sections, no glassmorphism without reason, no default Tailwind shadows everywhere. Instead:
 - **Layout:** Strong asymmetry, overlapping elements, unusual grid breaks
-- **Color:** Commit to the gold/green/cream palette with coral as high-contrast accent. Break rules intentionally.
+- **Color:** Commit to the red/white/charcoal palette with coral as danger accent. Break rules intentionally.
 - **Motion:** Micro-interactions, scroll-triggered reveals, Framer Motion spring physics
 - **Personality:** Jaksel energy — playful, irreverent, youthful Indonesian vibe in every pixel
-- **Typography:** Plus Jakarta Sans with confident weight variation
+- **Typography:** Baloo 2 headings + Inter body, max weight 600 (no font-bold), Resnick for logo wordmark

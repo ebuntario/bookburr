@@ -29,7 +29,7 @@ export function DateSummary({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground/60">
+        <h3 className="text-sm font-medium text-foreground/60">
           Tanggal Kandidat
         </h3>
         <span className="text-xs text-foreground/40">
@@ -55,7 +55,7 @@ export function DateSummary({
                   <>
                     {d.stronglyPrefer > 0 && (
                       <div
-                        className="bg-gold"
+                        className="bg-primary"
                         style={{ flex: d.stronglyPrefer, minWidth: 4 }}
                       />
                     )}
@@ -67,7 +67,7 @@ export function DateSummary({
                     )}
                     {d.unavailable > 0 && (
                       <div
-                        className="bg-coral/60"
+                        className="bg-danger/60"
                         style={{ flex: d.unavailable, minWidth: 4 }}
                       />
                     )}
@@ -79,7 +79,7 @@ export function DateSummary({
               {total > 0 && (
                 <div className="flex gap-2 text-xs">
                   {d.stronglyPrefer > 0 && (
-                    <span className="text-gold font-medium">
+                    <span className="text-primary font-medium">
                       {d.stronglyPrefer} bisa banget
                     </span>
                   )}
@@ -89,7 +89,7 @@ export function DateSummary({
                     </span>
                   )}
                   {d.unavailable > 0 && (
-                    <span className="text-coral/70 font-medium">
+                    <span className="text-danger/70 font-medium">
                       {d.unavailable} gabisa
                     </span>
                   )}

@@ -11,14 +11,14 @@ export default function WizardError({
   reset: () => void;
 }) {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-cream px-6">
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-white px-6">
       <ExclamationTriangleIcon className="h-12 w-12 text-foreground/30" />
-      <h1 className="text-xl font-bold text-foreground">Terjadi Kesalahan</h1>
+      <h1 className="text-xl font-heading font-semibold text-foreground">Terjadi Kesalahan</h1>
       <p className="text-center text-sm text-foreground/60">
         Langkah ini gagal. Silakan coba lagi atau kembali ke beranda.
       </p>
       <div className="flex gap-3">
-        <Button className="bg-gold text-white font-semibold" onPress={reset}>
+        <Button className="bg-primary text-white font-medium" onPress={reset}>
           Coba Lagi
         </Button>
         <Link

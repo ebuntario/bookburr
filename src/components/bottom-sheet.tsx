@@ -36,7 +36,7 @@ export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
             dragConstraints={{ top: 0 }}
             dragElastic={0.15}
             onDragEnd={handleDragEnd}
-            className="w-full rounded-t-2xl bg-[#FFF8F0] shadow-xl touch-none"
+            className="w-full rounded-t-2xl bg-white shadow-xl touch-none"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drag handle */}

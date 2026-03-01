@@ -1,12 +1,25 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Baloo_2, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-plus-jakarta-sans",
+  weight: ["400", "500"],
+  variable: "--font-inter",
+});
+
+const baloo2 = Baloo_2({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  variable: "--font-baloo-2",
+});
+
+const resnick = localFont({
+  src: "./fonts/Resnick.ttf",
+  variable: "--font-resnick",
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -30,7 +43,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#D4A843",
+  themeColor: "#F14641",
 };
 
 export default function RootLayout({
@@ -41,7 +54,7 @@ export default function RootLayout({
   return (
     <html lang="id" suppressHydrationWarning>
       <body
-        className={`${plusJakartaSans.variable} font-sans bg-cream min-h-dvh antialiased`}
+        className={`${inter.variable} ${baloo2.variable} ${resnick.variable} font-sans bg-white min-h-dvh antialiased`}
       >
         <Providers>{children}</Providers>
       </body>

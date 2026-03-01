@@ -15,7 +15,7 @@ export default function OGImage() {
           flexDirection: "column",
           alignItems: "flex-start",
           justifyContent: "flex-end",
-          backgroundColor: "#FFF8F0",
+          backgroundColor: "#FFFFFF",
           padding: "80px",
           position: "relative",
         }}
@@ -28,7 +28,7 @@ export default function OGImage() {
             right: 0,
             width: "480px",
             height: "480px",
-            backgroundColor: "#D4A843",
+            backgroundColor: "#F14641",
             borderRadius: "50%",
             opacity: 0.12,
             transform: "translate(160px, -160px)",
@@ -71,7 +71,7 @@ export default function OGImage() {
         <div
           style={{
             fontSize: "36px",
-            color: "#D4A843",
+            color: "#F14641",
             fontWeight: 600,
             display: "flex",
           }}

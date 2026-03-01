@@ -20,7 +20,7 @@ const PILL_CONFIG: Record<
 > = {
   [PREFERENCE_LEVEL.strongly_prefer]: {
     label: "Bisa banget!",
-    selected: "bg-gold text-white border-gold",
+    selected: "bg-primary text-white border-primary",
     unselected: "border-foreground/20 text-foreground/60",
   },
   [PREFERENCE_LEVEL.can_do]: {
@@ -30,7 +30,7 @@ const PILL_CONFIG: Record<
   },
   [PREFERENCE_LEVEL.unavailable]: {
     label: "Ga bisa",
-    selected: "bg-coral text-white border-coral",
+    selected: "bg-danger text-white border-danger",
     unselected: "border-foreground/20 text-foreground/60",
   },
 };
@@ -60,9 +60,9 @@ function VoteBar({ stronglyPrefer, canDo, unavailable }: { stronglyPrefer: numbe
   if (total === 0) return null;
 
   const segments = [
-    { value: stronglyPrefer, color: "bg-gold" },
+    { value: stronglyPrefer, color: "bg-primary" },
     { value: canDo, color: "bg-teal" },
-    { value: unavailable, color: "bg-coral" },
+    { value: unavailable, color: "bg-danger" },
   ].filter((s) => s.value > 0);
 
   return (
@@ -129,10 +129,10 @@ function VotePills({
 function ReadOnlyVote({ myVote }: { myVote: PreferenceLevel }) {
   const colorClass =
     myVote === PREFERENCE_LEVEL.strongly_prefer
-      ? "font-medium text-gold"
+      ? "font-medium text-primary"
       : myVote === PREFERENCE_LEVEL.can_do
         ? "font-medium text-teal"
-        : "font-medium text-coral";
+        : "font-medium text-danger";
 
   return (
     <p className="text-xs text-foreground/50">
@@ -182,11 +182,11 @@ function DateRow({
 
       {total > 0 && (
         <p className="text-xs text-foreground/50">
-          <span className="text-gold">{date.stronglyPrefer} bisa banget</span>
+          <span className="text-primary">{date.stronglyPrefer} bisa banget</span>
           {" · "}
           <span className="text-teal">{date.canDo} bisa</span>
           {" · "}
-          <span className="text-coral">{date.unavailable} gabisa</span>
+          <span className="text-danger">{date.unavailable} gabisa</span>
         </p>
       )}
 
@@ -298,7 +298,7 @@ export function DateVotingResults({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground/60">Tanggal</h3>
+        <h3 className="text-sm font-medium text-foreground/60">Tanggal</h3>
         <p className="text-xs text-foreground/40">
           {votedMemberCount}/{totalMembers} udah vote
         </p>
@@ -328,7 +328,7 @@ export function DateVotingResults({
       )}
 
       {error && (
-        <div className="rounded-xl bg-coral/10 px-3 py-2 text-xs text-coral">
+        <div className="rounded-xl bg-danger/10 px-3 py-2 text-xs text-danger">
           {error}
         </div>
       )}

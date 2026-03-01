@@ -26,7 +26,7 @@ export function StepSessionName({
   return (
     <div className="flex flex-1 flex-col justify-between">
       <div className="flex flex-col gap-4">
-        <h2 className="text-2xl font-bold text-foreground">
+        <h2 className="text-2xl font-heading font-semibold text-foreground">
           Mau bikin bukber apa nih?
         </h2>
         <p className="text-foreground/60">Kasih nama buat bukber lu</p>
@@ -44,12 +44,12 @@ export function StepSessionName({
             onKeyDown={(e) => {
               if (e.key === "Enter" && isValid) onNext();
             }}
-            className="rounded-xl border border-foreground/20 bg-white px-4 py-3 text-lg outline-none focus:border-gold"
+            className="rounded-xl border border-foreground/20 bg-white px-4 py-3 text-lg outline-none focus:border-primary"
           />
         </TextField>
 
         {trimmed.length > 0 && trimmed.length < 2 && (
-          <p className="text-sm text-coral">Minimal 2 karakter ya</p>
+          <p className="text-sm text-danger">Minimal 2 karakter ya</p>
         )}
       </div>
 
@@ -57,7 +57,7 @@ export function StepSessionName({
         <Button
           onPress={onNext}
           isDisabled={!isValid}
-          className="w-full rounded-xl bg-coral py-3 font-semibold text-white disabled:opacity-40"
+          className="w-full rounded-xl bg-danger py-3 font-medium text-white disabled:opacity-40"
         >
           Lanjut
         </Button>
