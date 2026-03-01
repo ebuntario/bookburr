@@ -89,14 +89,14 @@ describe("buildInvitationCard", () => {
     expect(text).toContain("Reza");
   });
 
-  it("uses 'Someone' when hostName is not provided", () => {
+  it("uses 'Temen lu' when hostName is not provided", () => {
     const url = buildInvitationCard({
       sessionName: "Bukber SMA",
       shareUrl: "https://bookburr.com/sessions/abc",
       inviteCode: "INVITE01",
     });
     const text = decodeWaUrl(url);
-    expect(text).toContain("Someone");
+    expect(text).toContain("Temen lu");
   });
 
   it("includes dateRange when provided", () => {

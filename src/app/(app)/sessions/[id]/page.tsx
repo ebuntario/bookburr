@@ -62,8 +62,16 @@ export default async function SessionDashboardPage({
   const hostMember = sessionData.members.find(
     (m) => m.userId === sessionData.session.hostId,
   );
-  const hostName = hostMember?.name ?? undefined;
+  const hostName =
+    hostMember?.name ?? hostMember?.email?.split("@")[0] ?? undefined;
   const dateRange = computeDateRange(datesData.dates);
+
+  const confirmedVenue = venuesData.find(
+    (v) => v.id === sessionData.session.confirmedVenueId,
+  );
+  const confirmedDate = datesData.dates.find(
+    (d) => d.id === sessionData.session.confirmedDateOptionId,
+  );
 
   const dateVotedMemberIds = new Set(datesData.votedMemberIds);
 
@@ -135,7 +143,6 @@ export default async function SessionDashboardPage({
           status={status}
           memberCount={sessionData.members.length}
           venueCount={venuesData.length}
-          shareUrl={shareUrl}
           dates={datesData.dates}
           venues={venuesData}
           hasViableDates={datesData.dates.some(
@@ -151,8 +158,17 @@ export default async function SessionDashboardPage({
         sessionName={sessionData.session.name}
         inviteCode={sessionData.session.inviteCode}
         shareUrl={shareUrl}
+        status={status}
         hostName={hostName}
         dateRange={dateRange}
+        venueCount={venuesData.length}
+        confirmedVenueName={confirmedVenue?.name}
+        confirmedDateStr={confirmedDate?.date}
+        googleMapsUrl={
+          confirmedVenue?.location
+            ? `https://www.google.com/maps/search/?api=1&query=${(confirmedVenue.location as { lat: number; lng: number }).lat},${(confirmedVenue.location as { lat: number; lng: number }).lng}`
+            : undefined
+        }
       />
     </div>
     </RealtimeDashboardWrapper>

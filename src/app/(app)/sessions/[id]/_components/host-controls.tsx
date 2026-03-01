@@ -7,7 +7,6 @@ import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { tapScale } from "@/lib/motion-variants";
 import { advanceSessionStatus } from "@/lib/actions/session-status";
 import { discoverVenues, retryDiscoverVenues } from "@/lib/actions/venues";
-import { copyToClipboard } from "@/lib/share-utils";
 import { HostCollectingCTA } from "./host-collecting-cta";
 import { HostDiscoveringCTA } from "./host-discovering-cta";
 import { HostVotingPanel } from "./host-voting-panel";
@@ -36,7 +35,6 @@ interface HostControlsProps {
   status: string;
   memberCount: number;
   venueCount: number;
-  shareUrl: string;
   dates: DateOption[];
   venues: Venue[];
   hasViableDates: boolean;
@@ -48,7 +46,6 @@ export function HostControls({
   status,
   memberCount,
   venueCount,
-  shareUrl,
   dates,
   venues,
   hasViableDates,
@@ -56,7 +53,6 @@ export function HostControls({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [inviteCopied, setInviteCopied] = useState(false);
   const [discoveryFailed, setDiscoveryFailed] = useState(false);
 
   if (status === "completed") return null;
@@ -83,25 +79,6 @@ export function HostControls({
     const result = await retryDiscoverVenues(sessionId);
     if (!result.ok) setDiscoveryFailed(true);
     else router.refresh();
-  };
-
-  const handleInvite = async () => {
-    if (typeof navigator !== "undefined" && "share" in navigator) {
-      try {
-        await (navigator as Navigator & { share: (data: ShareData) => Promise<void> }).share({
-          title: "Join bukber kita!",
-          url: shareUrl,
-        });
-      } catch {
-        // user cancelled
-      }
-      return;
-    }
-    const ok = await copyToClipboard(shareUrl);
-    if (ok) {
-      setInviteCopied(true);
-      setTimeout(() => setInviteCopied(false), 2000);
-    }
   };
 
   const renderCTA = (
@@ -145,8 +122,6 @@ export function HostControls({
       <HostCollectingCTA
         memberCount={memberCount}
         hasViableDates={hasViableDates}
-        inviteCopied={inviteCopied}
-        onInvite={handleInvite}
         onAdvance={handleAdvance}
         renderCTA={renderCTA}
       />
@@ -170,8 +145,6 @@ export function HostControls({
       <HostVotingPanel
         sessionId={sessionId}
         sessionName={sessionName}
-        venueCount={venueCount}
-        shareUrl={shareUrl}
         dates={dates}
         venues={venues}
         loading={loading}

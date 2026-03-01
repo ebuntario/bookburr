@@ -34,7 +34,7 @@ export function buildInvitationCard(input: {
   shareUrl: string;
   inviteCode: string;
 }): string {
-  const host = input.hostName || "Someone";
+  const host = input.hostName || "Temen lu";
   const dateLine = input.dateRange ? ` — ${input.dateRange}` : "";
   const text = [
     `\u{1F319} ${host} ngajak lu bukber!`,
