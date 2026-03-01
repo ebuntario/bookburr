@@ -1,5 +1,6 @@
 import { VenueCard } from "./venue-card";
 import { TerserahButton } from "./terserah-button";
+import { VenueRevealItem } from "./venue-reveal-item";
 
 interface VenueReaction {
   count: number;
@@ -35,24 +36,25 @@ export function VenueList({ venues, sessionId, status, isTerserah }: VenueListPr
   return (
     <div className="flex flex-col gap-3">
       {venues.map((v, i) => (
-        <VenueCard
-          key={v.id}
-          id={v.id}
-          name={v.name}
-          rating={v.rating}
-          priceLevel={v.priceLevel}
-          compositeScore={v.compositeScore}
-          socialLinkUrl={v.socialLinkUrl}
-          socialLinkPlatform={v.socialLinkPlatform}
-          socialLinkMetadata={v.socialLinkMetadata}
-          suggestedByMemberId={v.suggestedByMemberId}
-          reactions={v.reactions}
-          voteCount={v.voteCount}
-          isMyVote={v.isMyVote}
-          rank={i}
-          sessionId={sessionId}
-          status={status}
-        />
+        <VenueRevealItem key={v.id}>
+          <VenueCard
+            id={v.id}
+            name={v.name}
+            rating={v.rating}
+            priceLevel={v.priceLevel}
+            compositeScore={v.compositeScore}
+            socialLinkUrl={v.socialLinkUrl}
+            socialLinkPlatform={v.socialLinkPlatform}
+            socialLinkMetadata={v.socialLinkMetadata}
+            suggestedByMemberId={v.suggestedByMemberId}
+            reactions={v.reactions}
+            voteCount={v.voteCount}
+            isMyVote={v.isMyVote}
+            rank={i}
+            sessionId={sessionId}
+            status={status}
+          />
+        </VenueRevealItem>
       ))}
 
       {/* Inline suggest nudge (discovering + voting only) */}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { PlusIcon } from "@heroicons/react/24/outline";
+import { springs, tapScale, popIn } from "@/lib/motion-variants";
 import { SuggestVenueForm } from "./suggest-venue-form";
 import { BottomSheet } from "@/components/bottom-sheet";
 
@@ -21,10 +22,10 @@ export function SuggestVenueFab({ sessionId }: SuggestVenueFabProps) {
       <motion.button
         type="button"
         onClick={() => setOpen(true)}
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", bounce: 0.4, delay: 0.2 }}
-        className="fixed bottom-24 right-5 z-40 flex items-center gap-2 rounded-full bg-coral px-4 py-3 shadow-lg shadow-coral/30 text-sm font-semibold text-white transition-transform active:scale-95"
+        {...popIn}
+        whileTap={tapScale}
+        transition={{ ...springs.bouncy, delay: 0.2 }}
+        className="fixed bottom-24 right-5 z-40 flex items-center gap-2 rounded-full bg-coral px-4 py-3 shadow-lg shadow-coral/30 text-sm font-semibold text-white"
         aria-label="Suggest tempat"
       >
         <PlusIcon className="h-5 w-5" />

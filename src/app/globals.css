@@ -13,6 +13,21 @@
   --danger-foreground: oklch(1 0 0);
 }
 
+/* Compositor-thread animations (CSS, not JS) */
+@keyframes gentle-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+.animate-gentle-pulse {
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-gentle-pulse {
+    animation: none;
+  }
+}
+
 /* Custom BookBurr Tailwind colors + font via @theme inline */
 @theme inline {
   --font-sans: var(--font-plus-jakarta-sans), "Plus Jakarta Sans", sans-serif;

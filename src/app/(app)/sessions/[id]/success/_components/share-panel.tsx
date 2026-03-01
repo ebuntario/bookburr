@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@heroui/react";
+import { scaleIn, springs } from "@/lib/motion-variants";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { SparklesIcon } from "@heroicons/react/24/solid";
 import {
@@ -41,9 +42,8 @@ export function SharePanel({
 
   return (
     <motion.div
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      {...scaleIn}
+      transition={springs.smooth}
       className="flex flex-col items-center gap-8 py-8"
     >
       {/* Celebration */}

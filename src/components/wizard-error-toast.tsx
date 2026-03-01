@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { toastSlideUp } from "@/lib/motion-variants";
 
 interface WizardErrorToastProps {
   error: string | null;
@@ -15,9 +16,7 @@ export function WizardErrorToast({
     <AnimatePresence>
       {error && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
+          {...toastSlideUp}
           className="absolute inset-x-6 bottom-6 rounded-xl bg-coral/10 px-4 py-3 text-center text-sm text-coral"
         >
           {error === "unauthorized"

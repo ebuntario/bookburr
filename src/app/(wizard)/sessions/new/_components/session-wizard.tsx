@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { createSession } from "@/lib/actions/sessions";
-import { slideVariants } from "@/lib/motion-variants";
+import { slideVariants, slideTransition } from "@/lib/motion-variants";
 import { useWizard } from "@/lib/hooks/use-wizard";
 import { StepSessionName } from "./step-session-name";
 import { StepSessionMode } from "./step-session-mode";
@@ -116,7 +116,7 @@ export function SessionWizard() {
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.25, ease: "easeInOut" }}
+            transition={slideTransition}
             className="flex flex-1 flex-col"
           >
             {currentComponent === 0 && (

@@ -2,6 +2,7 @@
 
 import { Button } from "@heroui/react";
 import { motion } from "framer-motion";
+import { fadeUp } from "@/lib/motion-variants";
 import { PREFERENCE_LEVEL } from "@/lib/constants";
 import type { PreferenceLevel } from "@/lib/constants";
 import { formatDate } from "@/lib/format-utils";
@@ -98,8 +99,7 @@ export function StepDateVotes({
             >
               {conflicts && conflicts.length > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  {...fadeUp}
                   className="mb-2 rounded-lg border border-coral/20 bg-coral/10 px-3 py-2"
                 >
                   {conflicts.map((name) => (

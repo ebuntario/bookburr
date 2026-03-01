@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { backdropFade, sheetSlideUp, springs } from "@/lib/motion-variants";
 import {
   CheckCircleIcon,
   CheckIcon,
@@ -337,16 +338,14 @@ export function ConfirmSessionSheet({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      {...backdropFade}
       className="fixed inset-0 z-50 flex items-end bg-foreground/30"
       onClick={step === 1 ? onClose : undefined}
     >
       {step === 1 ? (
         <motion.div
-          initial={{ y: "100%" }}
-          animate={{ y: 0 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          {...sheetSlideUp}
+          transition={springs.sheet}
           className="w-full"
         >
         <SelectionStep

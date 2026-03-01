@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { fadeIn } from "@/lib/motion-variants";
 
 interface Member {
   id: string;
@@ -24,8 +25,7 @@ export function WaitingOnList({ pendingMembers, status }: WaitingOnListProps) {
   if (status === "voting") {
     return (
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        {...fadeIn}
         className="rounded-xl border border-gold/20 bg-gold/5 px-4 py-3"
       >
         <p className="text-sm text-foreground/60">

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { springs } from "@/lib/motion-variants";
 
 const MAX_AVATARS = 6;
 
@@ -91,7 +92,7 @@ export function SessionProgress({
             strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
             initial={{ strokeDashoffset: CIRCUMFERENCE }}
             animate={{ strokeDashoffset: CIRCUMFERENCE * (1 - progress) }}
-            transition={{ type: "spring", duration: 0.8, bounce: 0.2 }}
+            transition={springs.smooth}
             style={{
               transform: "rotate(-90deg)",
               transformOrigin: "50% 50%",
@@ -122,18 +123,8 @@ export function SessionProgress({
               className="absolute"
               style={{ left: cx, top: cy }}
             >
-              <motion.div
-                className="relative h-7 w-7 rounded-full border-2 border-cream flex items-center justify-center"
-                animate={
-                  !isCompleted
-                    ? { scale: [1, 1.08, 1] }
-                    : undefined
-                }
-                transition={
-                  !isCompleted
-                    ? { duration: 2, repeat: Infinity, ease: "easeInOut" }
-                    : undefined
-                }
+              <div
+                className={`relative h-7 w-7 rounded-full border-2 border-cream flex items-center justify-center ${!isCompleted ? "animate-gentle-pulse" : ""}`}
               >
                 {member.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -156,7 +147,7 @@ export function SessionProgress({
                     <span className="text-[7px] text-white">&#10003;</span>
                   </div>
                 )}
-              </motion.div>
+              </div>
             </div>
           );
         })}

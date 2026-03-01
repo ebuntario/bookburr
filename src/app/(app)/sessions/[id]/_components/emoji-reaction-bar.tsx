@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { reactToVenue } from "@/lib/actions/venues";
 import { VENUE_EMOJI } from "@/lib/constants";
+import { tapScaleUp } from "@/lib/motion-variants";
 
 const EMOJIS = [
   VENUE_EMOJI.fire,
@@ -70,7 +71,7 @@ export function EmojiReactionBar({
             type="button"
             onClick={() => handleReact(emoji)}
             disabled={!canReact}
-            whileTap={canReact ? { scale: 1.3 } : undefined}
+            whileTap={canReact ? tapScaleUp : undefined}
             className={[
               "flex items-center gap-1 rounded-full border px-2 py-1 text-xs transition-all",
               mine

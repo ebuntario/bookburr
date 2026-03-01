@@ -1,25 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-
-const container = {
-  hidden: {},
-  show: {
-    transition: {
-      staggerChildren: 0.08,
-    },
-  },
-};
-
-const item = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" as const } },
-};
+import { staggerContainer, staggerItem } from "@/lib/motion-variants";
 
 export function SessionCardList({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
-      variants={container}
+      variants={staggerContainer}
       initial="hidden"
       animate="show"
       className="flex flex-col gap-3"
@@ -30,5 +17,5 @@ export function SessionCardList({ children }: { children: React.ReactNode }) {
 }
 
 export function SessionCardItem({ children }: { children: React.ReactNode }) {
-  return <motion.div variants={item}>{children}</motion.div>;
+  return <motion.div variants={staggerItem}>{children}</motion.div>;
 }

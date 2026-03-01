@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import { tapScale } from "@/lib/motion-variants";
 import { advanceSessionStatus } from "@/lib/actions/session-status";
 import { discoverVenues, retryDiscoverVenues } from "@/lib/actions/venues";
 import { copyToClipboard } from "@/lib/share-utils";
@@ -123,7 +124,7 @@ export function HostControls({
           type="button"
           onClick={onPress}
           disabled={loading}
-          whileTap={{ scale: 0.97 }}
+          whileTap={tapScale}
           className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-opacity disabled:opacity-50 ${variantClass}`}
         >
           {loading ? (

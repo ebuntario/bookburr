@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { joinSession } from "@/lib/actions/members";
 import { PREFERENCE_LEVEL } from "@/lib/constants";
 import type { PreferenceLevel } from "@/lib/constants";
-import { slideVariants } from "@/lib/motion-variants";
+import { slideVariants, slideTransition, toastSlideUp } from "@/lib/motion-variants";
 import { useWizard } from "@/lib/hooks/use-wizard";
 import { WizardProgress } from "@/app/(wizard)/sessions/new/_components/wizard-progress";
 import { WizardErrorToast } from "@/components/wizard-error-toast";
@@ -47,9 +47,7 @@ function UnvotedConfirmModal({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
+      {...toastSlideUp}
       className="absolute inset-x-6 bottom-6 flex flex-col gap-3 rounded-xl border border-foreground/10 bg-white p-4 text-center shadow-lg"
     >
       <p className="text-sm text-foreground">
@@ -160,7 +158,7 @@ export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWiz
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.25, ease: "easeInOut" }}
+            transition={slideTransition}
             className="flex flex-1 flex-col"
           >
             {step === 0 && (

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { loadMoreActivity } from "@/lib/actions/activity";
 import { ActivityEntry, type ActivityEntryData } from "./activity-entry";
+import { durations } from "@/lib/motion-variants";
 
 const PAGE_SIZE = 10;
 
@@ -53,7 +54,7 @@ export function ActivityFeed({ sessionId, initialEntries }: ActivityFeedProps) {
               key={entry.id}
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              transition={{ duration: durations.normal, ease: "easeOut" }}
             >
               <ActivityEntry entry={entry} compact />
             </motion.div>

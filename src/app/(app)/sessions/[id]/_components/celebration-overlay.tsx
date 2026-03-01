@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { SparklesIcon } from "@heroicons/react/24/solid";
 import { buildConfirmationCard } from "@/lib/share-utils";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { fadeIn, springs } from "@/lib/motion-variants";
 
 interface CelebrationOverlayProps {
   venueName: string;
@@ -47,8 +48,7 @@ export function CelebrationOverlay({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      {...fadeIn}
       className="fixed inset-0 z-[70] flex flex-col items-center justify-center bg-foreground/70 px-5"
       onClick={onClose}
     >
@@ -76,7 +76,7 @@ export function CelebrationOverlay({
       <motion.div
         initial={{ scale: 0.85, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        transition={{ type: "spring", bounce: 0.4, delay: 0.15 }}
+        transition={{ ...springs.bouncy, delay: 0.15 }}
         className="relative z-10 w-full max-w-sm rounded-2xl bg-[#FFF8F0] p-6 text-center shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >

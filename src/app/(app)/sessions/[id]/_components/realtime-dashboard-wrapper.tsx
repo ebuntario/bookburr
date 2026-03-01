@@ -4,6 +4,7 @@ import { useCallback, useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRealtimeSession } from "@/lib/hooks/use-realtime-session";
+import { toastSlideUp, durations } from "@/lib/motion-variants";
 import type { SessionRealtimeEvent } from "@/lib/hooks/use-realtime-session";
 
 const EVENT_MESSAGES: Record<SessionRealtimeEvent, string> = {
@@ -81,10 +82,8 @@ export function RealtimeDashboardWrapper({
       <AnimatePresence>
         {toast && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.25 }}
+            {...toastSlideUp}
+            transition={{ duration: durations.normal }}
             className="fixed bottom-36 left-1/2 z-50 -translate-x-1/2"
           >
             <div className="flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 shadow-lg">

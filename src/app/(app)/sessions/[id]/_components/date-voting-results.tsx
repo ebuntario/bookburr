@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { updateDateVotes } from "@/lib/actions/date-votes";
+import { voteBarTransition, successPulse, durations } from "@/lib/motion-variants";
 import { PREFERENCE_LEVEL } from "@/lib/constants";
 import type { PreferenceLevel } from "@/lib/constants";
 import { DateScoreBadge } from "./date-score-badge";
@@ -72,7 +73,7 @@ function VoteBar({ stronglyPrefer, canDo, unavailable }: { stronglyPrefer: numbe
           className={`h-full rounded-full ${seg.color}`}
           initial={{ width: 0 }}
           animate={{ width: `${(seg.value / total) * 100}%` }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
+          transition={voteBarTransition}
           style={{ minWidth: 4 }}
         />
       ))}
@@ -105,10 +106,10 @@ function VotePills({
             onClick={() => onVote(level)}
             animate={
               isSuccess && isSelected
-                ? { scale: [1, 1.1, 1] }
+                ? successPulse.animate
                 : { scale: 1 }
             }
-            transition={{ duration: 0.2 }}
+            transition={{ duration: durations.fast }}
             disabled={submitting}
             className={[
               "flex-1 rounded-xl border px-2 py-2 text-xs font-medium transition-all disabled:opacity-60",

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { voteForVenue } from "@/lib/actions/venues";
+import { tapScale, successPulse, durations } from "@/lib/motion-variants";
 
 interface VenueVoteButtonProps {
   sessionId: string;
@@ -51,9 +52,9 @@ export function VenueVoteButton({
       type="button"
       onClick={handleVote}
       disabled={submitting}
-      whileTap={{ scale: 0.9 }}
-      animate={isMyVote ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-      transition={{ duration: 0.3 }}
+      whileTap={tapScale}
+      animate={isMyVote ? successPulse.animate : { scale: 1 }}
+      transition={{ duration: durations.normal }}
       className={[
         "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all",
         isMyVote
