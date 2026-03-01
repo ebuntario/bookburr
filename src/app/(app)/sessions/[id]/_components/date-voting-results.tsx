@@ -204,6 +204,36 @@ function DateRow({
   );
 }
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function initializeLocalVotes(
+  dates: DateWithVotes[],
+): Record<string, PreferenceLevel | null> {
+  return Object.fromEntries(
+    dates.map((d) => [d.id, d.myVote as PreferenceLevel | null]),
+  );
+}
+
+function buildDateVotePayload(
+  localVotes: Record<string, PreferenceLevel | null>,
+) {
+  return Object.entries(localVotes)
+    .filter(([, v]) => v !== null)
+    .map(([dateOptionId, preferenceLevel]) => ({
+      dateOptionId,
+      preferenceLevel: preferenceLevel as PreferenceLevel,
+    }));
+}
+
+function initBannerDismissed(sessionId: string): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    return !!sessionStorage.getItem(`bookburr-revisit-dates-${sessionId}`);
+  } catch {
+    return false;
+  }
+}
+
 // ── Main component ─────────────────────────────────────────────────────────
 
 interface DateVotingResultsProps {
@@ -226,22 +256,13 @@ export function DateVotingResults({
 }: DateVotingResultsProps) {
   const [localVotes, setLocalVotes] = useState<
     Record<string, PreferenceLevel | null>
-  >(() =>
-    Object.fromEntries(
-      initialDates.map((d) => [d.id, d.myVote as PreferenceLevel | null]),
-    ),
-  );
+  >(() => initializeLocalVotes(initialDates));
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [successDateId, setSuccessDateId] = useState<string | null>(null);
-  const [bannerDismissed, setBannerDismissed] = useState(() => {
-    if (typeof window === "undefined") return true;
-    try {
-      return !!sessionStorage.getItem(`bookburr-revisit-dates-${sessionId}`);
-    } catch {
-      return false;
-    }
-  });
+  const [bannerDismissed, setBannerDismissed] = useState(
+    () => initBannerDismissed(sessionId),
+  );
 
   const showRevisitBanner = status === "discovering" && !bannerDismissed;
 
@@ -274,14 +295,10 @@ export function DateVotingResults({
     setError(null);
     setSubmitting(true);
 
-    const votes = Object.entries(newLocalVotes)
-      .filter(([, v]) => v !== null)
-      .map(([dateOptionId, preferenceLevel]) => ({
-        dateOptionId,
-        preferenceLevel: preferenceLevel as PreferenceLevel,
-      }));
-
-    const result = await updateDateVotes({ sessionId, votes });
+    const result = await updateDateVotes({
+      sessionId,
+      votes: buildDateVotePayload(newLocalVotes),
+    });
     setSubmitting(false);
 
     if (!result.ok) {

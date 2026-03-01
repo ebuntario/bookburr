@@ -45,6 +45,44 @@ const defaultState: JoinWizardState = {
   budgetCeiling: null,
 };
 
+function deriveJoinStepKeys(
+  sessionShape: SessionShape,
+): ("dates" | "location" | "budget")[] {
+  const keys: ("dates" | "location" | "budget")[] = [];
+  if (sessionShape !== SESSION_SHAPE.date_known) keys.push("dates");
+  if (sessionShape !== SESSION_SHAPE.venue_known) keys.push("location");
+  keys.push("budget");
+  return keys;
+}
+
+function buildVotePayload(
+  dateOptions: { id: string; date: string }[],
+  state: JoinWizardState,
+) {
+  const existingVotes = dateOptions
+    .filter((d) => state.votes[d.id])
+    .map((d) => ({
+      dateOptionId: d.id,
+      preferenceLevel: state.votes[d.id] || PREFERENCE_LEVEL.can_do,
+    }));
+
+  const unvotedExisting = dateOptions
+    .filter((d) => !state.votes[d.id])
+    .map((d) => ({
+      dateOptionId: d.id,
+      preferenceLevel: PREFERENCE_LEVEL.can_do as PreferenceLevel,
+    }));
+
+  const newDates = Object.entries(state.newDateVotes).map(
+    ([date, preferenceLevel]) => ({ date, preferenceLevel }),
+  );
+
+  return {
+    votes: [...existingVotes, ...unvotedExisting],
+    newDates: newDates.length > 0 ? newDates : undefined,
+  };
+}
+
 function UnvotedConfirmModal({
   unvotedCount,
   onCancel,
@@ -85,23 +123,10 @@ function UnvotedConfirmModal({
 export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWizardProps) {
   const router = useRouter();
 
-  // Build step sequence based on session shape
-  const stepKeys = useMemo(() => {
-    const keys: ("dates" | "location" | "budget")[] = [];
-
-    // date_known: skip date step (date already decided)
-    if (session.sessionShape !== SESSION_SHAPE.date_known) {
-      keys.push("dates");
-    }
-
-    // venue_known: skip location step (venue already decided, location is irrelevant)
-    if (session.sessionShape !== SESSION_SHAPE.venue_known) {
-      keys.push("location");
-    }
-
-    keys.push("budget");
-    return keys;
-  }, [session.sessionShape]);
+  const stepKeys = useMemo(
+    () => deriveJoinStepKeys(session.sessionShape),
+    [session.sessionShape],
+  );
 
   const totalSteps = stepKeys.length;
 
@@ -131,33 +156,11 @@ export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWiz
     setError(null);
     setPendingUnvotedConfirm(false);
     startTransition(async () => {
-      // Build votes for existing date options
-      const existingVotes = dateOptions
-        .filter((d) => state.votes[d.id])
-        .map((d) => ({
-          dateOptionId: d.id,
-          preferenceLevel: state.votes[d.id] || PREFERENCE_LEVEL.can_do,
-        }));
-
-      // For unvoted existing dates, default to can_do
-      const unvotedExisting = dateOptions
-        .filter((d) => !state.votes[d.id])
-        .map((d) => ({
-          dateOptionId: d.id,
-          preferenceLevel: PREFERENCE_LEVEL.can_do as PreferenceLevel,
-        }));
-
-      const allExistingVotes = [...existingVotes, ...unvotedExisting];
-
-      // Build new date suggestions
-      const newDates = Object.entries(state.newDateVotes).map(
-        ([date, preferenceLevel]) => ({ date, preferenceLevel }),
-      );
+      const payload = buildVotePayload(dateOptions, state);
 
       const result = await joinSession({
         sessionId: session.id,
-        votes: allExistingVotes,
-        newDates: newDates.length > 0 ? newDates : undefined,
+        ...payload,
         referenceLocation: state.referenceLocation || undefined,
         lat: state.lat,
         lng: state.lng,

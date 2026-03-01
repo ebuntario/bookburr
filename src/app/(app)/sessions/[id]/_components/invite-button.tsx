@@ -30,28 +30,62 @@ interface InviteButtonProps {
   googleMapsUrl?: string;
 }
 
-function getStatusLabel(status: string) {
+function getStatusCopy(status: string): { label: string; title: string } {
   switch (status) {
     case "voting":
-      return "Share Voting";
+      return { label: "Share Voting", title: "Share Voting" };
     case "confirmed":
     case "completed":
-      return "Share ke Temen";
+      return { label: "Share ke Temen", title: "Share Info Bukber" };
     default:
-      return "Invite Temen";
+      return { label: "Invite Temen", title: "Share Bukber" };
   }
 }
 
-function getSheetTitle(status: string) {
-  switch (status) {
-    case "voting":
-      return "Share Voting";
-    case "confirmed":
-    case "completed":
-      return "Share Info Bukber";
-    default:
-      return "Share Bukber";
+function buildWhatsAppHref(
+  status: string,
+  session: { sessionName: string; shareUrl: string; inviteCode: string; hostName?: string; dateRange?: string },
+  confirmedVenue?: { name: string; dateStr: string; googleMapsUrl?: string },
+  venueCount?: number,
+): string {
+  if (
+    (status === "confirmed" || status === "completed") &&
+    confirmedVenue
+  ) {
+    return buildConfirmationCard({
+      sessionName: session.sessionName,
+      venueName: confirmedVenue.name,
+      dateStr: confirmedVenue.dateStr,
+      googleMapsUrl: confirmedVenue.googleMapsUrl,
+    });
   }
+  if (status === "voting" && venueCount) {
+    return buildVotingOpenCard({
+      sessionName: session.sessionName,
+      venueCount,
+      shareUrl: session.shareUrl,
+    });
+  }
+  return buildInvitationCard({
+    hostName: session.hostName,
+    sessionName: session.sessionName,
+    dateRange: session.dateRange,
+    shareUrl: session.shareUrl,
+    inviteCode: session.inviteCode,
+  });
+}
+
+function createCopyHandler(
+  text: string,
+  setter: (v: boolean) => void,
+) {
+  return async () => {
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setter(true);
+      setTimeout(() => setter(false), 2000);
+    }
+  };
 }
 
 export function InviteButton({
@@ -70,49 +104,19 @@ export function InviteButton({
   const [codeCopied, setCodeCopied] = useState(false);
   const [showSheet, setShowSheet] = useState(false);
 
-  const handleCopyLink = async () => {
-    const ok = await copyToClipboard(shareUrl);
-    if (ok) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
+  const handleCopyLink = createCopyHandler(shareUrl, setCopied);
+  const handleCopyCode = createCopyHandler(inviteCode, setCodeCopied);
 
-  const handleCopyCode = async () => {
-    const ok = await copyToClipboard(inviteCode);
-    if (ok) {
-      setCodeCopied(true);
-      setTimeout(() => setCodeCopied(false), 2000);
-    }
-  };
+  const whatsappHref = buildWhatsAppHref(
+    status,
+    { sessionName, shareUrl, inviteCode, hostName, dateRange },
+    confirmedVenueName && confirmedDateStr
+      ? { name: confirmedVenueName, dateStr: confirmedDateStr, googleMapsUrl }
+      : undefined,
+    venueCount,
+  );
 
-  const whatsappHref = (() => {
-    if (
-      (status === "confirmed" || status === "completed") &&
-      confirmedVenueName &&
-      confirmedDateStr
-    ) {
-      return buildConfirmationCard({
-        sessionName,
-        venueName: confirmedVenueName,
-        dateStr: confirmedDateStr,
-        googleMapsUrl,
-      });
-    }
-    if (status === "voting" && venueCount) {
-      return buildVotingOpenCard({ sessionName, venueCount, shareUrl });
-    }
-    return buildInvitationCard({
-      hostName,
-      sessionName,
-      dateRange,
-      shareUrl,
-      inviteCode,
-    });
-  })();
-
-  const label = getStatusLabel(status);
-  const sheetTitle = getSheetTitle(status);
+  const { label, title: sheetTitle } = getStatusCopy(status);
   const showInviteCode =
     status === "collecting" || status === "discovering";
 

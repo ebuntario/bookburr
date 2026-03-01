@@ -41,6 +41,37 @@ function toggleItem(arr: string[], item: string): string[] {
   return arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item];
 }
 
+function OptionPills({
+  items,
+  selected,
+  onToggle,
+  colorClass,
+}: {
+  items: { value: string; label: string }[];
+  selected: string[];
+  onToggle: (value: string) => void;
+  colorClass: string;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onToggle(opt.value)}
+          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+            selected.includes(opt.value)
+              ? colorClass
+              : "border-foreground/15 bg-white text-foreground/60"
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function ProfileForm({
   name: initialName,
   email,
@@ -142,22 +173,12 @@ export function ProfileForm({
         <label className="text-sm font-medium text-foreground">
           Pantangan Makanan
         </label>
-        <div className="flex flex-wrap gap-2">
-          {DIETARY_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setDietary(toggleItem(dietary, opt.value))}
-              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
-                dietary.includes(opt.value)
-                  ? "border-teal bg-teal/15 text-teal"
-                  : "border-foreground/15 bg-white text-foreground/60"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+        <OptionPills
+          items={DIETARY_OPTIONS}
+          selected={dietary}
+          onToggle={(v) => setDietary(toggleItem(dietary, v))}
+          colorClass="border-teal bg-teal/15 text-teal"
+        />
         <p className="text-xs text-foreground/40">
           Agar venue yang tidak sesuai bisa difilter
         </p>
@@ -168,22 +189,12 @@ export function ProfileForm({
         <label className="text-sm font-medium text-foreground">
           Preferensi Masakan
         </label>
-        <div className="flex flex-wrap gap-2">
-          {CUISINE_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setCuisine(toggleItem(cuisine, opt.value))}
-              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
-                cuisine.includes(opt.value)
-                  ? "border-danger bg-danger/15 text-danger"
-                  : "border-foreground/15 bg-white text-foreground/60"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+        <OptionPills
+          items={CUISINE_OPTIONS}
+          selected={cuisine}
+          onToggle={(v) => setCuisine(toggleItem(cuisine, v))}
+          colorClass="border-danger bg-danger/15 text-danger"
+        />
         <p className="text-xs text-foreground/40">
           Untuk mencocokkan venue dengan selera kamu
         </p>

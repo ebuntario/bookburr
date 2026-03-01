@@ -27,6 +27,23 @@ import {
 import type { SessionStatus, SessionShape } from "@/lib/constants";
 import { SESSION_SHAPE } from "@/lib/constants";
 
+function extractHostName(
+  members: { userId: string; name: string | null; email: string | null }[],
+  hostId: string,
+): string | undefined {
+  const host = members.find((m) => m.userId === hostId);
+  return host?.name ?? host?.email?.split("@")[0] ?? undefined;
+}
+
+function buildGoogleMapsUrl(
+  location: unknown,
+): string | undefined {
+  if (!location) return undefined;
+  const loc = location as { lat?: number; lng?: number };
+  if (loc.lat == null || loc.lng == null) return undefined;
+  return `https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}`;
+}
+
 export const metadata = { title: "Dashboard Bukber — BookBurr" };
 
 export default async function SessionDashboardPage({
@@ -61,11 +78,7 @@ export default async function SessionDashboardPage({
   const shareUrl = `${baseUrl}/sessions/${sessionId}/join`;
   const status = sessionData.session.status;
   const sessionShape = (sessionData.session.sessionShape ?? "need_both") as SessionShape;
-  const hostMember = sessionData.members.find(
-    (m) => m.userId === sessionData.session.hostId,
-  );
-  const hostName =
-    hostMember?.name ?? hostMember?.email?.split("@")[0] ?? undefined;
+  const hostName = extractHostName(sessionData.members, sessionData.session.hostId);
   const dateRange = computeDateRange(datesData.dates);
 
   const confirmedVenue = venuesData.find(
@@ -193,11 +206,7 @@ export default async function SessionDashboardPage({
         venueCount={venuesData.length}
         confirmedVenueName={confirmedVenue?.name}
         confirmedDateStr={confirmedDate?.date}
-        googleMapsUrl={
-          confirmedVenue?.location
-            ? `https://www.google.com/maps/search/?api=1&query=${(confirmedVenue.location as { lat: number; lng: number }).lat},${(confirmedVenue.location as { lat: number; lng: number }).lng}`
-            : undefined
-        }
+        googleMapsUrl={buildGoogleMapsUrl(confirmedVenue?.location)}
       />
     </div>
     </RealtimeDashboardWrapper>

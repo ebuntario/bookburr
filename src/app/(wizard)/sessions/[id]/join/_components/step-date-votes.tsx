@@ -75,6 +75,98 @@ function buildDateToIdMap(
   return new Map(dateOptions.map((d) => [d.date, d.id]));
 }
 
+/** Check if there's at least one non-unavailable vote across existing + new */
+function hasAnyAvailableVote(
+  votes: Record<string, PreferenceLevel>,
+  newDateVotes: Record<string, PreferenceLevel>,
+): boolean {
+  const isAvailable = (v: PreferenceLevel) =>
+    v === PREFERENCE_LEVEL.strongly_prefer || v === PREFERENCE_LEVEL.can_do;
+  return (
+    Object.values(votes).some(isAvailable) ||
+    Object.values(newDateVotes).some(isAvailable)
+  );
+}
+
+/** Toggle a vote: if current level matches, remove; otherwise set/update */
+function toggleVoteForDate(
+  dateStr: string,
+  level: PreferenceLevel | null,
+  dateToId: Map<string, string>,
+  votes: Record<string, PreferenceLevel>,
+  newDateVotes: Record<string, PreferenceLevel>,
+  onChange: (v: Record<string, PreferenceLevel>) => void,
+  onChangeNewDates: (v: Record<string, PreferenceLevel>) => void,
+  datesLocked: boolean,
+) {
+  const optId = dateToId.get(dateStr);
+
+  if (optId) {
+    const currentLevel = votes[optId];
+    const targetLevel = level ?? PREFERENCE_LEVEL.can_do;
+    if (currentLevel === targetLevel) {
+      const next = { ...votes };
+      delete next[optId];
+      onChange(next);
+    } else if (currentLevel && level === null) {
+      // Calendar tap toggle-off
+      const next = { ...votes };
+      delete next[optId];
+      onChange(next);
+    } else {
+      onChange({ ...votes, [optId]: targetLevel });
+    }
+  } else if (!datesLocked) {
+    const currentLevel = newDateVotes[dateStr];
+    const targetLevel = level ?? PREFERENCE_LEVEL.can_do;
+    if (currentLevel === targetLevel) {
+      const next = { ...newDateVotes };
+      delete next[dateStr];
+      onChangeNewDates(next);
+    } else if (currentLevel && level === null) {
+      const next = { ...newDateVotes };
+      delete next[dateStr];
+      onChangeNewDates(next);
+    } else {
+      onChangeNewDates({ ...newDateVotes, [dateStr]: targetLevel });
+    }
+  }
+}
+
+/** Build sorted list of dates that have active votes, for the pill section */
+function buildActiveDates(
+  dateOptions: { id: string; date: string }[],
+  votes: Record<string, PreferenceLevel>,
+  newDateVotes: Record<string, PreferenceLevel>,
+): { key: string; date: string; isNew: boolean }[] {
+  const result: { key: string; date: string; isNew: boolean }[] = [];
+  for (const opt of dateOptions) {
+    if (votes[opt.id]) {
+      result.push({ key: opt.id, date: opt.date, isNew: false });
+    }
+  }
+  for (const date of Object.keys(newDateVotes)) {
+    result.push({ key: `new-${date}`, date, isNew: true });
+  }
+  return result.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function ConflictWarning({ conflicts }: { conflicts: string[] }) {
+  if (conflicts.length === 0) return null;
+  return (
+    <motion.div
+      {...fadeUp}
+      className="mb-2 rounded-lg border border-danger/20 bg-danger/10 px-2.5 py-1.5"
+    >
+      {conflicts.map((name) => (
+        <p key={name} className="text-xs text-danger">
+          Lu udah ada bukber &ldquo;{name}&rdquo; di tanggal ini
+        </p>
+      ))}
+    </motion.div>
+  );
+}
+
 export function StepDateVotes({
   sessionName,
   dateOptions,
@@ -94,74 +186,30 @@ export function StepDateVotes({
     [dateOptions],
   );
 
-  // Dates that have any non-unavailable vote
-  const hasAvailable = useMemo(() => {
-    const existingAvail = Object.values(votes).some(
-      (v) => v === PREFERENCE_LEVEL.strongly_prefer || v === PREFERENCE_LEVEL.can_do,
-    );
-    const newAvail = Object.values(newDateVotes).some(
-      (v) => v === PREFERENCE_LEVEL.strongly_prefer || v === PREFERENCE_LEVEL.can_do,
-    );
-    return existingAvail || newAvail;
-  }, [votes, newDateVotes]);
+  const hasAvailable = useMemo(
+    () => hasAnyAvailableVote(votes, newDateVotes),
+    [votes, newDateVotes],
+  );
 
-  // Calendar selection: show all dates that have any vote/preference
   const selectedDates = useMemo(
     () => getAllVotedDates(dateOptions, votes, newDateVotes),
     [dateOptions, votes, newDateVotes],
   );
 
-  // Handle calendar tap → select the date (default to "can_do"), then user refines with pills
   const handleDateTap = (dateStr: string) => {
-    const optId = dateToId.get(dateStr);
-
-    if (optId) {
-      // Existing date option — toggle vote
-      if (votes[optId]) {
-        const next = { ...votes };
-        delete next[optId];
-        onChange(next);
-      } else {
-        onChange({ ...votes, [optId]: PREFERENCE_LEVEL.can_do });
-      }
-    } else if (!datesLocked) {
-      // New date — toggle new date vote
-      if (newDateVotes[dateStr]) {
-        const next = { ...newDateVotes };
-        delete next[dateStr];
-        onChangeNewDates(next);
-      } else {
-        onChangeNewDates({ ...newDateVotes, [dateStr]: PREFERENCE_LEVEL.can_do });
-      }
-    }
+    toggleVoteForDate(
+      dateStr, null, dateToId, votes, newDateVotes,
+      onChange, onChangeNewDates, datesLocked,
+    );
   };
 
-  // Set preference for a specific date
   const setPreference = (dateStr: string, level: PreferenceLevel) => {
-    const optId = dateToId.get(dateStr);
-
-    if (optId) {
-      // Existing date option
-      if (votes[optId] === level) {
-        const next = { ...votes };
-        delete next[optId];
-        onChange(next);
-      } else {
-        onChange({ ...votes, [optId]: level });
-      }
-    } else {
-      // New date
-      if (newDateVotes[dateStr] === level) {
-        const next = { ...newDateVotes };
-        delete next[dateStr];
-        onChangeNewDates(next);
-      } else {
-        onChangeNewDates({ ...newDateVotes, [dateStr]: level });
-      }
-    }
+    toggleVoteForDate(
+      dateStr, level, dateToId, votes, newDateVotes,
+      onChange, onChangeNewDates, datesLocked,
+    );
   };
 
-  // Mark all dates as "can_do"
   const handleIkutAja = () => {
     const allVotes: Record<string, PreferenceLevel> = {};
     for (const opt of dateOptions) {
@@ -170,24 +218,10 @@ export function StepDateVotes({
     onChange(allVotes);
   };
 
-  // Build list of all active dates (existing with votes + new dates) for the pill section
-  const activeDates = useMemo(() => {
-    const result: { key: string; date: string; isNew: boolean }[] = [];
-
-    // Existing dates with votes
-    for (const opt of dateOptions) {
-      if (votes[opt.id]) {
-        result.push({ key: opt.id, date: opt.date, isNew: false });
-      }
-    }
-
-    // New dates
-    for (const date of Object.keys(newDateVotes)) {
-      result.push({ key: `new-${date}`, date, isNew: true });
-    }
-
-    return result.sort((a, b) => a.date.localeCompare(b.date));
-  }, [dateOptions, votes, newDateVotes]);
+  const activeDates = useMemo(
+    () => buildActiveDates(dateOptions, votes, newDateVotes),
+    [dateOptions, votes, newDateVotes],
+  );
 
   return (
     <div className="flex flex-1 flex-col gap-5">
@@ -256,16 +290,7 @@ export function StepDateVotes({
             return (
               <div key={key} className="rounded-xl border border-foreground/10 bg-white px-3 py-2.5">
                 {conflicts && conflicts.length > 0 && (
-                  <motion.div
-                    {...fadeUp}
-                    className="mb-2 rounded-lg border border-danger/20 bg-danger/10 px-2.5 py-1.5"
-                  >
-                    {conflicts.map((name) => (
-                      <p key={name} className="text-xs text-danger">
-                        Lu udah ada bukber &ldquo;{name}&rdquo; di tanggal ini
-                      </p>
-                    ))}
-                  </motion.div>
+                  <ConflictWarning conflicts={conflicts} />
                 )}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex flex-col">

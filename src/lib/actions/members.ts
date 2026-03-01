@@ -105,6 +105,88 @@ function buildLocationObject(input: JoinSessionInput) {
     : null;
 }
 
+async function insertNewDatesAndBuildVotes(
+  tx: Tx,
+  sessionId: string,
+  userId: string,
+  newDates: NonNullable<JoinSessionInput["newDates"]>,
+): Promise<{ dateOptionId: string; preferenceLevel: PreferenceLevel }[]> {
+  const newDateStrings = newDates.map((nd) => nd.date);
+  for (const nd of newDates) {
+    await tx
+      .insert(dateOptions)
+      .values({
+        id: nanoid(),
+        sessionId,
+        date: nd.date,
+        createdBy: userId,
+      })
+      .onConflictDoNothing({
+        target: [dateOptions.sessionId, dateOptions.date],
+      });
+  }
+
+  const insertedDates = await tx
+    .select({ id: dateOptions.id, date: dateOptions.date })
+    .from(dateOptions)
+    .where(
+      and(
+        eq(dateOptions.sessionId, sessionId),
+        inArray(dateOptions.date, newDateStrings),
+      ),
+    );
+
+  const prefByDate = new Map(
+    newDates.map((nd) => [nd.date, nd.preferenceLevel]),
+  );
+  const result: { dateOptionId: string; preferenceLevel: PreferenceLevel }[] = [];
+  for (const d of insertedDates) {
+    const pref = prefByDate.get(d.date);
+    if (pref) {
+      result.push({ dateOptionId: d.id, preferenceLevel: pref });
+    }
+  }
+  return result;
+}
+
+async function insertMemberWithVotes(
+  tx: Tx,
+  params: {
+    memberId: string;
+    sessionId: string;
+    userId: string;
+    input: JoinSessionInput;
+    allVotes: { dateOptionId: string; preferenceLevel: PreferenceLevel }[];
+  },
+) {
+  await tx.insert(sessionMembers).values({
+    id: params.memberId,
+    sessionId: params.sessionId,
+    userId: params.userId,
+    joinedVia: JOINED_VIA.web,
+    referenceLocation: buildLocationObject(params.input),
+    budgetCeiling: params.input.budgetCeiling ?? null,
+  });
+
+  if (params.allVotes.length > 0) {
+    await tx.insert(dateVotes).values(
+      params.allVotes.map((v) => ({
+        id: nanoid(),
+        dateOptionId: v.dateOptionId,
+        memberId: params.memberId,
+        preferenceLevel: v.preferenceLevel,
+      })),
+    );
+  }
+
+  await tx.insert(activityFeed).values({
+    id: nanoid(),
+    sessionId: params.sessionId,
+    memberId: params.memberId,
+    type: ACTIVITY_TYPE.joined,
+  });
+}
+
 const JOIN_ERRORS: Record<string, string> = {
   UNAUTHORIZED: "unauthorized",
   SESSION_NOT_FOUND: "Bukber nggak ditemukan",
@@ -143,82 +225,22 @@ export async function joinSession(
         throw new Error("SESSION_CLOSED");
       }
 
-      // Validate existing date options
       await validateDateOptions(tx, input.sessionId, input.votes);
 
-      // Handle new date suggestions (atomic suggest+vote)
-      const newDateVotes: { dateOptionId: string; preferenceLevel: PreferenceLevel }[] = [];
-
+      let newDateVotes: { dateOptionId: string; preferenceLevel: PreferenceLevel }[] = [];
       if (input.newDates && input.newDates.length > 0) {
         if (bukber.datesLocked) throw new Error("DATES_LOCKED");
-
-        // Insert new date_options (ON CONFLICT DO NOTHING for concurrent members)
-        const newDateStrings = input.newDates.map((nd) => nd.date);
-        for (const nd of input.newDates) {
-          await tx
-            .insert(dateOptions)
-            .values({
-              id: nanoid(),
-              sessionId: input.sessionId,
-              date: nd.date,
-              createdBy: userId,
-            })
-            .onConflictDoNothing({
-              target: [dateOptions.sessionId, dateOptions.date],
-            });
-        }
-
-        // Fetch IDs for all new dates (covers both newly created and already-existing)
-        const insertedDates = await tx
-          .select({ id: dateOptions.id, date: dateOptions.date })
-          .from(dateOptions)
-          .where(
-            and(
-              eq(dateOptions.sessionId, input.sessionId),
-              inArray(dateOptions.date, newDateStrings),
-            ),
-          );
-
-        // Build preference lookup
-        const prefByDate = new Map(
-          input.newDates.map((nd) => [nd.date, nd.preferenceLevel]),
+        newDateVotes = await insertNewDatesAndBuildVotes(
+          tx, input.sessionId, userId, input.newDates,
         );
-        for (const d of insertedDates) {
-          const pref = prefByDate.get(d.date);
-          if (pref) {
-            newDateVotes.push({ dateOptionId: d.id, preferenceLevel: pref });
-          }
-        }
       }
 
-      // Insert member
-      await tx.insert(sessionMembers).values({
-        id: memberId,
+      await insertMemberWithVotes(tx, {
+        memberId,
         sessionId: input.sessionId,
         userId,
-        joinedVia: JOINED_VIA.web,
-        referenceLocation: buildLocationObject(input),
-        budgetCeiling: input.budgetCeiling ?? null,
-      });
-
-      // Merge all votes (existing + new date votes)
-      const allVotes = [...input.votes, ...newDateVotes];
-      if (allVotes.length > 0) {
-        await tx.insert(dateVotes).values(
-          allVotes.map((v) => ({
-            id: nanoid(),
-            dateOptionId: v.dateOptionId,
-            memberId,
-            preferenceLevel: v.preferenceLevel,
-          })),
-        );
-      }
-
-      await tx.insert(activityFeed).values({
-        id: nanoid(),
-        sessionId: input.sessionId,
-        memberId,
-        type: ACTIVITY_TYPE.joined,
+        input,
+        allVotes: [...input.votes, ...newDateVotes],
       });
     });
 
@@ -226,7 +248,6 @@ export async function joinSession(
     broadcastSessionEvent({ event: "member_joined", sessionId: input.sessionId }).catch(() => {});
     return { ok: true, sessionId: input.sessionId };
   } catch (err: unknown) {
-    // Handle race condition: UNIQUE violation means already joined
     const pgErr = err as { code?: string };
     if (pgErr.code === "23505") {
       return { ok: true, sessionId: input.sessionId };

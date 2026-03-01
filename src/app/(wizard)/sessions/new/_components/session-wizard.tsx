@@ -97,6 +97,32 @@ function buildStepSequence(state: WizardState): StepKey[] {
   return steps;
 }
 
+function validateSessionForm(
+  state: WizardState,
+  shape: SessionShape | null,
+): boolean {
+  if (!state.name.trim() || !state.mode || !shape) return false;
+  if (shape === SESSION_SHAPE.date_known && !state.confirmedDate) return false;
+  if (shape === SESSION_SHAPE.venue_known && !state.presetVenueName.trim()) return false;
+  return true;
+}
+
+function buildCreateSessionPayload(
+  state: WizardState,
+  shape: SessionShape,
+): Parameters<typeof createSession>[0] {
+  return {
+    name: state.name.trim(),
+    mode: state.mode!,
+    sessionShape: shape,
+    officeLocation: state.mode === "work" ? state.officeLocation : undefined,
+    confirmedDate: shape === SESSION_SHAPE.date_known ? state.confirmedDate! : undefined,
+    presetVenueName: shape === SESSION_SHAPE.venue_known ? state.presetVenueName : undefined,
+    presetVenueAddress: shape === SESSION_SHAPE.venue_known ? state.presetVenueAddress : undefined,
+    seededDates: state.seededDates.length > 0 ? state.seededDates : undefined,
+  };
+}
+
 export function SessionWizard() {
   const router = useRouter();
 
@@ -127,25 +153,11 @@ export function SessionWizard() {
 
   const handleSubmit = useCallback(() => {
     const shape = deriveShape(state.dateFixed, state.venueFixed);
-    if (!state.name.trim() || !state.mode || !shape) return;
-
-    // date_known needs a confirmed date
-    if (shape === SESSION_SHAPE.date_known && !state.confirmedDate) return;
-    // venue_known needs a venue name
-    if (shape === SESSION_SHAPE.venue_known && !state.presetVenueName.trim()) return;
+    if (!validateSessionForm(state, shape)) return;
 
     setError(null);
     startTransition(async () => {
-      const result = await createSession({
-        name: state.name.trim(),
-        mode: state.mode!,
-        sessionShape: shape,
-        officeLocation: state.mode === "work" ? state.officeLocation : undefined,
-        confirmedDate: shape === SESSION_SHAPE.date_known ? state.confirmedDate! : undefined,
-        presetVenueName: shape === SESSION_SHAPE.venue_known ? state.presetVenueName : undefined,
-        presetVenueAddress: shape === SESSION_SHAPE.venue_known ? state.presetVenueAddress : undefined,
-        seededDates: state.seededDates.length > 0 ? state.seededDates : undefined,
-      });
+      const result = await createSession(buildCreateSessionPayload(state, shape!));
 
       if (result.ok) {
         clearStorage();

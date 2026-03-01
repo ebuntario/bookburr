@@ -70,6 +70,110 @@ function getTomorrow(): string {
 
 const VALID_SHAPES = new Set(Object.values(SESSION_SHAPE));
 
+function validateCreateSessionInput(
+  input: CreateSessionInput,
+): CreateSessionError | null {
+  const name = input.name.trim();
+  if (name.length < 2 || name.length > 60) {
+    return { ok: false, error: "Nama bukber harus 2-60 karakter" };
+  }
+  if (input.mode !== SESSION_MODE.personal && input.mode !== SESSION_MODE.work) {
+    return { ok: false, error: "Mode nggak valid" };
+  }
+  if (!VALID_SHAPES.has(input.sessionShape)) {
+    return { ok: false, error: "Session shape nggak valid" };
+  }
+  if (input.sessionShape === SESSION_SHAPE.date_known) {
+    if (!input.confirmedDate || !isValidDate(input.confirmedDate)) {
+      return { ok: false, error: "Tanggal wajib diisi untuk date_known" };
+    }
+  }
+  if (input.sessionShape === SESSION_SHAPE.venue_known) {
+    if (!input.presetVenueName?.trim()) {
+      return { ok: false, error: "Nama venue wajib diisi" };
+    }
+  }
+  const seededCount = input.seededDates
+    ? [...new Set(input.seededDates)].filter(isValidDate).length
+    : 0;
+  if (seededCount > MAX_DATES) {
+    return { ok: false, error: `Maksimal ${MAX_DATES} tanggal` };
+  }
+  return null;
+}
+
+function normalizeDateRange(input: CreateSessionInput): {
+  dateRangeStart: string;
+  dateRangeEnd: string;
+  seededDates: string[];
+  officeLocation: string | undefined;
+} {
+  return {
+    dateRangeStart:
+      input.dateRangeStart && isValidDate(input.dateRangeStart)
+        ? input.dateRangeStart
+        : getTomorrow(),
+    dateRangeEnd:
+      input.dateRangeEnd && isValidDate(input.dateRangeEnd)
+        ? input.dateRangeEnd
+        : EID_2026,
+    seededDates: input.seededDates
+      ? [...new Set(input.seededDates)].filter(isValidDate)
+      : [],
+    officeLocation:
+      input.mode === SESSION_MODE.work && input.officeLocation
+        ? input.officeLocation.trim()
+        : undefined,
+  };
+}
+
+async function insertShapeSpecificRecords(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  sessionId: string,
+  memberId: string,
+  userId: string,
+  shape: SessionShape,
+  input: CreateSessionInput,
+  seededDates: string[],
+) {
+  if (shape === SESSION_SHAPE.date_known && input.confirmedDate) {
+    const dateOptionId = nanoid();
+    await tx.insert(dateOptions).values({
+      id: dateOptionId,
+      sessionId,
+      date: input.confirmedDate,
+      createdBy: userId,
+    });
+    await tx
+      .update(bukberSessions)
+      .set({ confirmedDateOptionId: dateOptionId })
+      .where(eq(bukberSessions.id, sessionId));
+  }
+
+  if (shape === SESSION_SHAPE.venue_known && input.presetVenueName) {
+    await tx.insert(venues).values({
+      id: nanoid(),
+      sessionId,
+      name: input.presetVenueName.trim(),
+      location: input.presetVenueAddress
+        ? { address: input.presetVenueAddress.trim() }
+        : null,
+      suggestedByMemberId: memberId,
+    });
+  }
+
+  if (seededDates.length > 0 && shape !== SESSION_SHAPE.date_known) {
+    await tx.insert(dateOptions).values(
+      seededDates.map((d) => ({
+        id: nanoid(),
+        sessionId,
+        date: d,
+        createdBy: userId,
+      })),
+    );
+  }
+}
+
 export async function createSession(
   input: CreateSessionInput,
 ): Promise<CreateSessionResult | CreateSessionError> {
@@ -79,58 +183,13 @@ export async function createSession(
     return { ok: false, error: "unauthorized" };
   }
 
-  // Validate name
+  const validationError = validateCreateSessionInput(input);
+  if (validationError) return validationError;
+
   const name = input.name.trim();
-  if (name.length < 2 || name.length > 60) {
-    return { ok: false, error: "Nama bukber harus 2-60 karakter" };
-  }
-
-  // Validate mode
-  if (input.mode !== SESSION_MODE.personal && input.mode !== SESSION_MODE.work) {
-    return { ok: false, error: "Mode nggak valid" };
-  }
-
-  // Validate shape
-  if (!VALID_SHAPES.has(input.sessionShape)) {
-    return { ok: false, error: "Session shape nggak valid" };
-  }
-
   const shape = input.sessionShape;
-
-  // Validate shape-specific inputs
-  if (shape === SESSION_SHAPE.date_known) {
-    if (!input.confirmedDate || !isValidDate(input.confirmedDate)) {
-      return { ok: false, error: "Tanggal wajib diisi untuk date_known" };
-    }
-  }
-
-  if (shape === SESSION_SHAPE.venue_known) {
-    if (!input.presetVenueName?.trim()) {
-      return { ok: false, error: "Nama venue wajib diisi" };
-    }
-  }
-
-  // Validate and deduplicate seeded dates
-  const seededDates = input.seededDates
-    ? [...new Set(input.seededDates)].filter(isValidDate)
-    : [];
-  if (seededDates.length > MAX_DATES) {
-    return { ok: false, error: `Maksimal ${MAX_DATES} tanggal` };
-  }
-
-  // Default date range: tomorrow → EID_2026
-  const dateRangeStart = input.dateRangeStart && isValidDate(input.dateRangeStart)
-    ? input.dateRangeStart
-    : getTomorrow();
-  const dateRangeEnd = input.dateRangeEnd && isValidDate(input.dateRangeEnd)
-    ? input.dateRangeEnd
-    : EID_2026;
-
-  // Validate office location for work mode
-  const officeLocation =
-    input.mode === SESSION_MODE.work && input.officeLocation
-      ? input.officeLocation.trim()
-      : undefined;
+  const { dateRangeStart, dateRangeEnd, seededDates, officeLocation } =
+    normalizeDateRange(input);
 
   // Retry loop for invite code collisions
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -139,7 +198,6 @@ export async function createSession(
 
     try {
       await db.transaction(async (tx) => {
-        // Insert session (without confirmed_date_option_id — set later for date_known)
         await tx.insert(bukberSessions).values({
           id: sessionId,
           hostId: userId,
@@ -151,12 +209,11 @@ export async function createSession(
             : undefined,
           inviteCode,
           status: SESSION_STATUS.collecting,
-          dateRangeStart: dateRangeStart,
-          dateRangeEnd: dateRangeEnd,
+          dateRangeStart,
+          dateRangeEnd,
           datesLocked: shape === SESSION_SHAPE.date_known,
         });
 
-        // Host auto-joins as member
         const memberId = nanoid();
         await tx.insert(sessionMembers).values({
           id: memberId,
@@ -165,47 +222,10 @@ export async function createSession(
           joinedVia: JOINED_VIA.web,
         });
 
-        // Shape-specific: date_known → insert single date_option, set confirmed
-        if (shape === SESSION_SHAPE.date_known && input.confirmedDate) {
-          const dateOptionId = nanoid();
-          await tx.insert(dateOptions).values({
-            id: dateOptionId,
-            sessionId,
-            date: input.confirmedDate,
-            createdBy: userId,
-          });
-          await tx
-            .update(bukberSessions)
-            .set({ confirmedDateOptionId: dateOptionId })
-            .where(eq(bukberSessions.id, sessionId));
-        }
+        await insertShapeSpecificRecords(
+          tx, sessionId, memberId, userId, shape, input, seededDates,
+        );
 
-        // Shape-specific: venue_known → create venue record
-        if (shape === SESSION_SHAPE.venue_known && input.presetVenueName) {
-          await tx.insert(venues).values({
-            id: nanoid(),
-            sessionId,
-            name: input.presetVenueName.trim(),
-            location: input.presetVenueAddress
-              ? { address: input.presetVenueAddress.trim() }
-              : null,
-            suggestedByMemberId: memberId,
-          });
-        }
-
-        // Insert seeded dates (for need_both or venue_known)
-        if (seededDates.length > 0 && shape !== SESSION_SHAPE.date_known) {
-          await tx.insert(dateOptions).values(
-            seededDates.map((d) => ({
-              id: nanoid(),
-              sessionId,
-              date: d,
-              createdBy: userId,
-            })),
-          );
-        }
-
-        // Activity feed entry
         await tx.insert(activityFeed).values({
           id: nanoid(),
           sessionId,
@@ -217,7 +237,6 @@ export async function createSession(
 
       return { ok: true, sessionId, inviteCode };
     } catch (err: unknown) {
-      // Retry on invite_code unique constraint violation (PG error 23505)
       const pgError = err as { code?: string; constraint_name?: string };
       if (
         pgError.code === "23505" &&
