@@ -33,6 +33,7 @@ interface HostControlsProps {
   sessionId: string;
   sessionName: string;
   status: string;
+  sessionShape?: string;
   memberCount: number;
   venueCount: number;
   dates: DateOption[];
@@ -44,6 +45,7 @@ export function HostControls({
   sessionId,
   sessionName,
   status,
+  sessionShape = "need_both",
   memberCount,
   venueCount,
   dates,
@@ -66,7 +68,8 @@ export function HostControls({
       setError(result.error);
     } else {
       router.refresh();
-      if (status === "collecting") {
+      // Only trigger venue discovery for shapes that need it
+      if (status === "collecting" && sessionShape !== "venue_known") {
         discoverVenues(sessionId).then((r) => {
           if (!r.ok) setDiscoveryFailed(true);
         });
@@ -118,16 +121,24 @@ export function HostControls({
   };
 
   if (status === "collecting") {
+    // For date_known, hasViableDates check is irrelevant
+    const effectiveHasViableDates = sessionShape === "date_known" ? true : hasViableDates;
+    // For venue_known, the button label changes since we skip discovering
+    const advanceLabel = sessionShape === "venue_known"
+      ? "Mulai Voting!"
+      : "Cari Tempat Bukber!";
     return (
       <HostCollectingCTA
         memberCount={memberCount}
-        hasViableDates={hasViableDates}
+        hasViableDates={effectiveHasViableDates}
         onAdvance={handleAdvance}
         renderCTA={renderCTA}
+        advanceLabel={advanceLabel}
       />
     );
   }
 
+  // venue_known sessions skip discovering entirely (transition map handles this)
   if (status === "discovering") {
     return (
       <HostDiscoveringCTA

@@ -12,6 +12,7 @@ interface HostCollectingCTAProps {
     onPress: () => void,
     variant?: "gold" | "coral" | "ghost",
   ) => React.ReactNode;
+  advanceLabel?: string;
 }
 
 export function HostCollectingCTA({
@@ -19,6 +20,7 @@ export function HostCollectingCTA({
   hasViableDates,
   onAdvance,
   renderCTA,
+  advanceLabel,
 }: HostCollectingCTAProps) {
   if (memberCount < 2) {
     return (
@@ -41,5 +43,5 @@ export function HostCollectingCTA({
     );
   }
 
-  return renderCTA("Mulai Cari Venue →", "Lagi nyari... 🔍", onAdvance, "gold");
+  return renderCTA(advanceLabel ?? "Mulai Cari Venue →", "Lagi proses...", onAdvance, "gold");
 }

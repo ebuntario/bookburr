@@ -10,6 +10,7 @@ interface SessionCardProps {
   id: string;
   name: string;
   mode: string;
+  sessionShape?: string;
   status: string;
   memberCount: number;
   createdAt: string;
@@ -29,10 +30,17 @@ function formatDateRange(earliest: string | null | undefined, latest: string | n
   return mon1 === mon2 ? `${day1}–${day2} ${mon1}` : `${day1} ${mon1}–${day2} ${mon2}`;
 }
 
+const SHAPE_LABELS: Record<string, string> = {
+  need_both: "Cari semua",
+  date_known: "Tanggal fix",
+  venue_known: "Tempat fix",
+};
+
 export function SessionCard({
   id,
   name,
   mode,
+  sessionShape,
   status,
   memberCount,
   createdAt,
@@ -64,6 +72,14 @@ export function SessionCard({
           </span>
           <span className="text-foreground/20">·</span>
           <span className="text-sm text-foreground/50">{dateDisplay}</span>
+          {sessionShape && sessionShape !== "need_both" && (
+            <>
+              <span className="text-foreground/20">·</span>
+              <span className="text-xs text-primary/70">
+                {SHAPE_LABELS[sessionShape]}
+              </span>
+            </>
+          )}
         </Card.Content>
       </Card>
     </Link>

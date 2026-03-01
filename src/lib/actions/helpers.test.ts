@@ -76,9 +76,9 @@ describe("lockSessionForUpdate", () => {
   }
 
   it("returns session row when host matches", async () => {
-    const tx = makeMockTx([{ id: "s1", status: "collecting", host_id: "u1" }]);
+    const tx = makeMockTx([{ id: "s1", status: "collecting", host_id: "u1", session_shape: "need_both" }]);
     const row = await lockSessionForUpdate(tx, "s1", "u1");
-    expect(row).toEqual({ id: "s1", status: "collecting", host_id: "u1" });
+    expect(row).toEqual({ id: "s1", status: "collecting", host_id: "u1", session_shape: "need_both" });
   });
 
   it("throws SESSION_NOT_FOUND when no rows returned", async () => {

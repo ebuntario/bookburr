@@ -49,13 +49,18 @@ CREATE TABLE bukber_sessions (
     host_id text NOT NULL REFERENCES users(id),
     name text NOT NULL,
     mode text NOT NULL, -- 'personal' | 'work'
+    session_shape text NOT NULL DEFAULT 'need_both', -- 'need_both' | 'date_known' | 'venue_known'
     office_location jsonb, -- {address: string, lat?: number, lng?: number}
     invite_code text UNIQUE NOT NULL,
     status text NOT NULL DEFAULT 'collecting', -- 'collecting' | 'discovering' | 'voting' | 'confirmed' | 'completed'
     expected_group_size integer,
+    date_range_start date, -- calendar lower bound (NULL = no constraint)
+    date_range_end date, -- calendar upper bound (NULL = no constraint)
+    dates_locked boolean NOT NULL DEFAULT false, -- host can lock date suggestions
     confirmed_venue_id text,
     confirmed_date_option_id text,
-    created_at timestamp with time zone NOT NULL DEFAULT now()
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    CHECK (session_shape IN ('need_both', 'date_known', 'venue_known'))
 );
 
 CREATE INDEX idx_bukber_sessions_invite_code ON bukber_sessions(invite_code);
@@ -157,7 +162,7 @@ CREATE TABLE activity_feed (
     id text PRIMARY KEY,
     session_id text NOT NULL REFERENCES bukber_sessions(id) ON DELETE CASCADE,
     member_id text REFERENCES session_members(id), -- null for system events
-    type text NOT NULL, -- 'session_created' | 'joined' | 'voted' | 'suggested_venue' | 'added_preference' | 'system_recommendation' | 'milestone' | 'confirmed'
+    type text NOT NULL, -- 'session_created' | 'joined' | 'voted' | 'suggested_venue' | 'added_preference' | 'system_recommendation' | 'milestone' | 'confirmed' | 'date_suggested' | 'date_removed' | 'dates_locked_changed'
     metadata jsonb,
     created_at timestamp with time zone NOT NULL DEFAULT now()
 );

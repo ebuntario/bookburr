@@ -14,6 +14,9 @@ const EVENT_MESSAGES: Record<SessionRealtimeEvent, string> = {
   reaction_changed: "Ada yang bereaksi ke venue 🔥",
   status_changed: "Status session berubah 🔄",
   venue_voted: "Ada yang vote venue! 🏆",
+  date_suggested: "Ada yang suggest tanggal baru 📅",
+  date_removed: "Host hapus tanggal 📅",
+  dates_locked_changed: "Host ubah kunci tanggal 🔒",
 };
 
 interface RealtimeDashboardWrapperProps {

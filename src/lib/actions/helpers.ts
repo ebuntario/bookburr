@@ -34,13 +34,13 @@ export async function lockSessionForUpdate(
   tx: Tx,
   sessionId: string,
   userId: string,
-): Promise<{ id: string; status: string; host_id: string }> {
+): Promise<{ id: string; status: string; host_id: string; session_shape: string }> {
   const lockResult = await tx.execute(
-    sql`SELECT id, status, host_id FROM bukber_sessions WHERE id = ${sessionId} FOR UPDATE`,
+    sql`SELECT id, status, host_id, session_shape FROM bukber_sessions WHERE id = ${sessionId} FOR UPDATE`,
   );
   const locked = lockResult.rows[0];
   if (!locked) throw new Error("SESSION_NOT_FOUND");
-  const row = locked as { id: string; status: string; host_id: string };
+  const row = locked as { id: string; status: string; host_id: string; session_shape: string };
   if (row.host_id !== userId) throw new Error("NOT_HOST");
   return row;
 }

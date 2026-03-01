@@ -104,6 +104,7 @@ export function useWizard<T extends object>({
     goBack,
     updateState,
     setError,
+    setStep,
     clearStorage,
     startTransition,
   };

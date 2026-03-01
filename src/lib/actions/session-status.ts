@@ -9,7 +9,7 @@ import {
   dateOptions,
   dateVotes,
 } from "@/lib/db/schema";
-import { SESSION_STATUS_TRANSITIONS, ACTIVITY_TYPE } from "@/lib/constants";
+import { SESSION_STATUS_TRANSITIONS, SHAPE_STATUS_TRANSITIONS, ACTIVITY_TYPE, SESSION_SHAPE } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
 import { sendCalendarInvitesForSession } from "@/lib/email/calendar-invite";
@@ -27,6 +27,7 @@ async function validateAdvancePrerequisites(
   tx: Tx,
   status: string,
   sessionId: string,
+  sessionShape: string,
 ): Promise<void> {
   if (status === "collecting") {
     const [{ memberCount }] = await tx
@@ -35,22 +36,26 @@ async function validateAdvancePrerequisites(
       .where(eq(sessionMembers.sessionId, sessionId));
     if (memberCount < 2) throw new Error("NEED_MORE_MEMBERS");
 
-    const [{ viableDateCount }] = await tx
-      .select({
-        viableDateCount: sql<number>`count(distinct ${dateOptions.id})::int`,
-      })
-      .from(dateOptions)
-      .innerJoin(dateVotes, eq(dateVotes.dateOptionId, dateOptions.id))
-      .where(
-        and(
-          eq(dateOptions.sessionId, sessionId),
-          sql`${dateVotes.preferenceLevel} IN ('strongly_prefer', 'can_do')`,
-        ),
-      );
-    if (viableDateCount < 1) throw new Error("NEED_VIABLE_DATE");
+    // date_known: skip viable date check (date already confirmed)
+    if (sessionShape !== SESSION_SHAPE.date_known) {
+      const [{ viableDateCount }] = await tx
+        .select({
+          viableDateCount: sql<number>`count(distinct ${dateOptions.id})::int`,
+        })
+        .from(dateOptions)
+        .innerJoin(dateVotes, eq(dateVotes.dateOptionId, dateOptions.id))
+        .where(
+          and(
+            eq(dateOptions.sessionId, sessionId),
+            sql`${dateVotes.preferenceLevel} IN ('strongly_prefer', 'can_do')`,
+          ),
+        );
+      if (viableDateCount < 1) throw new Error("NEED_VIABLE_DATE");
+    }
   }
 
-  if (status === "discovering") {
+  // venue_known: skip venue check for discovering (it skips discovering entirely via transition map)
+  if (status === "discovering" && sessionShape !== SESSION_SHAPE.venue_known) {
     const [{ venueCount }] = await tx
       .select({ venueCount: count() })
       .from(venues)
@@ -78,10 +83,12 @@ export async function advanceSessionStatus(
     await db.transaction(async (tx) => {
       const row = await lockSessionForUpdate(tx, sessionId, userId);
 
-      const nextStatus = SESSION_STATUS_TRANSITIONS[row.status];
+      // Use per-shape transition map
+      const shapeTransitions = SHAPE_STATUS_TRANSITIONS[row.session_shape] ?? SESSION_STATUS_TRANSITIONS;
+      const nextStatus = shapeTransitions[row.status];
       if (!nextStatus) throw new Error("NO_TRANSITION");
 
-      await validateAdvancePrerequisites(tx, row.status, sessionId);
+      await validateAdvancePrerequisites(tx, row.status, sessionId, row.session_shape);
 
       await tx
         .update(bukberSessions)
@@ -147,7 +154,9 @@ export async function confirmSession(input: {
   venueId: string;
   dateOptionId: string;
 }): Promise<ActionResult> {
-  const { sessionId, venueId, dateOptionId } = input;
+  const { sessionId } = input;
+  const { venueId } = input;
+  let { dateOptionId } = input;
 
   try {
     const userId = await requireAuth();
@@ -155,6 +164,20 @@ export async function confirmSession(input: {
     await db.transaction(async (tx) => {
       const row = await lockSessionForUpdate(tx, sessionId, userId);
       if (row.status !== "voting") throw new Error("WRONG_STATUS");
+
+      // For venue_known: venueId should already be the preset venue
+      // For date_known: dateOptionId should already be set at creation
+      if (row.session_shape === SESSION_SHAPE.date_known) {
+        // Read the already-set confirmedDateOptionId
+        const [sess] = await tx
+          .select({ confirmedDateOptionId: bukberSessions.confirmedDateOptionId })
+          .from(bukberSessions)
+          .where(eq(bukberSessions.id, sessionId))
+          .limit(1);
+        if (sess?.confirmedDateOptionId) {
+          dateOptionId = sess.confirmedDateOptionId;
+        }
+      }
 
       await validateConfirmInputs(tx, sessionId, venueId, dateOptionId);
 

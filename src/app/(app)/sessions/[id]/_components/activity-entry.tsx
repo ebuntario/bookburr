@@ -6,6 +6,8 @@ import {
   ArrowPathIcon,
   TrophyIcon,
   DocumentTextIcon,
+  CalendarDaysIcon,
+  LockClosedIcon,
 } from "@heroicons/react/24/outline";
 
 export interface ActivityEntryData {
@@ -50,6 +52,33 @@ const ACTIVITY_CONFIG: Record<
     icon: SparklesIcon,
     getMessage: (_actor, m) =>
       `Bukber confirmed di ${m.venueName ?? "sini"}!`,
+  },
+  date_suggested: {
+    icon: CalendarDaysIcon,
+    getMessage: (actor, m) => {
+      if (m.date) {
+        const d = new Date(m.date + "T00:00:00");
+        const formatted = d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+        return `${actor} suggest tanggal ${formatted}`;
+      }
+      return `${actor} suggest tanggal baru`;
+    },
+  },
+  date_removed: {
+    icon: CalendarDaysIcon,
+    getMessage: (actor, m) => {
+      if (m.date) {
+        const d = new Date(m.date + "T00:00:00");
+        const formatted = d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+        return `${actor} hapus tanggal ${formatted}`;
+      }
+      return `${actor} hapus tanggal`;
+    },
+  },
+  dates_locked_changed: {
+    icon: LockClosedIcon,
+    getMessage: (actor, m) =>
+      m.locked === "true" ? `${actor} kunci tanggal` : `${actor} buka kunci tanggal`,
   },
 };
 

@@ -24,7 +24,8 @@ import {
   computePendingMembers,
   computeDateRange,
 } from "./_components/dashboard-helpers";
-import type { SessionStatus } from "@/lib/constants";
+import type { SessionStatus, SessionShape } from "@/lib/constants";
+import { SESSION_SHAPE } from "@/lib/constants";
 
 export const metadata = { title: "Dashboard Bukber — BookBurr" };
 
@@ -59,6 +60,7 @@ export default async function SessionDashboardPage({
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://bookburr.com";
   const shareUrl = `${baseUrl}/sessions/${sessionId}/join`;
   const status = sessionData.session.status;
+  const sessionShape = (sessionData.session.sessionShape ?? "need_both") as SessionShape;
   const hostMember = sessionData.members.find(
     (m) => m.userId === sessionData.session.hostId,
   );
@@ -116,31 +118,58 @@ export default async function SessionDashboardPage({
         status={status}
       />
 
-      {datesData.dates.length > 0 && (
-        <DateVotingResults
-          sessionId={sessionId}
-          memberId={currentMember.id}
-          dates={datesData.dates}
-          totalMembers={sessionData.members.length}
-          votedMemberCount={datesData.votedMemberCount}
-          status={status}
-          topVenueName={venuesData[0]?.name}
-        />
+      {/* Date section: skip for date_known (show simple confirmed card) */}
+      {sessionShape === SESSION_SHAPE.date_known ? (
+        confirmedDate && (
+          <div className="rounded-2xl border border-foreground/10 bg-white px-5 py-4">
+            <p className="text-xs font-medium text-foreground/40">Tanggal fix</p>
+            <p className="font-heading text-lg font-medium">
+              {new Date(confirmedDate.date + "T00:00:00").toLocaleDateString("id-ID", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })}
+            </p>
+          </div>
+        )
+      ) : (
+        datesData.dates.length > 0 && (
+          <DateVotingResults
+            sessionId={sessionId}
+            memberId={currentMember.id}
+            dates={datesData.dates}
+            totalMembers={sessionData.members.length}
+            votedMemberCount={datesData.votedMemberCount}
+            status={status}
+            topVenueName={venuesData[0]?.name}
+          />
+        )
       )}
 
-      <VenueSection
-        sessionId={sessionId}
-        status={status as SessionStatus}
-        isHost={isHost}
-        venues={venuesData}
-        isTerserah={memberVoteStatus.isTerserah}
-      />
+      {/* Venue section: for venue_known, show preset venue info */}
+      {sessionShape === SESSION_SHAPE.venue_known ? (
+        venuesData.length > 0 && (
+          <div className="rounded-2xl border border-foreground/10 bg-white px-5 py-4">
+            <p className="text-xs font-medium text-foreground/40">Tempat fix</p>
+            <p className="font-heading text-lg font-medium">{venuesData[0].name}</p>
+          </div>
+        )
+      ) : (
+        <VenueSection
+          sessionId={sessionId}
+          status={status as SessionStatus}
+          isHost={isHost}
+          venues={venuesData}
+          isTerserah={memberVoteStatus.isTerserah}
+        />
+      )}
 
       {isHost && (
         <HostControls
           sessionId={sessionId}
           sessionName={sessionData.session.name}
           status={status}
+          sessionShape={sessionShape}
           memberCount={sessionData.members.length}
           venueCount={venuesData.length}
           dates={datesData.dates}

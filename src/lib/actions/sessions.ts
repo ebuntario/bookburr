@@ -1,26 +1,41 @@
 "use server";
 
 import { nanoid } from "nanoid";
+import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   bukberSessions,
   sessionMembers,
   dateOptions,
+  venues,
   activityFeed,
 } from "@/lib/db/schema";
 import {
   SESSION_STATUS,
   SESSION_MODE,
+  SESSION_SHAPE,
   JOINED_VIA,
   ACTIVITY_TYPE,
+  EID_2026,
 } from "@/lib/constants";
+import type { SessionShape } from "@/lib/constants";
 
 interface CreateSessionInput {
   name: string;
   mode: "personal" | "work";
+  sessionShape: SessionShape;
   officeLocation?: string;
-  candidateDates: string[]; // "YYYY-MM-DD" strings
+  /** Seed dates for need_both / venue_known (optional) */
+  seededDates?: string[];
+  /** Pre-set date for date_known (required when shape is date_known) */
+  confirmedDate?: string;
+  /** Date range bounds (optional, defaults to tomorrow → EID_2026) */
+  dateRangeStart?: string;
+  dateRangeEnd?: string;
+  /** For venue_known shape */
+  presetVenueName?: string;
+  presetVenueAddress?: string;
 }
 
 interface CreateSessionResult {
@@ -37,6 +52,23 @@ interface CreateSessionError {
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_DATES = 30;
 const MAX_RETRIES = 3;
+
+function isValidDate(d: string): boolean {
+  if (!DATE_PATTERN.test(d)) return false;
+  const parsed = new Date(d + "T00:00:00");
+  return !isNaN(parsed.getTime());
+}
+
+function getTomorrow(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+const VALID_SHAPES = new Set(Object.values(SESSION_SHAPE));
 
 export async function createSession(
   input: CreateSessionInput,
@@ -58,19 +90,41 @@ export async function createSession(
     return { ok: false, error: "Mode nggak valid" };
   }
 
-  // Deduplicate and validate dates
-  const uniqueDates = [...new Set(input.candidateDates)];
-  if (uniqueDates.length === 0) {
-    return { ok: false, error: "Pilih minimal 1 tanggal" };
+  // Validate shape
+  if (!VALID_SHAPES.has(input.sessionShape)) {
+    return { ok: false, error: "Session shape nggak valid" };
   }
-  if (uniqueDates.length > MAX_DATES) {
-    return { ok: false, error: `Maksimal ${MAX_DATES} tanggal` };
-  }
-  for (const d of uniqueDates) {
-    if (!DATE_PATTERN.test(d)) {
-      return { ok: false, error: "Format tanggal nggak valid" };
+
+  const shape = input.sessionShape;
+
+  // Validate shape-specific inputs
+  if (shape === SESSION_SHAPE.date_known) {
+    if (!input.confirmedDate || !isValidDate(input.confirmedDate)) {
+      return { ok: false, error: "Tanggal wajib diisi untuk date_known" };
     }
   }
+
+  if (shape === SESSION_SHAPE.venue_known) {
+    if (!input.presetVenueName?.trim()) {
+      return { ok: false, error: "Nama venue wajib diisi" };
+    }
+  }
+
+  // Validate and deduplicate seeded dates
+  const seededDates = input.seededDates
+    ? [...new Set(input.seededDates)].filter(isValidDate)
+    : [];
+  if (seededDates.length > MAX_DATES) {
+    return { ok: false, error: `Maksimal ${MAX_DATES} tanggal` };
+  }
+
+  // Default date range: tomorrow → EID_2026
+  const dateRangeStart = input.dateRangeStart && isValidDate(input.dateRangeStart)
+    ? input.dateRangeStart
+    : getTomorrow();
+  const dateRangeEnd = input.dateRangeEnd && isValidDate(input.dateRangeEnd)
+    ? input.dateRangeEnd
+    : EID_2026;
 
   // Validate office location for work mode
   const officeLocation =
@@ -85,17 +139,21 @@ export async function createSession(
 
     try {
       await db.transaction(async (tx) => {
-        // Insert session
+        // Insert session (without confirmed_date_option_id — set later for date_known)
         await tx.insert(bukberSessions).values({
           id: sessionId,
           hostId: userId,
           name,
           mode: input.mode,
+          sessionShape: shape,
           officeLocation: officeLocation
             ? { address: officeLocation }
             : undefined,
           inviteCode,
           status: SESSION_STATUS.collecting,
+          dateRangeStart: dateRangeStart,
+          dateRangeEnd: dateRangeEnd,
+          datesLocked: shape === SESSION_SHAPE.date_known,
         });
 
         // Host auto-joins as member
@@ -107,23 +165,53 @@ export async function createSession(
           joinedVia: JOINED_VIA.web,
         });
 
-        // Insert date options
-        await tx.insert(dateOptions).values(
-          uniqueDates.map((d) => ({
+        // Shape-specific: date_known → insert single date_option, set confirmed
+        if (shape === SESSION_SHAPE.date_known && input.confirmedDate) {
+          const dateOptionId = nanoid();
+          await tx.insert(dateOptions).values({
+            id: dateOptionId,
+            sessionId,
+            date: input.confirmedDate,
+            createdBy: userId,
+          });
+          await tx
+            .update(bukberSessions)
+            .set({ confirmedDateOptionId: dateOptionId })
+            .where(eq(bukberSessions.id, sessionId));
+        }
+
+        // Shape-specific: venue_known → create venue record
+        if (shape === SESSION_SHAPE.venue_known && input.presetVenueName) {
+          await tx.insert(venues).values({
             id: nanoid(),
             sessionId,
-            date: d,
-            createdBy: userId,
-          })),
-        );
+            name: input.presetVenueName.trim(),
+            location: input.presetVenueAddress
+              ? { address: input.presetVenueAddress.trim() }
+              : null,
+            suggestedByMemberId: memberId,
+          });
+        }
 
-        // Insert activity feed entry
+        // Insert seeded dates (for need_both or venue_known)
+        if (seededDates.length > 0 && shape !== SESSION_SHAPE.date_known) {
+          await tx.insert(dateOptions).values(
+            seededDates.map((d) => ({
+              id: nanoid(),
+              sessionId,
+              date: d,
+              createdBy: userId,
+            })),
+          );
+        }
+
+        // Activity feed entry
         await tx.insert(activityFeed).values({
           id: nanoid(),
           sessionId,
           memberId,
           type: ACTIVITY_TYPE.session_created,
-          metadata: { sessionName: name, mode: input.mode },
+          metadata: { sessionName: name, mode: input.mode, shape },
         });
       });
 

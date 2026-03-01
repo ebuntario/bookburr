@@ -9,7 +9,10 @@ export type SessionRealtimeEvent =
   | "venue_suggested"
   | "reaction_changed"
   | "status_changed"
-  | "venue_voted";
+  | "venue_voted"
+  | "date_suggested"
+  | "date_removed"
+  | "dates_locked_changed";
 
 interface SessionEventPayload {
   event: SessionRealtimeEvent;

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { joinSession } from "@/lib/actions/members";
-import { PREFERENCE_LEVEL } from "@/lib/constants";
-import type { PreferenceLevel } from "@/lib/constants";
+import { PREFERENCE_LEVEL, SESSION_SHAPE } from "@/lib/constants";
+import type { PreferenceLevel, SessionShape } from "@/lib/constants";
 import { slideVariants, slideTransition, toastSlideUp } from "@/lib/motion-variants";
 import { useWizard } from "@/lib/hooks/use-wizard";
 import { WizardProgress } from "@/app/(wizard)/sessions/new/_components/wizard-progress";
@@ -15,13 +15,23 @@ import { StepLocation } from "./step-location";
 import { StepBudget } from "./step-budget";
 
 interface JoinWizardProps {
-  session: { id: string; name: string; mode: string; status: string };
+  session: {
+    id: string;
+    name: string;
+    mode: string;
+    status: string;
+    sessionShape: SessionShape;
+    dateRangeStart: string | null;
+    dateRangeEnd: string | null;
+    datesLocked: boolean;
+  };
   dateOptions: { id: string; date: string }[];
   conflictDates?: Record<string, string[]>;
 }
 
 interface JoinWizardState {
   votes: Record<string, PreferenceLevel>;
+  newDateVotes: Record<string, PreferenceLevel>;
   referenceLocation: string;
   lat?: number;
   lng?: number;
@@ -30,11 +40,10 @@ interface JoinWizardState {
 
 const defaultState: JoinWizardState = {
   votes: {},
+  newDateVotes: {},
   referenceLocation: "",
   budgetCeiling: null,
 };
-
-const TOTAL_STEPS = 3;
 
 function UnvotedConfirmModal({
   unvotedCount,
@@ -76,6 +85,26 @@ function UnvotedConfirmModal({
 export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWizardProps) {
   const router = useRouter();
 
+  // Build step sequence based on session shape
+  const stepKeys = useMemo(() => {
+    const keys: ("dates" | "location" | "budget")[] = [];
+
+    // date_known: skip date step (date already decided)
+    if (session.sessionShape !== SESSION_SHAPE.date_known) {
+      keys.push("dates");
+    }
+
+    // venue_known: skip location step (venue already decided, location is irrelevant)
+    if (session.sessionShape !== SESSION_SHAPE.venue_known) {
+      keys.push("location");
+    }
+
+    keys.push("budget");
+    return keys;
+  }, [session.sessionShape]);
+
+  const totalSteps = stepKeys.length;
+
   const {
     state,
     step,
@@ -91,24 +120,44 @@ export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWiz
     startTransition,
   } = useWizard<JoinWizardState>({
     storageKey: `bookburr-join-${session.id}`,
-    totalSteps: TOTAL_STEPS,
+    totalSteps,
     defaultState,
   });
 
+  const currentStepKey = stepKeys[step] ?? stepKeys[stepKeys.length - 1];
   const [pendingUnvotedConfirm, setPendingUnvotedConfirm] = useState(false);
 
   const executeSubmit = useCallback(() => {
     setError(null);
     setPendingUnvotedConfirm(false);
     startTransition(async () => {
-      const votes = dateOptions.map((d) => ({
-        dateOptionId: d.id,
-        preferenceLevel: state.votes[d.id] || PREFERENCE_LEVEL.can_do,
-      }));
+      // Build votes for existing date options
+      const existingVotes = dateOptions
+        .filter((d) => state.votes[d.id])
+        .map((d) => ({
+          dateOptionId: d.id,
+          preferenceLevel: state.votes[d.id] || PREFERENCE_LEVEL.can_do,
+        }));
+
+      // For unvoted existing dates, default to can_do
+      const unvotedExisting = dateOptions
+        .filter((d) => !state.votes[d.id])
+        .map((d) => ({
+          dateOptionId: d.id,
+          preferenceLevel: PREFERENCE_LEVEL.can_do as PreferenceLevel,
+        }));
+
+      const allExistingVotes = [...existingVotes, ...unvotedExisting];
+
+      // Build new date suggestions
+      const newDates = Object.entries(state.newDateVotes).map(
+        ([date, preferenceLevel]) => ({ date, preferenceLevel }),
+      );
 
       const result = await joinSession({
         sessionId: session.id,
-        votes,
+        votes: allExistingVotes,
+        newDates: newDates.length > 0 ? newDates : undefined,
         referenceLocation: state.referenceLocation || undefined,
         lat: state.lat,
         lng: state.lng,
@@ -125,13 +174,18 @@ export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWiz
   }, [state, session.id, dateOptions, clearStorage, router, setError, startTransition]);
 
   const handleSubmit = useCallback(() => {
-    const unvotedCount = dateOptions.filter((d) => !state.votes[d.id]).length;
-    if (unvotedCount > 0) {
-      setPendingUnvotedConfirm(true);
-      return;
+    // Only check unvoted for non-date_known sessions
+    if (session.sessionShape !== SESSION_SHAPE.date_known) {
+      const unvotedCount = dateOptions.filter(
+        (d) => !state.votes[d.id],
+      ).length;
+      if (unvotedCount > 0) {
+        setPendingUnvotedConfirm(true);
+        return;
+      }
     }
     executeSubmit();
-  }, [dateOptions, state.votes, executeSubmit]);
+  }, [dateOptions, state.votes, executeSubmit, session.sessionShape]);
 
   if (!mounted) return null;
 
@@ -145,14 +199,14 @@ export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWiz
         >
           {step === 0 ? "Batal" : "Balik"}
         </button>
-        <WizardProgress current={step} total={TOTAL_STEPS} />
+        <WizardProgress current={step} total={totalSteps} />
         <div className="w-10" />
       </div>
 
       <div className="relative flex flex-1 flex-col overflow-hidden px-6 py-8">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
-            key={step}
+            key={currentStepKey}
             custom={direction}
             variants={slideVariants}
             initial="enter"
@@ -161,17 +215,22 @@ export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWiz
             transition={slideTransition}
             className="flex flex-1 flex-col"
           >
-            {step === 0 && (
+            {currentStepKey === "dates" && (
               <StepDateVotes
                 sessionName={session.name}
                 dateOptions={dateOptions}
                 votes={state.votes}
                 onChange={(votes) => updateState({ votes })}
+                newDateVotes={state.newDateVotes}
+                onChangeNewDates={(newDateVotes) => updateState({ newDateVotes })}
                 onNext={goNext}
                 conflictDates={conflictDates}
+                dateRangeStart={session.dateRangeStart}
+                dateRangeEnd={session.dateRangeEnd}
+                datesLocked={session.datesLocked}
               />
             )}
-            {step === 1 && (
+            {currentStepKey === "location" && (
               <StepLocation
                 value={state.referenceLocation}
                 lat={state.lat}
@@ -182,7 +241,7 @@ export function JoinWizard({ session, dateOptions, conflictDates = {} }: JoinWiz
                 onNext={goNext}
               />
             )}
-            {step === 2 && (
+            {currentStepKey === "budget" && (
               <StepBudget
                 value={state.budgetCeiling}
                 onChange={(budgetCeiling) => updateState({ budgetCeiling })}

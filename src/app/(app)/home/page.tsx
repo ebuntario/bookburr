@@ -37,6 +37,7 @@ export default async function HomePage() {
                 id={s.id}
                 name={s.name}
                 mode={s.mode}
+                sessionShape={s.sessionShape}
                 status={s.status}
                 memberCount={s.memberCount}
                 createdAt={s.createdAt.toISOString()}

@@ -11,6 +11,7 @@ export async function getSessionsByUserId(userId: string) {
       id: bukberSessions.id,
       name: bukberSessions.name,
       mode: bukberSessions.mode,
+      sessionShape: bukberSessions.sessionShape,
       status: bukberSessions.status,
       inviteCode: bukberSessions.inviteCode,
       hostId: bukberSessions.hostId,

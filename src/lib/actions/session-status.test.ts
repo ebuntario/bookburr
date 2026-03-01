@@ -29,8 +29,10 @@ function makeTxForAdvance(opts: {
   status: string;
   memberCount?: number;
   venueCount?: number;
+  viableDateCount?: number;
+  sessionShape?: string;
 }) {
-  const { status, memberCount = 2, venueCount = 1 } = opts;
+  const { status, memberCount = 2, venueCount = 1, viableDateCount = 1, sessionShape = "need_both" } = opts;
 
   function makeWhereResult(countResult: object[]) {
     // Thenable AND has .limit() — satisfies both call patterns
@@ -42,16 +44,31 @@ function makeTxForAdvance(opts: {
     };
   }
 
+  // Track select calls to return different count results
+  let selectCallCount = 0;
+
+  const fromMock = vi.fn().mockReturnThis();
+  const chainable = {
+    from: fromMock,
+    innerJoin: vi.fn().mockReturnThis(),
+    where: vi.fn().mockImplementation(() => {
+      selectCallCount++;
+      // For collecting: 1st=memberCount, 2nd=viableDateCount
+      // For discovering: 1st=venueCount
+      // insertHostActivity uses .limit() pattern
+      if (status === "collecting") {
+        if (selectCallCount === 1) return makeWhereResult([{ memberCount }]);
+        if (selectCallCount === 2) return makeWhereResult([{ viableDateCount }]);
+      }
+      return makeWhereResult([{ memberCount, venueCount }]);
+    }),
+  };
+
   return {
     execute: vi.fn().mockResolvedValue({
-      rows: [{ id: "s1", status, host_id: "host-1" }],
+      rows: [{ id: "s1", status, host_id: "host-1", session_shape: sessionShape }],
     }),
-    select: vi.fn().mockReturnValue({
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockImplementation(() =>
-        makeWhereResult([{ memberCount, venueCount }])
-      ),
-    }),
+    select: vi.fn().mockReturnValue(chainable),
     update: vi.fn().mockReturnValue({
       set: vi.fn().mockReturnValue({
         where: vi.fn().mockResolvedValue([]),
@@ -96,7 +113,7 @@ describe("advanceSessionStatus", () => {
       vi.mocked(db.transaction).mockImplementation(async (cb) => {
         const tx = {
           execute: vi.fn().mockResolvedValue({
-            rows: [{ id: "s1", status: "collecting", host_id: "host-1" }],
+            rows: [{ id: "s1", status: "collecting", host_id: "host-1", session_shape: "need_both" }],
           }),
         };
         return cb(tx as unknown as any);
@@ -112,7 +129,7 @@ describe("advanceSessionStatus", () => {
       vi.mocked(db.transaction).mockImplementation(async (cb) => {
         const tx = {
           execute: vi.fn().mockResolvedValue({
-            rows: [{ id: "s1", status: "completed", host_id: "host-1" }],
+            rows: [{ id: "s1", status: "completed", host_id: "host-1", session_shape: "need_both" }],
           }),
         };
         return cb(tx as unknown as any);
@@ -128,7 +145,7 @@ describe("advanceSessionStatus", () => {
       vi.mocked(db.transaction).mockImplementation(async (cb) => {
         const tx = {
           execute: vi.fn().mockResolvedValue({
-            rows: [{ id: "s1", status: "collecting", host_id: "host-1" }],
+            rows: [{ id: "s1", status: "collecting", host_id: "host-1", session_shape: "need_both" }],
           }),
           select: vi.fn().mockReturnValue({
             from: vi.fn().mockReturnValue({
@@ -159,7 +176,7 @@ describe("advanceSessionStatus", () => {
       vi.mocked(db.transaction).mockImplementation(async (cb) => {
         const tx = {
           execute: vi.fn().mockResolvedValue({
-            rows: [{ id: "s1", status: "discovering", host_id: "host-1" }],
+            rows: [{ id: "s1", status: "discovering", host_id: "host-1", session_shape: "need_both" }],
           }),
           select: vi.fn().mockReturnValue({
             from: vi.fn().mockReturnValue({
@@ -204,7 +221,7 @@ describe("confirmSession", () => {
       vi.mocked(db.transaction).mockImplementation(async (cb) => {
         const tx = {
           execute: vi.fn().mockResolvedValue({
-            rows: [{ id: "s1", status: "collecting", host_id: "host-1" }],
+            rows: [{ id: "s1", status: "collecting", host_id: "host-1", session_shape: "need_both" }],
           }),
         };
         return cb(tx as unknown as any);
@@ -225,7 +242,7 @@ describe("confirmSession", () => {
         let selectCount = 0;
         const tx = {
           execute: vi.fn().mockResolvedValue({
-            rows: [{ id: "s1", status: "voting", host_id: "host-1" }],
+            rows: [{ id: "s1", status: "voting", host_id: "host-1", session_shape: "need_both" }],
           }),
           select: vi.fn().mockImplementation(() => ({
             from: vi.fn().mockReturnThis(),
@@ -255,7 +272,7 @@ describe("confirmSession", () => {
         let selectCount = 0;
         const tx = {
           execute: vi.fn().mockResolvedValue({
-            rows: [{ id: "s1", status: "voting", host_id: "host-1" }],
+            rows: [{ id: "s1", status: "voting", host_id: "host-1", session_shape: "need_both" }],
           }),
           select: vi.fn().mockImplementation(() => ({
             from: vi.fn().mockReturnThis(),
@@ -284,7 +301,7 @@ describe("confirmSession", () => {
       vi.mocked(db.transaction).mockImplementation(async (cb) => {
         const tx = {
           execute: vi.fn().mockResolvedValue({
-            rows: [{ id: "s1", status: "voting", host_id: "host-1" }],
+            rows: [{ id: "s1", status: "voting", host_id: "host-1", session_shape: "need_both" }],
           }),
           select: vi.fn().mockImplementation(() => ({
             from: vi.fn().mockReturnThis(),

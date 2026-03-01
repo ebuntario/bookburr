@@ -16,6 +16,18 @@ export const SESSION_MODE = {
 
 export type SessionMode = (typeof SESSION_MODE)[keyof typeof SESSION_MODE];
 
+export const SESSION_SHAPE = {
+  need_both: "need_both",
+  date_known: "date_known",
+  venue_known: "venue_known",
+} as const;
+
+export type SessionShape =
+  (typeof SESSION_SHAPE)[keyof typeof SESSION_SHAPE];
+
+/** Eid al-Fitr 2026 — update annually */
+export const EID_2026 = "2026-03-30";
+
 export const PREFERENCE_LEVEL = {
   strongly_prefer: "strongly_prefer",
   can_do: "can_do",
@@ -60,6 +72,9 @@ export const ACTIVITY_TYPE = {
   status_changed: "status_changed",
   confirmed: "confirmed",
   calendar_sent: "calendar_sent",
+  date_suggested: "date_suggested",
+  date_removed: "date_removed",
+  dates_locked_changed: "dates_locked_changed",
 } as const;
 
 export type ActivityType =
@@ -74,6 +89,33 @@ export const SESSION_STATUS_TRANSITIONS: Record<
   voting: "confirmed",
   confirmed: "completed",
   completed: null,
+} as const;
+
+/** Per-shape transition overrides. venue_known skips discovering entirely. */
+export const SHAPE_STATUS_TRANSITIONS: Record<
+  string,
+  Record<string, string | null>
+> = {
+  need_both: {
+    collecting: "discovering",
+    discovering: "voting",
+    voting: "confirmed",
+    confirmed: "completed",
+    completed: null,
+  },
+  date_known: {
+    collecting: "discovering",
+    discovering: "voting",
+    voting: "confirmed",
+    confirmed: "completed",
+    completed: null,
+  },
+  venue_known: {
+    collecting: "voting",
+    voting: "confirmed",
+    confirmed: "completed",
+    completed: null,
+  },
 } as const;
 
 export const FLEXIBILITY_SCORE_MIN = 0.1;

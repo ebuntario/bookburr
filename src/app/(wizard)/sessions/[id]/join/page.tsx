@@ -9,6 +9,7 @@ import {
   getUserConfirmedDates,
 } from "@/lib/queries/sessions";
 import { JoinWizard } from "./_components/join-wizard";
+import type { SessionShape } from "@/lib/constants";
 
 function formatDateRange(earliest: string | null, latest: string | null) {
   if (!earliest) return "";
@@ -96,6 +97,10 @@ export default async function JoinPage({
           name: result.session.name,
           mode: result.session.mode,
           status: result.session.status,
+          sessionShape: (result.session.sessionShape ?? "need_both") as SessionShape,
+          dateRangeStart: result.session.dateRangeStart ?? null,
+          dateRangeEnd: result.session.dateRangeEnd ?? null,
+          datesLocked: result.session.datesLocked ?? false,
         }}
         dateOptions={result.dateOptions}
         conflictDates={conflictDates}
