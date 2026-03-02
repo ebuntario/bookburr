@@ -329,6 +329,12 @@ export function DateVotingResults({
         </div>
       )}
 
+      {isCollecting && (
+        <p className="text-xs text-foreground/40">
+          Hasilnya disembunyiin biar semua bisa jujur — keliatan setelah host confirm
+        </p>
+      )}
+
       {error && (
         <div className="rounded-xl bg-danger/10 px-3 py-2 text-xs text-danger">
           {error}

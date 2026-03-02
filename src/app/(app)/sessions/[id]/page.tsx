@@ -16,6 +16,7 @@ import { WaitingOnList } from "./_components/waiting-on-list";
 import { DateVotingResults } from "./_components/date-voting-results";
 import { VenueSection } from "./_components/venue-section";
 import { ActivityPreview } from "./_components/activity-preview";
+import { PendingActionBanner } from "./_components/pending-action-banner";
 import { InviteButton } from "./_components/invite-button";
 import { HostControls } from "./_components/host-controls";
 import { RealtimeDashboardWrapper } from "./_components/realtime-dashboard-wrapper";
@@ -73,6 +74,9 @@ export default async function SessionDashboardPage({
   const hostName = extractHostName(sessionData.members, sessionData.session.hostId);
   const dateRange = computeDateRange(datesData.dates);
 
+  const hasVotedOnDates = datesData.dates.some((d) => d.myVote !== null);
+  const canEditDates = status === "collecting" || status === "discovering";
+
   const confirmedVenue = venuesData.find(
     (v) => v.id === sessionData.session.confirmedVenueId,
   );
@@ -123,6 +127,10 @@ export default async function SessionDashboardPage({
         status={status}
       />
 
+      {sessionShape !== SESSION_SHAPE.date_known && datesData.dates.length > 0 && (
+        <PendingActionBanner hasVoted={hasVotedOnDates} canEdit={canEditDates} />
+      )}
+
       {/* Date section: skip for date_known (show simple confirmed card) */}
       {sessionShape === SESSION_SHAPE.date_known ? (
         confirmedDate && (
@@ -135,15 +143,17 @@ export default async function SessionDashboardPage({
         )
       ) : (
         datesData.dates.length > 0 && (
-          <DateVotingResults
-            sessionId={sessionId}
-            memberId={currentMember.id}
-            dates={datesData.dates}
-            totalMembers={sessionData.members.length}
-            votedMemberCount={datesData.votedMemberCount}
-            status={status}
-            topVenueName={venuesData[0]?.name}
-          />
+          <div id="date-section">
+            <DateVotingResults
+              sessionId={sessionId}
+              memberId={currentMember.id}
+              dates={datesData.dates}
+              totalMembers={sessionData.members.length}
+              votedMemberCount={datesData.votedMemberCount}
+              status={status}
+              topVenueName={venuesData[0]?.name}
+            />
+          </div>
         )
       )}
 

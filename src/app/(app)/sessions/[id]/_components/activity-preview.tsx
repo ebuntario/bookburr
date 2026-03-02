@@ -12,7 +12,21 @@ interface ActivityPreviewProps {
 export function ActivityPreview({ sessionId, activities }: ActivityPreviewProps) {
   const [expanded, setExpanded] = useState(false);
 
-  if (activities.length === 0) return null;
+  if (activities.length === 0) {
+    return (
+      <div className="flex flex-col gap-2">
+        <h3 className="text-sm font-medium text-foreground/60">
+          Aktivitas Terkini
+        </h3>
+        <div className="flex flex-col items-center gap-2 rounded-2xl border border-foreground/10 bg-white px-5 py-6 text-center">
+          <span className="text-xl">✨</span>
+          <p className="text-sm text-foreground/40">
+            Baru mulai nih! Aktivitas bakal muncul di sini
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (expanded) {
     return (
