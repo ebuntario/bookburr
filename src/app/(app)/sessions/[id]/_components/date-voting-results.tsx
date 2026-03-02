@@ -300,7 +300,7 @@ export function DateVotingResults({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-foreground/60">Tanggal</h3>
+        <h3 className="text-sm font-heading font-semibold text-foreground/70">Tanggal</h3>
         <p className="text-xs text-foreground/40">
           {votedMemberCount}/{totalMembers} udah vote
         </p>

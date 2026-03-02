@@ -37,6 +37,11 @@ export function StatusProgress({ status }: { status: string }) {
           </Fragment>
         ))}
       </div>
+      <div className="flex justify-between px-0.5">
+        {["Kumpul", "Cari", "Vote", "Fix", "Selesai"].map((label) => (
+          <span key={label} className="text-[10px] text-foreground/30">{label}</span>
+        ))}
+      </div>
       <p className="text-xs text-foreground/60">{activeStep?.activeLabel}</p>
     </div>
   );

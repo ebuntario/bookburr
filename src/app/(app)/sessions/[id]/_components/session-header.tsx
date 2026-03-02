@@ -16,7 +16,7 @@ export function SessionHeader({ name, mode, status, isHost }: SessionHeaderProps
     STATUS_CONFIG[status as SessionStatus] ?? STATUS_CONFIG.collecting;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm pb-2 -mx-4 px-4 pt-1 flex flex-col gap-2">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <Link href="/home" className="shrink-0 rounded-lg p-2.5 -ml-2.5 text-foreground/50 transition-colors active:bg-foreground/5">

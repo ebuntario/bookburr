@@ -94,26 +94,16 @@ export function VenueCard({
 
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-foreground/10 bg-white px-4 py-3.5">
-      {/* Header: name + best pick badge + vote button */}
+      {/* Header: name + best pick badge */}
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-heading font-medium leading-tight text-foreground">
           {name}
         </p>
-        <div className="flex shrink-0 items-center gap-2">
-          {isBestPick && (
-            <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
-              <SparklesIcon className="h-3 w-3" /> Top Pick
-            </span>
-          )}
-          {isVotingPhase && (
-            <VenueVoteButton
-              sessionId={sessionId}
-              venueId={id}
-              voteCount={voteCount}
-              isMyVote={isMyVote}
-            />
-          )}
-        </div>
+        {isBestPick && (
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+            <SparklesIcon className="h-3 w-3" /> Top Pick
+          </span>
+        )}
       </div>
 
       {/* Rating + price + suggested badge */}
@@ -180,6 +170,17 @@ export function VenueCard({
         reactions={reactions}
         canReact={canReact}
       />
+
+      {/* Vote button — full-width row during voting */}
+      {isVotingPhase && (
+        <VenueVoteButton
+          sessionId={sessionId}
+          venueId={id}
+          voteCount={voteCount}
+          isMyVote={isMyVote}
+          fullWidth
+        />
+      )}
     </div>
   );
 }

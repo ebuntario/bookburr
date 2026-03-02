@@ -13,6 +13,13 @@ const EMOJIS = [
   VENUE_EMOJI.far,
 ] as const;
 
+const EMOJI_LABELS: Record<string, string> = {
+  [VENUE_EMOJI.fire]: "Mantap",
+  [VENUE_EMOJI.meh]: "Biasa aja",
+  [VENUE_EMOJI.expensive]: "Mahal",
+  [VENUE_EMOJI.far]: "Jauh",
+};
+
 interface EmojiReactionBarProps {
   sessionId: string;
   venueId: string;
@@ -76,6 +83,7 @@ export function EmojiReactionBar({
             onClick={() => handleReact(emoji)}
             disabled={!canReact}
             whileTap={canReact ? tapScaleUp : undefined}
+            aria-label={EMOJI_LABELS[emoji]}
             className={[
               "flex items-center gap-1 rounded-full border px-2 py-1 text-xs transition-all",
               errorEmoji === emoji

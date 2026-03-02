@@ -10,6 +10,7 @@ interface VenueVoteButtonProps {
   venueId: string;
   voteCount: number;
   isMyVote: boolean;
+  fullWidth?: boolean;
 }
 
 export function VenueVoteButton({
@@ -17,6 +18,7 @@ export function VenueVoteButton({
   venueId,
   voteCount: initialVoteCount,
   isMyVote: initialIsMyVote,
+  fullWidth = false,
 }: VenueVoteButtonProps) {
   const [voteCount, setVoteCount] = useState(initialVoteCount);
   const [isMyVote, setIsMyVote] = useState(initialIsMyVote);
@@ -52,7 +54,7 @@ export function VenueVoteButton({
   };
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className={fullWidth ? "flex flex-col gap-1" : "flex flex-col items-end gap-1"}>
       <motion.button
         type="button"
         onClick={handleVote}
@@ -61,7 +63,8 @@ export function VenueVoteButton({
         animate={isMyVote ? successPulse.animate : { scale: 1 }}
         transition={{ duration: durations.normal }}
         className={[
-          "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all",
+          "flex items-center justify-center gap-1.5 rounded-xl border font-medium transition-all",
+          fullWidth ? "w-full py-2.5 text-sm" : "px-3 py-1.5 text-xs",
           isMyVote
             ? "border-primary bg-primary text-background"
             : "border-foreground/20 text-foreground/60",
@@ -70,7 +73,7 @@ export function VenueVoteButton({
           .filter(Boolean)
           .join(" ")}
       >
-        <span>{isMyVote ? "✓" : "Vote"}</span>
+        <span>{isMyVote ? "✓ Voted" : "Vote tempat ini"}</span>
         {voteCount > 0 && (
           <span
             className={
