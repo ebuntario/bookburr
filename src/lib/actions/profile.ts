@@ -6,8 +6,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { MARITAL_STATUS } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
-
-type ActionResult = { ok: true } | { ok: false; error: string };
+import type { ActionResult } from "./helpers";
 
 export async function updateProfile(input: {
   name?: string;

@@ -19,8 +19,7 @@ import { logError } from "@/lib/logger";
 import { detectPlatform, fetchSocialLinkMetadata } from "@/lib/social-embed";
 import { calculateCentroid, calculateVenueScore } from "@/lib/algorithms/scoring";
 import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
-
-type ActionResult = { ok: true } | { ok: false; error: string };
+import type { ActionResult } from "./helpers";
 
 // ── discoverVenues helpers ──────────────────────────────────────────────────
 

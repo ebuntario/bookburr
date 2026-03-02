@@ -20,6 +20,7 @@ import {
   EID_2026,
 } from "@/lib/constants";
 import type { SessionShape } from "@/lib/constants";
+import type { Tx } from "./helpers";
 
 interface CreateSessionInput {
   name: string;
@@ -128,7 +129,7 @@ function normalizeDateRange(input: CreateSessionInput): {
 }
 
 async function insertShapeSpecificRecords(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tx: Tx,
   sessionId: string,
   memberId: string,
   userId: string,

@@ -7,8 +7,7 @@ import { db } from "@/lib/db";
 import { venues, sessionMembers } from "@/lib/db/schema";
 import { fetchSocialLinkMetadata } from "@/lib/social-embed";
 import { logError } from "@/lib/logger";
-
-type ActionResult = { ok: true } | { ok: false; error: string };
+import type { ActionResult } from "./helpers";
 
 export async function refreshVenueMetadata(params: {
   venueId: string;
