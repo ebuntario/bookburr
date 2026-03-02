@@ -19,7 +19,7 @@ export function SessionHeader({ name, mode, status, isHost }: SessionHeaderProps
     <div className="flex flex-col gap-2">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <Link href="/home" className="shrink-0 rounded-lg p-1 -ml-1 text-foreground/50 transition-colors active:bg-foreground/5">
+          <Link href="/home" className="shrink-0 rounded-lg p-2.5 -ml-2.5 text-foreground/50 transition-colors active:bg-foreground/5">
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
           <ModeIcon mode={mode} className="h-6 w-6 shrink-0 text-foreground/60" />

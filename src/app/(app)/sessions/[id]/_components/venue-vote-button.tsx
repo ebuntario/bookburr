@@ -21,10 +21,12 @@ export function VenueVoteButton({
   const [voteCount, setVoteCount] = useState(initialVoteCount);
   const [isMyVote, setIsMyVote] = useState(initialIsMyVote);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(false);
 
   const handleVote = async () => {
     if (submitting) return;
     setSubmitting(true);
+    setError(false);
 
     const wasMyVote = isMyVote;
 
@@ -44,37 +46,42 @@ export function VenueVoteButton({
       // Revert
       setIsMyVote(wasMyVote);
       setVoteCount((c) => c + (wasMyVote ? 1 : -1));
+      setError(true);
+      setTimeout(() => setError(false), 2000);
     }
   };
 
   return (
-    <motion.button
-      type="button"
-      onClick={handleVote}
-      disabled={submitting}
-      whileTap={tapScale}
-      animate={isMyVote ? successPulse.animate : { scale: 1 }}
-      transition={{ duration: durations.normal }}
-      className={[
-        "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all",
-        isMyVote
-          ? "border-primary bg-primary text-background"
-          : "border-foreground/20 text-foreground/60",
-        submitting && "opacity-60",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      <span>{isMyVote ? "✓" : "Vote"}</span>
-      {voteCount > 0 && (
-        <span
-          className={
-            isMyVote ? "text-background/80" : "text-foreground/40"
-          }
-        >
-          {voteCount}
-        </span>
-      )}
-    </motion.button>
+    <div className="flex flex-col items-end gap-1">
+      <motion.button
+        type="button"
+        onClick={handleVote}
+        disabled={submitting}
+        whileTap={tapScale}
+        animate={isMyVote ? successPulse.animate : { scale: 1 }}
+        transition={{ duration: durations.normal }}
+        className={[
+          "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all",
+          isMyVote
+            ? "border-primary bg-primary text-background"
+            : "border-foreground/20 text-foreground/60",
+          submitting && "opacity-60",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <span>{isMyVote ? "✓" : "Vote"}</span>
+        {voteCount > 0 && (
+          <span
+            className={
+              isMyVote ? "text-background/80" : "text-foreground/40"
+            }
+          >
+            {voteCount}
+          </span>
+        )}
+      </motion.button>
+      {error && <p className="text-[10px] text-danger">Gagal, coba lagi</p>}
+    </div>
   );
 }

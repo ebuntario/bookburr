@@ -87,7 +87,7 @@ export function RealtimeDashboardWrapper({
           <motion.div
             {...toastSlideUp}
             transition={{ duration: durations.normal }}
-            className="fixed bottom-36 left-1/2 z-50 -translate-x-1/2"
+            className="fixed bottom-44 left-1/2 z-50 -translate-x-1/2"
           >
             <div className="flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 shadow-lg">
               <p className="text-xs font-medium text-background">{toast}</p>

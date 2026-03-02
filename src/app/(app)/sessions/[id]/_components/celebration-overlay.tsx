@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { SparklesIcon } from "@heroicons/react/24/solid";
 import { buildConfirmationCard } from "@/lib/share-utils";
@@ -33,11 +33,6 @@ export function CelebrationOverlay({
       duration: 1.8 + (i % 4) * 0.5,
     })),
   );
-
-  useEffect(() => {
-    const timer = setTimeout(onClose, 6000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
 
   const whatsappHref = buildConfirmationCard({
     sessionName: sessionName ?? venueName,

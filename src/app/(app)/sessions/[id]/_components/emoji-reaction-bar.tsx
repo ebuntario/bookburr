@@ -27,12 +27,14 @@ export function EmojiReactionBar({
   canReact,
 }: EmojiReactionBarProps) {
   const [localReactions, setLocalReactions] = useState(initialReactions);
+  const [errorEmoji, setErrorEmoji] = useState<string | null>(null);
 
   const handleReact = async (emoji: string) => {
     if (!canReact) return;
 
     const prev = localReactions[emoji];
     const hadReaction = prev?.hasMyReaction ?? false;
+    setErrorEmoji(null);
 
     // Optimistic update
     setLocalReactions((r) => ({
@@ -55,6 +57,8 @@ export function EmojiReactionBar({
           hasMyReaction: prev?.hasMyReaction ?? false,
         },
       }));
+      setErrorEmoji(emoji);
+      setTimeout(() => setErrorEmoji(null), 1000);
     }
   };
 
@@ -74,9 +78,11 @@ export function EmojiReactionBar({
             whileTap={canReact ? tapScaleUp : undefined}
             className={[
               "flex items-center gap-1 rounded-full border px-2 py-1 text-xs transition-all",
-              mine
-                ? "border-primary/40 bg-primary/10 font-medium"
-                : "border-foreground/10 bg-foreground/5",
+              errorEmoji === emoji
+                ? "border-danger/40 bg-danger/10"
+                : mine
+                  ? "border-primary/40 bg-primary/10 font-medium"
+                  : "border-foreground/10 bg-foreground/5",
               !canReact && "cursor-default",
             ]
               .filter(Boolean)
