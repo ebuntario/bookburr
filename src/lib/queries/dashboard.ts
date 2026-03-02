@@ -122,6 +122,7 @@ export async function getVenuesForSession(sessionId: string, memberId?: string) 
       socialLinkPlatform: venues.socialLinkPlatform,
       socialLinkMetadata: venues.socialLinkMetadata,
       suggestedByMemberId: venues.suggestedByMemberId,
+      aiInsight: venues.aiInsight,
     })
     .from(venues)
     .where(eq(venues.sessionId, sessionId))

@@ -126,6 +126,7 @@ CREATE TABLE venues (
     social_link_platform text, -- 'tiktok' | 'instagram'
     social_link_metadata jsonb,
     suggested_by_member_id text REFERENCES session_members(id), -- null = system-suggested
+    ai_insight jsonb, -- AI-generated venue insight {oneLiner, fitLevel, pros, cons}
     created_at timestamp with time zone NOT NULL DEFAULT now()
 );
 

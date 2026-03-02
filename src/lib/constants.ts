@@ -128,6 +128,18 @@ export const PRICE_ESTIMATES: Record<number, number> = {
   4: 400_000,
 };
 
+// ── AI ──────────────────────────────────────────────────────────────────────
+export const AI_MODEL = "google/gemini-3-flash-preview" as const;
+export const AI_TIMEOUT_MS = 10_000;
+
+export const AI_FIT_LEVEL = {
+  strong: "strong",
+  decent: "decent",
+  poor: "poor",
+} as const;
+
+export type AiFitLevel = (typeof AI_FIT_LEVEL)[keyof typeof AI_FIT_LEVEL];
+
 export const MARITAL_STATUS = {
   single: "single",
   married: "married",

@@ -10,6 +10,13 @@ interface VenueReaction {
   hasMyReaction: boolean;
 }
 
+interface AiInsight {
+  oneLiner: string;
+  fitLevel: "strong" | "decent" | "poor";
+  pros: string[];
+  cons: string[];
+}
+
 interface VenueCardProps {
   id: string;
   name: string;
@@ -20,6 +27,7 @@ interface VenueCardProps {
   socialLinkPlatform: string | null;
   socialLinkMetadata: unknown;
   suggestedByMemberId: string | null;
+  aiInsight: unknown;
   reactions: Record<string, VenueReaction>;
   voteCount: number;
   isMyVote: boolean;
@@ -49,6 +57,18 @@ function PriceLevel({ level }: { level: number }) {
   );
 }
 
+const FIT_LEVEL_STYLES: Record<string, string> = {
+  strong: "bg-success/10 text-success",
+  decent: "bg-teal/10 text-teal",
+  poor: "bg-danger-soft text-danger",
+};
+
+function isValidAiInsight(value: unknown): value is AiInsight {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return typeof v.oneLiner === "string" && typeof v.fitLevel === "string";
+}
+
 export function VenueCard({
   id,
   name,
@@ -58,6 +78,7 @@ export function VenueCard({
   socialLinkPlatform,
   socialLinkMetadata,
   suggestedByMemberId,
+  aiInsight: rawAiInsight,
   reactions,
   voteCount,
   isMyVote,
@@ -66,6 +87,7 @@ export function VenueCard({
   status,
 }: VenueCardProps) {
   const meta = socialLinkMetadata as SocialLinkMetadata | null;
+  const insight = isValidAiInsight(rawAiInsight) ? rawAiInsight : null;
   const isBestPick = rank === 0;
   const isVotingPhase = status === SESSION_STATUS.voting;
   const canReact = status === SESSION_STATUS.discovering || status === SESSION_STATUS.voting;
@@ -115,6 +137,30 @@ export function VenueCard({
           </>
         )}
       </div>
+
+      {/* AI insight */}
+      {insight && (
+        <div className="flex flex-col gap-1.5 rounded-xl bg-surface px-3 py-2.5">
+          <div className="flex items-center gap-2">
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${FIT_LEVEL_STYLES[insight.fitLevel] ?? FIT_LEVEL_STYLES.decent}`}>
+              {insight.fitLevel === "strong" ? "Cocok banget" : insight.fitLevel === "decent" ? "Lumayan" : "Kurang cocok"}
+            </span>
+          </div>
+          <p className="text-xs leading-relaxed text-foreground/70">
+            {insight.oneLiner}
+          </p>
+          {(insight.pros.length > 0 || insight.cons.length > 0) && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
+              {insight.pros.map((p, i) => (
+                <span key={`p${i}`} className="text-success">+ {p}</span>
+              ))}
+              {insight.cons.map((c, i) => (
+                <span key={`c${i}`} className="text-danger">- {c}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Social embed preview */}
       {socialLinkUrl && socialLinkPlatform && (

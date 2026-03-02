@@ -18,6 +18,7 @@ interface Venue {
   socialLinkPlatform: string | null;
   socialLinkMetadata: unknown;
   suggestedByMemberId: string | null;
+  aiInsight: unknown;
   reactions: Record<string, VenueReaction>;
   voteCount: number;
   isMyVote: boolean;
@@ -47,6 +48,7 @@ export function VenueList({ venues, sessionId, status, isTerserah }: VenueListPr
             socialLinkPlatform={v.socialLinkPlatform}
             socialLinkMetadata={v.socialLinkMetadata}
             suggestedByMemberId={v.suggestedByMemberId}
+            aiInsight={v.aiInsight}
             reactions={v.reactions}
             voteCount={v.voteCount}
             isMyVote={v.isMyVote}

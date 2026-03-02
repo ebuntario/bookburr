@@ -194,6 +194,7 @@ export const venues = pgTable(
     suggestedByMemberId: text("suggested_by_member_id").references(
       () => sessionMembers.id,
     ),
+    aiInsight: jsonb("ai_insight"),
     createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -37,6 +37,10 @@ export const env = {
   get AUTH_GOOGLE_SECRET() {
     return process.env.AUTH_GOOGLE_SECRET ?? null;
   },
+  // OpenRouter AI (optional — venue AI insights disabled when not configured)
+  get OPENROUTER_API_KEY() {
+    return process.env.OPENROUTER_API_KEY ?? null;
+  },
   // Unsplash API (optional — home page background disabled when not configured)
   get UNSPLASH_ACCESS_KEY() {
     return process.env.UNSPLASH_ACCESS_KEY ?? null;

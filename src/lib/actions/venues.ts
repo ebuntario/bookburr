@@ -18,6 +18,7 @@ import { logError, logWarn } from "@/lib/logger";
 import { detectPlatform, fetchSocialLinkMetadata } from "@/lib/social-embed";
 import { calculateCentroid, calculateVenueScore } from "@/lib/algorithms/scoring";
 import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
+import { generateVenueInsights } from "@/lib/ai/venue-insights";
 import { requireAuth, requireMember, type ActionResult } from "./helpers";
 
 // ── discoverVenues helpers ──────────────────────────────────────────────────
@@ -27,6 +28,7 @@ interface DiscoverMember {
   referenceLocation: unknown;
   budgetCeiling: number | null;
   sessionCuisinePreferences: unknown;
+  sessionDietaryPreferences: unknown;
   proximityTolerance: number | null;
 }
 
@@ -229,6 +231,7 @@ async function fetchSessionMembers(sessionId: string) {
       referenceLocation: sessionMembers.referenceLocation,
       budgetCeiling: sessionMembers.budgetCeiling,
       sessionCuisinePreferences: sessionMembers.sessionCuisinePreferences,
+      sessionDietaryPreferences: sessionMembers.sessionDietaryPreferences,
       proximityTolerance: sessionMembers.proximityTolerance,
     })
     .from(sessionMembers)
@@ -240,7 +243,7 @@ async function insertDiscoveredVenues(
   members: DiscoverMember[],
   centroid: { lat: number; lng: number } | null,
   sessionId: string,
-): Promise<number> {
+): Promise<{ count: number; venueInserts: ReturnType<typeof buildVenueInserts> }> {
   const venueInserts = buildVenueInserts(results, members, centroid, sessionId);
   await db.insert(venues).values(venueInserts);
 
@@ -253,7 +256,7 @@ async function insertDiscoveredVenues(
 
   revalidatePath(`/sessions/${sessionId}`);
   broadcastSessionEvent({ event: "venues_discovered", sessionId }).catch(() => {});
-  return venueInserts.length;
+  return { count: venueInserts.length, venueInserts };
 }
 
 export async function discoverVenues(sessionId: string): Promise<ActionResult & { count?: number; skipped?: boolean }> {
@@ -315,7 +318,28 @@ export async function discoverVenues(sessionId: string): Promise<ActionResult & 
     return { ok: true, count: 0 };
   }
 
-  const count = await insertDiscoveredVenues(results, members, centroid, sessionId);
+  const { count, venueInserts } = await insertDiscoveredVenues(results, members, centroid, sessionId);
+
+  // Fire-and-forget: generate AI insights for discovered venues
+  generateVenueInsights(
+    sessionId,
+    venueInserts.map((v) => ({
+      id: v.id,
+      googlePlaceId: v.googlePlaceId,
+      name: v.name,
+      rating: v.rating,
+      priceLevel: v.priceLevel,
+      compositeScore: v.compositeScore,
+      location: v.location,
+    })),
+    members.map((m) => ({
+      budgetCeiling: m.budgetCeiling,
+      sessionCuisinePreferences: m.sessionCuisinePreferences as string[] | null,
+      sessionDietaryPreferences: m.sessionDietaryPreferences as string[] | null,
+      referenceLocation: m.referenceLocation as { lat: number; lng: number } | null,
+    })),
+  ).catch(() => {});
+
   return { ok: true, count };
 }
 
