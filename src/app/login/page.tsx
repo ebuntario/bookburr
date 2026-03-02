@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { LoginForm } from "./login-form";
+import { TestLoginForm } from "./test-login-form";
 
 export default async function LoginPage({
   searchParams,
@@ -7,6 +8,7 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; callbackUrl?: string }>;
 }) {
   const { error, callbackUrl } = await searchParams;
+  const isE2E = process.env.E2E_TEST === "true";
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-8 px-6">
@@ -25,6 +27,7 @@ export default async function LoginPage({
         </div>
       )}
       <LoginForm callbackUrl={callbackUrl} />
+      {isE2E && <TestLoginForm callbackUrl={callbackUrl} />}
     </main>
   );
 }
