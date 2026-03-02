@@ -154,9 +154,8 @@ export async function confirmSession(input: {
   venueId: string;
   dateOptionId: string;
 }): Promise<ActionResult> {
-  const { sessionId } = input;
-  const { venueId } = input;
-  let { dateOptionId } = input;
+  const { sessionId, venueId } = input;
+  let resolvedDateOptionId = input.dateOptionId;
 
   try {
     const userId = await requireAuth();
@@ -168,25 +167,24 @@ export async function confirmSession(input: {
       // For venue_known: venueId should already be the preset venue
       // For date_known: dateOptionId should already be set at creation
       if (row.session_shape === SESSION_SHAPE.date_known) {
-        // Read the already-set confirmedDateOptionId
         const [sess] = await tx
           .select({ confirmedDateOptionId: bukberSessions.confirmedDateOptionId })
           .from(bukberSessions)
           .where(eq(bukberSessions.id, sessionId))
           .limit(1);
         if (sess?.confirmedDateOptionId) {
-          dateOptionId = sess.confirmedDateOptionId;
+          resolvedDateOptionId = sess.confirmedDateOptionId;
         }
       }
 
-      await validateConfirmInputs(tx, sessionId, venueId, dateOptionId);
+      await validateConfirmInputs(tx, sessionId, venueId, resolvedDateOptionId);
 
       await tx
         .update(bukberSessions)
         .set({
           status: SESSION_STATUS.confirmed,
           confirmedVenueId: venueId,
-          confirmedDateOptionId: dateOptionId,
+          confirmedDateOptionId: resolvedDateOptionId,
         })
         .where(eq(bukberSessions.id, sessionId));
 
@@ -194,7 +192,7 @@ export async function confirmSession(input: {
         sessionId,
         userId,
         type: ACTIVITY_TYPE.confirmed,
-        metadata: { from: "voting", to: "confirmed", venueId, dateOptionId },
+        metadata: { from: "voting", to: "confirmed", venueId, dateOptionId: resolvedDateOptionId },
       });
     });
 
@@ -202,7 +200,7 @@ export async function confirmSession(input: {
     broadcastSessionEvent({ event: "status_changed", sessionId }).catch(
       () => {},
     );
-    sendCalendarInvitesForSession(sessionId, venueId, dateOptionId).catch(
+    sendCalendarInvitesForSession(sessionId, venueId, resolvedDateOptionId).catch(
       (err) => {
         logError("confirmSession:calendarInvite", err, { sessionId });
       },

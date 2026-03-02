@@ -75,24 +75,15 @@ export async function getDatesWithVoteCounts(
     .groupBy(dateOptions.id, dateOptions.date)
     .orderBy(asc(dateOptions.date));
 
-  const [votedMemberRows, [{ votedMemberCount }]] = await Promise.all([
-    db
-      .selectDistinct({ memberId: dateVotes.memberId })
-      .from(dateVotes)
-      .innerJoin(dateOptions, eq(dateVotes.dateOptionId, dateOptions.id))
-      .where(eq(dateOptions.sessionId, sessionId)),
-    db
-      .select({
-        votedMemberCount: sql<number>`count(distinct ${dateVotes.memberId})::int`,
-      })
-      .from(dateVotes)
-      .innerJoin(dateOptions, eq(dateVotes.dateOptionId, dateOptions.id))
-      .where(eq(dateOptions.sessionId, sessionId)),
-  ]);
+  const votedMemberRows = await db
+    .selectDistinct({ memberId: dateVotes.memberId })
+    .from(dateVotes)
+    .innerJoin(dateOptions, eq(dateVotes.dateOptionId, dateOptions.id))
+    .where(eq(dateOptions.sessionId, sessionId));
 
   return {
     dates,
-    votedMemberCount,
+    votedMemberCount: votedMemberRows.length,
     votedMemberIds: votedMemberRows.map((r) => r.memberId),
   };
 }
@@ -241,10 +232,6 @@ export async function getMemberVoteStatus(
   return vote
     ? { voted: true, isTerserah: vote.isTerserah, venueId: vote.venueId }
     : { voted: false, isTerserah: false, venueId: null };
-}
-
-export async function getRecentActivity(sessionId: string, limit: number) {
-  return getActivityFeed(sessionId, limit);
 }
 
 export async function getActivityFeed(

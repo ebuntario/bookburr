@@ -5,7 +5,7 @@ import {
   getDatesWithVoteCounts,
   getVenuesForSession,
   getVenueVotedMemberCount,
-  getRecentActivity,
+  getActivityFeed,
   getMemberVoteStatus,
 } from "@/lib/queries/dashboard";
 import { getMemberByUserAndSession } from "@/lib/queries/sessions";
@@ -50,7 +50,7 @@ export default async function SessionDashboardPage({
   const [sessionData, [recentActivity, currentMember]] = await Promise.all([
     getSessionWithMembers(sessionId),
     Promise.all([
-      getRecentActivity(sessionId, 5),
+      getActivityFeed(sessionId, 5),
       getMemberByUserAndSession(userId, sessionId),
     ]),
   ]);

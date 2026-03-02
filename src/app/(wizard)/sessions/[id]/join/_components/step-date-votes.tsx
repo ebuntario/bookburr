@@ -72,16 +72,17 @@ function hasAnyAvailableVote(
 }
 
 /** Toggle a vote: if current level matches, remove; otherwise set/update */
-function toggleVoteForDate(
-  dateStr: string,
-  level: PreferenceLevel | null,
-  dateToId: Map<string, string>,
-  votes: Record<string, PreferenceLevel>,
-  newDateVotes: Record<string, PreferenceLevel>,
-  onChange: (v: Record<string, PreferenceLevel>) => void,
-  onChangeNewDates: (v: Record<string, PreferenceLevel>) => void,
-  datesLocked: boolean,
-) {
+function toggleVoteForDate(params: {
+  dateStr: string;
+  level: PreferenceLevel | null;
+  dateToId: Map<string, string>;
+  votes: Record<string, PreferenceLevel>;
+  newDateVotes: Record<string, PreferenceLevel>;
+  onChange: (v: Record<string, PreferenceLevel>) => void;
+  onChangeNewDates: (v: Record<string, PreferenceLevel>) => void;
+  datesLocked: boolean;
+}) {
+  const { dateStr, level, dateToId, votes, newDateVotes, onChange, onChangeNewDates, datesLocked } = params;
   const optId = dateToId.get(dateStr);
 
   if (optId) {
@@ -180,17 +181,17 @@ export function StepDateVotes({
   );
 
   const handleDateTap = (dateStr: string) => {
-    toggleVoteForDate(
-      dateStr, null, dateToId, votes, newDateVotes,
+    toggleVoteForDate({
+      dateStr, level: null, dateToId, votes, newDateVotes,
       onChange, onChangeNewDates, datesLocked,
-    );
+    });
   };
 
   const setPreference = (dateStr: string, level: PreferenceLevel) => {
-    toggleVoteForDate(
+    toggleVoteForDate({
       dateStr, level, dateToId, votes, newDateVotes,
       onChange, onChangeNewDates, datesLocked,
-    );
+    });
   };
 
   const handleIkutAja = () => {

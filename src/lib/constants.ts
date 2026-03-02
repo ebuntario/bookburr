@@ -71,7 +71,7 @@ export const ACTIVITY_TYPE = {
   milestone: "milestone",
   status_changed: "status_changed",
   confirmed: "confirmed",
-  calendar_sent: "calendar_sent",
+  calendar_sent: "calendar_sent", // TODO: wire up activity entry when calendar invites are sent
   date_suggested: "date_suggested",
   date_removed: "date_removed",
   dates_locked_changed: "dates_locked_changed",
