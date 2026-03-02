@@ -8,6 +8,7 @@ import { CalendarGrid } from "@/components/calendar-grid";
 import { PREFERENCE_LEVEL } from "@/lib/constants";
 import type { PreferenceLevel } from "@/lib/constants";
 import { formatDate } from "@/lib/format-utils";
+import { PREFERENCE_PILL_CONFIG } from "@/lib/ui-config";
 
 interface StepDateVotesProps {
   sessionName: string;
@@ -27,24 +28,6 @@ interface StepDateVotesProps {
   /** Whether member can suggest new dates */
   datesLocked: boolean;
 }
-
-const PILL_CONFIG: Record<
-  PreferenceLevel,
-  { label: string; selected: string }
-> = {
-  [PREFERENCE_LEVEL.strongly_prefer]: {
-    label: "Bisa banget!",
-    selected: "bg-primary text-white border-primary",
-  },
-  [PREFERENCE_LEVEL.can_do]: {
-    label: "Bisa",
-    selected: "bg-teal text-white border-teal",
-  },
-  [PREFERENCE_LEVEL.unavailable]: {
-    label: "Ga bisa",
-    selected: "bg-danger text-white border-danger",
-  },
-};
 
 const PILL_ORDER: PreferenceLevel[] = [
   PREFERENCE_LEVEL.strongly_prefer,
@@ -301,7 +284,7 @@ export function StepDateVotes({
                   </div>
                   <div className="flex gap-1.5">
                     {PILL_ORDER.map((level) => {
-                      const config = PILL_CONFIG[level];
+                      const config = PREFERENCE_PILL_CONFIG[level];
                       const isSelected = currentPref === level;
                       return (
                         <button

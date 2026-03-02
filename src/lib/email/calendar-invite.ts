@@ -11,7 +11,7 @@ import {
   dateOptions,
 } from "@/lib/db/schema";
 import { generateIcsContent } from "@/lib/calendar";
-import { formatDate } from "@/lib/format-utils";
+import { formatDate, buildGoogleMapsUrl } from "@/lib/format-utils";
 
 interface CalendarInviteInput {
   to: string[];
@@ -25,10 +25,9 @@ interface CalendarInviteInput {
 }
 
 function buildCalendarEmailHtml(input: CalendarInviteInput): string {
-  const googleMapsUrl =
-    input.lat && input.lng
-      ? `https://maps.google.com/?q=${input.lat},${input.lng}`
-      : null;
+  const googleMapsUrl = buildGoogleMapsUrl(
+    input.lat && input.lng ? { lat: input.lat, lng: input.lng } : null,
+  );
 
   return `
     <div style="font-family: 'Plus Jakarta Sans', sans-serif; max-width: 480px; margin: 0 auto;">

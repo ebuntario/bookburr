@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { Card } from "@heroui/react";
-import type { SessionStatus } from "@/lib/constants";
+import type { SessionStatus, SessionShape } from "@/lib/constants";
 import { SESSION_SHAPE } from "@/lib/constants";
-import { STATUS_CONFIG } from "@/lib/ui-config";
+import { STATUS_CONFIG, SHAPE_LABELS } from "@/lib/ui-config";
 import { ModeIcon } from "@/components/mode-icon";
 
 interface SessionCardProps {
@@ -30,12 +30,6 @@ function formatDateRange(earliest: string | null | undefined, latest: string | n
   if (earliest === latest) return `${day1} ${mon1}`;
   return mon1 === mon2 ? `${day1}–${day2} ${mon1}` : `${day1} ${mon1}–${day2} ${mon2}`;
 }
-
-const SHAPE_LABELS: Record<string, string> = {
-  need_both: "Cari semua",
-  date_known: "Tanggal fix",
-  venue_known: "Tempat fix",
-};
 
 export function SessionCard({
   id,
@@ -77,7 +71,7 @@ export function SessionCard({
             <>
               <span className="text-foreground/20">·</span>
               <span className="text-xs text-primary/70">
-                {SHAPE_LABELS[sessionShape]}
+                {SHAPE_LABELS[sessionShape as SessionShape]}
               </span>
             </>
           )}

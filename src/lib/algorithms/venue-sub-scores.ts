@@ -1,7 +1,7 @@
 import { haversineKm } from "./scoring";
 import { PRICE_ESTIMATES } from "@/lib/constants";
 
-interface VenueForScore {
+export interface VenueForScore {
   location: { lat: number; lng: number } | null;
   rating: number | null;
   priceLevel: number | null;
@@ -10,7 +10,7 @@ interface VenueForScore {
   suggestedByMemberId: string | null;
 }
 
-interface MemberForVenueScore {
+export interface MemberForVenueScore {
   referenceLocation: { lat: number; lng: number } | null;
   budgetCeiling: number | null;
   sessionCuisinePreferences: string[] | null;

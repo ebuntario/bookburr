@@ -11,7 +11,7 @@ import {
 import { SparklesIcon } from "@heroicons/react/24/solid";
 import { confirmSession } from "@/lib/actions/session-status";
 import { CelebrationOverlay } from "./celebration-overlay";
-import { formatDateShort } from "@/lib/format-utils";
+import { formatDateShort, buildGoogleMapsUrl } from "@/lib/format-utils";
 import type { ConfirmableVenue, ConfirmableDateOption } from "./types";
 
 // ── SelectableList sub-component ───────────────────────────────────────────
@@ -252,13 +252,6 @@ function ConfirmationDialog({
 
 // ── Main component ─────────────────────────────────────────────────────────
 
-function buildGoogleMapsUrl(venue: ConfirmableVenue | undefined): string | undefined {
-  const loc = venue?.location as { lat?: number; lng?: number } | null;
-  return loc?.lat && loc?.lng
-    ? `https://maps.google.com/?q=${loc.lat},${loc.lng}`
-    : undefined;
-}
-
 interface ConfirmSessionSheetProps {
   sessionId: string;
   sessionName: string;
@@ -317,7 +310,7 @@ export function ConfirmSessionSheet({
       venueName: venue?.name ?? "venue",
       dateStr: date ? formatDateShort(date.date) : "",
       sessionName,
-      googleMapsUrl: buildGoogleMapsUrl(venue),
+      googleMapsUrl: buildGoogleMapsUrl(venue?.location as { lat?: number; lng?: number } | null),
     });
   };
 

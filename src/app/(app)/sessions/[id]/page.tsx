@@ -26,7 +26,7 @@ import {
 } from "./_components/dashboard-helpers";
 import type { SessionStatus, SessionShape } from "@/lib/constants";
 import { SESSION_SHAPE } from "@/lib/constants";
-import { formatDateNoYear } from "@/lib/format-utils";
+import { formatDateNoYear, buildGoogleMapsUrl } from "@/lib/format-utils";
 
 function extractHostName(
   members: { userId: string; name: string | null; email: string | null }[],
@@ -34,15 +34,6 @@ function extractHostName(
 ): string | undefined {
   const host = members.find((m) => m.userId === hostId);
   return host?.name ?? host?.email?.split("@")[0] ?? undefined;
-}
-
-function buildGoogleMapsUrl(
-  location: unknown,
-): string | undefined {
-  if (!location) return undefined;
-  const loc = location as { lat?: number; lng?: number };
-  if (loc.lat == null || loc.lng == null) return undefined;
-  return `https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}`;
 }
 
 export const metadata = { title: "Dashboard Bukber — BookBurr" };
@@ -203,7 +194,7 @@ export default async function SessionDashboardPage({
         venueCount={venuesData.length}
         confirmedVenueName={confirmedVenue?.name}
         confirmedDateStr={confirmedDate?.date}
-        googleMapsUrl={buildGoogleMapsUrl(confirmedVenue?.location)}
+        googleMapsUrl={buildGoogleMapsUrl(confirmedVenue?.location as { lat?: number; lng?: number } | null)}
       />
     </div>
     </RealtimeDashboardWrapper>

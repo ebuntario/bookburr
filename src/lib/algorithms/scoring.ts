@@ -115,22 +115,9 @@ import {
   calcPriceFitScore,
   calcCuisineMatchScore,
   calcSocialProofScore,
+  type VenueForScore,
+  type MemberForVenueScore,
 } from "./venue-sub-scores";
-
-interface VenueForScore {
-  location: { lat: number; lng: number } | null;
-  rating: number | null;
-  priceLevel: number | null;
-  cuisineType: string | null;
-  socialLinkUrl: string | null;
-  suggestedByMemberId: string | null;
-}
-
-interface MemberForVenueScore {
-  referenceLocation: { lat: number; lng: number } | null;
-  budgetCeiling: number | null;
-  sessionCuisinePreferences: string[] | null;
-}
 
 /**
  * Composite venue score (0–1):

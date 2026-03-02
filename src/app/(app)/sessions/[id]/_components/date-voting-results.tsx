@@ -7,6 +7,7 @@ import { voteBarTransition, successPulse, durations } from "@/lib/motion-variant
 import { PREFERENCE_LEVEL, SESSION_STATUS } from "@/lib/constants";
 import type { PreferenceLevel } from "@/lib/constants";
 import { formatDateNoYear } from "@/lib/format-utils";
+import { PREFERENCE_PILL_CONFIG } from "@/lib/ui-config";
 import { DateScoreBadge } from "./date-score-badge";
 
 const PREFERENCE_LEVELS: PreferenceLevel[] = [
@@ -14,27 +15,6 @@ const PREFERENCE_LEVELS: PreferenceLevel[] = [
   PREFERENCE_LEVEL.can_do,
   PREFERENCE_LEVEL.unavailable,
 ];
-
-const PILL_CONFIG: Record<
-  PreferenceLevel,
-  { label: string; selected: string; unselected: string }
-> = {
-  [PREFERENCE_LEVEL.strongly_prefer]: {
-    label: "Bisa banget!",
-    selected: "bg-primary text-white border-primary",
-    unselected: "border-foreground/20 text-foreground/60",
-  },
-  [PREFERENCE_LEVEL.can_do]: {
-    label: "Bisa",
-    selected: "bg-teal text-white border-teal",
-    unselected: "border-foreground/20 text-foreground/60",
-  },
-  [PREFERENCE_LEVEL.unavailable]: {
-    label: "Ga bisa",
-    selected: "bg-danger text-white border-danger",
-    unselected: "border-foreground/20 text-foreground/60",
-  },
-};
 
 interface DateWithVotes {
   id: string;
@@ -90,7 +70,7 @@ function VotePills({
   return (
     <div className="flex gap-2">
       {PREFERENCE_LEVELS.map((level) => {
-        const config = PILL_CONFIG[level];
+        const config = PREFERENCE_PILL_CONFIG[level];
         const isSelected = myVote === level;
         return (
           <motion.button
@@ -131,7 +111,7 @@ function ReadOnlyVote({ myVote }: { myVote: PreferenceLevel }) {
     <p className="text-xs text-foreground/50">
       Pilihan lu:{" "}
       <span className={colorClass}>
-        {PILL_CONFIG[myVote]?.label}
+        {PREFERENCE_PILL_CONFIG[myVote]?.label}
       </span>
     </p>
   );

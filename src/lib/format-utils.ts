@@ -28,3 +28,11 @@ export function formatDateShort(dateStr: string): string {
     month: "short",
   });
 }
+
+/** Build a Google Maps search URL from lat/lng coordinates. */
+export function buildGoogleMapsUrl(
+  location: { lat?: number; lng?: number } | null | undefined,
+): string | undefined {
+  if (!location?.lat || !location?.lng) return undefined;
+  return `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
+}
