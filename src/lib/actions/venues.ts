@@ -14,7 +14,7 @@ import {
 } from "@/lib/db/schema";
 import { ACTIVITY_TYPE, VENUE_EMOJI, SESSION_STATUS } from "@/lib/constants";
 import { env } from "@/lib/env";
-import { logError } from "@/lib/logger";
+import { logError, logWarn } from "@/lib/logger";
 import { detectPlatform, fetchSocialLinkMetadata } from "@/lib/social-embed";
 import { calculateCentroid, calculateVenueScore } from "@/lib/algorithms/scoring";
 import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
@@ -265,12 +265,18 @@ export async function discoverVenues(sessionId: string): Promise<ActionResult & 
   }
 
   const validation = await validateDiscoverSession(sessionId, userId);
-  if ("error" in validation) return { ok: false, error: validation.error as string };
+  if ("error" in validation) {
+    logWarn("discoverVenues:validation", validation.error as string, { sessionId });
+    return { ok: false, error: validation.error as string };
+  }
 
   if (await hasExistingSystemVenues(sessionId)) return { ok: true, skipped: true };
 
   const apiKey = env.GOOGLE_PLACES_API_KEY;
-  if (!apiKey) return { ok: false, error: "Google Places API ga dikonfigurasi" };
+  if (!apiKey) {
+    logError("discoverVenues:config", new Error("GOOGLE_PLACES_API_KEY is not set"), { sessionId });
+    return { ok: false, error: "Google Places API ga dikonfigurasi" };
+  }
 
   const members = await fetchSessionMembers(sessionId);
   const centroid = calculateCentroid(
@@ -282,6 +288,11 @@ export async function discoverVenues(sessionId: string): Promise<ActionResult & 
 
   const searchLocation = resolveSearchLocation(validation.session, members, centroid);
   if (!searchLocation) {
+    logWarn("discoverVenues:location", "No usable location data, discovery skipped", {
+      sessionId,
+      memberCount: members.length,
+      hasCentroid: !!centroid,
+    });
     await insertNoResultsActivity(sessionId, "Ga ada data lokasi, venue discovery diskip");
     return { ok: true, skipped: true };
   }
@@ -295,6 +306,11 @@ export async function discoverVenues(sessionId: string): Promise<ActionResult & 
   }
 
   if (results.length === 0) {
+    logWarn("discoverVenues:results", "Google Places returned 0 results", {
+      sessionId,
+      searchLat: searchLocation.lat,
+      searchLng: searchLocation.lng,
+    });
     await insertNoResultsActivity(sessionId, "Ga ketemu venue di sekitar lokasi");
     return { ok: true, count: 0 };
   }

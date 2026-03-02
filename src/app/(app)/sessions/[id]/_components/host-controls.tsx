@@ -72,7 +72,12 @@ export function HostControls({
       // Only trigger venue discovery for shapes that need it
       if (status === SESSION_STATUS.collecting && sessionShape !== SESSION_SHAPE.venue_known) {
         discoverVenues(sessionId).then((r) => {
-          if (!r.ok) setDiscoveryFailed(true);
+          if (!r.ok) {
+            console.error("[BookBurr] discoverVenues failed:", r.error);
+            setDiscoveryFailed(true);
+          } else {
+            router.refresh();
+          }
         });
       }
     }

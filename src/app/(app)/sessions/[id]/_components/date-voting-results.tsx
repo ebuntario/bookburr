@@ -237,7 +237,8 @@ export function DateVotingResults({
     () => initBannerDismissed(sessionId),
   );
 
-  const showRevisitBanner = status === SESSION_STATUS.discovering && !bannerDismissed;
+  const showRevisitBanner =
+    status === SESSION_STATUS.discovering && !!topVenueName && !bannerDismissed;
 
   const dismissBanner = () => {
     setBannerDismissed(true);
