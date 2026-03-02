@@ -1,17 +1,29 @@
 import NextAuth from "next-auth";
 import type { Provider } from "@auth/core/providers";
 import Resend from "next-auth/providers/resend";
+import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { users, accounts, verificationTokens } from "./db/schema";
+import { env } from "./env";
 
 const providers: Provider[] = [
   Resend({
     from: process.env.AUTH_EMAIL_FROM ?? "BookBurr <noreply@bookburr.com>",
   }),
 ];
+
+// Google OAuth — only enabled when credentials are configured
+if (env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET) {
+  providers.push(
+    Google({
+      clientId: env.AUTH_GOOGLE_ID,
+      clientSecret: env.AUTH_GOOGLE_SECRET,
+    })
+  );
+}
 
 // Test-only credentials provider — gated behind E2E_TEST env var.
 // Only accepts @test.bookburr.com emails. Never ships to production.

@@ -30,4 +30,11 @@ export const env = {
   get SUPABASE_SERVICE_ROLE_KEY() {
     return process.env.SUPABASE_SERVICE_ROLE_KEY ?? null;
   },
+  // Google OAuth (optional — login with Google disabled when not configured)
+  get AUTH_GOOGLE_ID() {
+    return process.env.AUTH_GOOGLE_ID ?? null;
+  },
+  get AUTH_GOOGLE_SECRET() {
+    return process.env.AUTH_GOOGLE_SECRET ?? null;
+  },
 } as const;
