@@ -47,3 +47,6 @@ client_secret_*.json
 # claude code
 .claude/
 .mcp.json
+
+# testsprite
+testsprite_tests/
