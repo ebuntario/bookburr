@@ -77,7 +77,7 @@ function SelectableList<T extends { id: string }>({
 function ConsensusWarning({ show }: { show: boolean }) {
   if (!show) return null;
   return (
-    <p className="rounded-xl bg-primary/10 px-3 py-2 text-xs text-foreground/70">
+    <p className="rounded-xl bg-danger/10 px-3 py-2 text-xs text-danger">
       Eh ini bukan yang paling banyak dipilih loh — yakin mau?
     </p>
   );
@@ -233,9 +233,9 @@ function ConfirmationDialog({
           type="button"
           onClick={onConfirm}
           disabled={loading}
-          className="flex w-full items-center justify-center rounded-xl bg-danger py-3.5 text-sm font-medium text-white disabled:opacity-50"
+          className="flex w-full items-center justify-center rounded-xl bg-primary py-3.5 text-sm font-medium text-white disabled:opacity-50"
         >
-          {loading ? "Lagi proses..." : <><CheckCircleIcon className="h-5 w-5 inline" /> Confirm</>}
+          {loading ? "Lagi proses..." : <><CheckCircleIcon className="h-5 w-5 inline" /> Ya, fix bukber!</>}
         </button>
         <button
           type="button"

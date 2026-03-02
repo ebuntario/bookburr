@@ -26,7 +26,7 @@ export function WaitingOnList({ pendingMembers, status }: WaitingOnListProps) {
     return (
       <motion.div
         {...fadeIn}
-        className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3"
+        className="rounded-xl border border-foreground/15 bg-foreground/5 px-4 py-3"
       >
         <p className="text-sm text-foreground/60">
           {pendingMembers.length} orang belum vote

@@ -2,19 +2,26 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getSessionsByUserId } from "@/lib/queries/sessions";
+import { fetchRandomRamadanPhoto } from "@/lib/unsplash";
 import { SessionCard } from "./_components/session-card";
 import { SessionCardList, SessionCardItem } from "./_components/session-card-list";
 import { EmptyState } from "./_components/empty-state";
+import { UnsplashBackground } from "./_components/unsplash-background";
 
 export default async function HomePage() {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) redirect("/login");
 
-  const sessions = await getSessionsByUserId(userId);
+  const [sessions, photo] = await Promise.all([
+    getSessionsByUserId(userId),
+    fetchRandomRamadanPhoto(),
+  ]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="relative flex flex-col gap-6">
+      {photo && <UnsplashBackground photo={photo} />}
+
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-heading font-semibold">List Bukber</h2>
         {sessions.length > 0 && (

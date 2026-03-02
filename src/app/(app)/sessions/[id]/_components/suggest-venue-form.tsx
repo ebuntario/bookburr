@@ -99,7 +99,7 @@ export function SuggestVenueForm({
         type="button"
         onClick={handleSubmit}
         disabled={!name.trim() || submitting}
-        className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-danger py-3.5 text-sm font-medium text-white transition-opacity active:opacity-70 disabled:opacity-40"
+        className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-3.5 text-sm font-medium text-white transition-opacity active:opacity-70 disabled:opacity-40"
       >
         {submitting ? "Lagi kirim..." : <><PaperAirplaneIcon className="h-4 w-4" /> Suggest Sekarang</>}
       </button>

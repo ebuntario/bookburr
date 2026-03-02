@@ -35,9 +35,9 @@ export function HostVotingPanel({
           type="button"
           onClick={() => setShowConfirm(true)}
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-danger py-3.5 text-sm font-medium text-white transition-opacity active:opacity-70 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-medium text-white transition-opacity active:opacity-70 disabled:opacity-50"
         >
-          <CheckCircleIcon className="h-5 w-5" /> Confirm Venue
+          <CheckCircleIcon className="h-5 w-5" /> Fix Bukber!
         </button>
       </div>
 

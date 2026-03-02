@@ -37,4 +37,8 @@ export const env = {
   get AUTH_GOOGLE_SECRET() {
     return process.env.AUTH_GOOGLE_SECRET ?? null;
   },
+  // Unsplash API (optional — home page background disabled when not configured)
+  get UNSPLASH_ACCESS_KEY() {
+    return process.env.UNSPLASH_ACCESS_KEY ?? null;
+  },
 } as const;

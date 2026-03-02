@@ -59,10 +59,10 @@ export function VenueList({ venues, sessionId, status, isTerserah }: VenueListPr
 
       {/* Inline suggest nudge (discovering + voting only) */}
       {(status === "discovering" || isVoting) && (
-        <div className="rounded-2xl border border-dashed border-danger/30 bg-danger/5 px-4 py-4 text-center">
+        <div className="rounded-2xl border border-dashed border-teal/20 bg-teal/5 px-4 py-4 text-center">
           <p className="text-sm text-foreground/60">
             Ada tempat yang lu mau suggest?{" "}
-            <span className="font-medium text-danger">Spill aja! 🍛</span>
+            <span className="font-medium text-teal">Spill aja! 🍛</span>
           </p>
         </div>
       )}
