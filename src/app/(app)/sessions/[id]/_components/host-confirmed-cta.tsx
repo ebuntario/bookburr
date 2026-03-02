@@ -11,5 +11,12 @@ interface HostConfirmedCTAProps {
 }
 
 export function HostConfirmedCTA({ onAdvance, renderCTA }: HostConfirmedCTAProps) {
-  return renderCTA("Tandai Selesai", "Lagi proses...", onAdvance, "ghost");
+  return (
+    <div className="flex flex-col gap-1">
+      {renderCTA("Tandai Selesai", "Lagi proses...", onAdvance, "ghost")}
+      <p className="text-center text-xs text-foreground/40">
+        Ini cuma tandain bukber kelar — gak hapus session
+      </p>
+    </div>
+  );
 }

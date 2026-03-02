@@ -104,7 +104,6 @@ export function HostControls({
 
     return (
       <div className="flex flex-col gap-2">
-        <p className="text-sm text-foreground/50">Lu yang pegang kendali nih</p>
         {error && <p className="text-xs text-danger">{error}</p>}
         <motion.button
           type="button"

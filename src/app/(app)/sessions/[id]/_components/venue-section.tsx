@@ -19,6 +19,7 @@ interface Venue {
   socialLinkPlatform: string | null;
   socialLinkMetadata: unknown;
   suggestedByMemberId: string | null;
+  aiInsight: unknown;
   reactions: Record<string, VenueReaction>;
   voteCount: number;
   isMyVote: boolean;
@@ -51,7 +52,7 @@ export function VenueSection({
     // Collecting phase
     return (
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium text-foreground/60">Venue</h3>
+        <h3 className="text-sm font-medium text-foreground/60">Tempat</h3>
         <div className="rounded-2xl border border-dashed border-foreground/20 px-5 py-6 text-center">
           {isHost ? (
             <p className="text-sm text-foreground/50">
@@ -59,9 +60,7 @@ export function VenueSection({
             </p>
           ) : (
             <p className="text-sm text-foreground/50">
-              Host lagi ngumpulin orang dulu, sabar ya
-              <br />
-              Venue bakal muncul abis itu
+              Tempat bakal muncul abis host mulai cari
             </p>
           )}
         </div>
@@ -72,7 +71,7 @@ export function VenueSection({
   if (status === SESSION_STATUS.discovering && venues.length === 0) {
     return (
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium text-foreground/60">Venue</h3>
+        <h3 className="text-sm font-medium text-foreground/60">Tempat</h3>
         <div className="flex flex-col gap-3">
           {[1, 2, 3].map((i) => (
             <div
@@ -92,7 +91,7 @@ export function VenueSection({
   if (venues.length === 0) {
     return (
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium text-foreground/60">Venue</h3>
+        <h3 className="text-sm font-medium text-foreground/60">Tempat</h3>
         <div className="rounded-2xl border border-dashed border-foreground/20 px-5 py-6 text-center">
           <p className="text-sm text-foreground/50">
             Aduh, lagi susah nyari tempat nih.
@@ -108,7 +107,7 @@ export function VenueSection({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-foreground/60">Venue</h3>
+        <h3 className="text-sm font-medium text-foreground/60">Tempat</h3>
         <p className="text-xs text-foreground/40">{venues.length} tempat</p>
       </div>
 

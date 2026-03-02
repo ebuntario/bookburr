@@ -45,7 +45,7 @@ export function TerserahButton({ sessionId, isTerserah: initialIsTerserah }: Ter
         .filter(Boolean)
         .join(" ")}
     >
-      {isTerserah ? <><CheckIcon className="h-4 w-4 inline" /> Ikut aja dipilih!</> : "Ga ada preferensi? Ikut aja"}
+      {isTerserah ? <><CheckIcon className="h-4 w-4 inline" /> Ikut aja dipilih!</> : "Gapunya preferensi? Ikut aja deh"}
     </button>
   );
 }

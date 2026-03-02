@@ -7,7 +7,7 @@ export const STATUS_CONFIG: Record<
 > = {
   collecting: { label: "Lagi Ngumpulin", className: "bg-teal/15 text-teal" },
   discovering: {
-    label: "Lagi Nyari Resto",
+    label: "Lagi Nyari Tempat",
     className: "bg-primary/15 text-primary",
   },
   voting: { label: "Lagi Voting", className: "bg-danger/15 text-danger" },
@@ -33,7 +33,7 @@ export const PREFERENCE_PILL_CONFIG: Record<
     unselected: "border-foreground/20 text-foreground/60",
   },
   [PREFERENCE_LEVEL.unavailable]: {
-    label: "Ga bisa",
+    label: "Gabisa",
     selected: "bg-danger text-white border-danger",
     unselected: "border-foreground/20 text-foreground/60",
   },

@@ -27,7 +27,7 @@ export function HostCollectingCTA({
       <div className="rounded-2xl border border-dashed border-foreground/20 bg-foreground/[0.03] px-5 py-5 flex gap-2 items-start">
         <HandRaisedIcon className="h-5 w-5 shrink-0 text-foreground/50 mt-0.5" />
         <p className="text-sm font-medium text-foreground/70">
-          Tunggu minimal 1 orang lagi join dulu ya! Share link-nya pake tombol di bawah.
+          Tunggu minimal 1 orang lagi join dulu ya!
         </p>
       </div>
     );

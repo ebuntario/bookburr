@@ -182,7 +182,7 @@ export function InviteButton({
             }}
             className="flex items-center justify-center gap-2 rounded-xl border border-foreground/20 py-3 font-medium text-foreground"
           >
-            Copy Link
+            Salin Link
           </button>
 
           {typeof navigator !== "undefined" && "share" in navigator && (
