@@ -96,5 +96,53 @@ describe("env", () => {
       const { env } = await import("./env");
       expect(env.SUPABASE_SERVICE_ROLE_KEY).toBeNull();
     });
+
+    it("AUTH_GOOGLE_ID returns null when unset", async () => {
+      delete process.env.AUTH_GOOGLE_ID;
+      const { env } = await import("./env");
+      expect(env.AUTH_GOOGLE_ID).toBeNull();
+    });
+
+    it("AUTH_GOOGLE_ID returns value when set", async () => {
+      process.env.AUTH_GOOGLE_ID = "google-client-id";
+      const { env } = await import("./env");
+      expect(env.AUTH_GOOGLE_ID).toBe("google-client-id");
+    });
+
+    it("AUTH_GOOGLE_SECRET returns null when unset", async () => {
+      delete process.env.AUTH_GOOGLE_SECRET;
+      const { env } = await import("./env");
+      expect(env.AUTH_GOOGLE_SECRET).toBeNull();
+    });
+
+    it("AUTH_GOOGLE_SECRET returns value when set", async () => {
+      process.env.AUTH_GOOGLE_SECRET = "google-secret";
+      const { env } = await import("./env");
+      expect(env.AUTH_GOOGLE_SECRET).toBe("google-secret");
+    });
+
+    it("OPENROUTER_API_KEY returns null when unset", async () => {
+      delete process.env.OPENROUTER_API_KEY;
+      const { env } = await import("./env");
+      expect(env.OPENROUTER_API_KEY).toBeNull();
+    });
+
+    it("OPENROUTER_API_KEY returns value when set", async () => {
+      process.env.OPENROUTER_API_KEY = "sk-or-test";
+      const { env } = await import("./env");
+      expect(env.OPENROUTER_API_KEY).toBe("sk-or-test");
+    });
+
+    it("UNSPLASH_ACCESS_KEY returns null when unset", async () => {
+      delete process.env.UNSPLASH_ACCESS_KEY;
+      const { env } = await import("./env");
+      expect(env.UNSPLASH_ACCESS_KEY).toBeNull();
+    });
+
+    it("UNSPLASH_ACCESS_KEY returns value when set", async () => {
+      process.env.UNSPLASH_ACCESS_KEY = "unsplash-key";
+      const { env } = await import("./env");
+      expect(env.UNSPLASH_ACCESS_KEY).toBe("unsplash-key");
+    });
   });
 });

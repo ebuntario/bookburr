@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatDate, formatDateShort } from "./format-utils";
+import { formatDate, formatDateNoYear, formatDateShort, buildGoogleMapsUrl } from "./format-utils";
 
 describe("formatDate", () => {
   it("formats 2025-03-15 in Indonesian long format", () => {
@@ -29,6 +29,23 @@ describe("formatDate", () => {
   });
 });
 
+describe("formatDateNoYear", () => {
+  it("does not include the year", () => {
+    const result = formatDateNoYear("2025-03-15");
+    expect(result).not.toContain("2025");
+  });
+
+  it("includes the day number", () => {
+    const result = formatDateNoYear("2025-03-15");
+    expect(result).toContain("15");
+  });
+
+  it("returns a non-empty string", () => {
+    const result = formatDateNoYear("2025-06-01");
+    expect(result.length).toBeGreaterThan(0);
+  });
+});
+
 describe("formatDateShort", () => {
   it("returns shorter format without year", () => {
     const long = formatDate("2025-03-15");
@@ -50,5 +67,28 @@ describe("formatDateShort", () => {
   it("returns a non-empty string", () => {
     const result = formatDateShort("2025-06-01");
     expect(result.length).toBeGreaterThan(0);
+  });
+});
+
+describe("buildGoogleMapsUrl", () => {
+  it("returns a Google Maps URL for valid coordinates", () => {
+    const url = buildGoogleMapsUrl({ lat: -6.2, lng: 106.8 });
+    expect(url).toBe("https://www.google.com/maps/search/?api=1&query=-6.2,106.8");
+  });
+
+  it("returns undefined for null location", () => {
+    expect(buildGoogleMapsUrl(null)).toBeUndefined();
+  });
+
+  it("returns undefined for undefined location", () => {
+    expect(buildGoogleMapsUrl(undefined)).toBeUndefined();
+  });
+
+  it("returns undefined when lat is missing", () => {
+    expect(buildGoogleMapsUrl({ lng: 106.8 } as { lat?: number; lng?: number })).toBeUndefined();
+  });
+
+  it("returns undefined when lng is missing", () => {
+    expect(buildGoogleMapsUrl({ lat: -6.2 } as { lat?: number; lng?: number })).toBeUndefined();
   });
 });

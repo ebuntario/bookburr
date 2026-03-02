@@ -24,6 +24,9 @@ export default defineConfig({
         // Pure constants — no logic to test
         "src/lib/motion-variants.ts",
         "src/lib/ui-config.ts",
+        // External API clients — require OpenRouter, Unsplash keys
+        "src/lib/ai/**",
+        "src/lib/unsplash.ts",
         // Integration-test-only — too many sequential DB calls for mock-based unit tests
         "src/lib/actions/venues.ts",
       ],
