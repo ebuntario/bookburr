@@ -20,15 +20,9 @@ import {
   type ActionResult,
   type Tx,
 } from "./helpers";
+import { isValidDateString } from "@/lib/date-utils";
 
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_DATE_OPTIONS_PER_SESSION = 45;
-
-function isValidDateString(d: string): boolean {
-  if (!DATE_PATTERN.test(d)) return false;
-  const parsed = new Date(d + "T00:00:00");
-  return !isNaN(parsed.getTime());
-}
 
 function isDateInRange(
   d: string,

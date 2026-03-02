@@ -11,6 +11,15 @@ export function formatDate(dateStr: string): string {
   });
 }
 
+/** Long format without year (weekday + day + month). */
+export function formatDateNoYear(dateStr: string): string {
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
 /** Shorter date format for compact display. */
 export function formatDateShort(dateStr: string): string {
   return new Date(`${dateStr}T00:00:00`).toLocaleDateString("id-ID", {

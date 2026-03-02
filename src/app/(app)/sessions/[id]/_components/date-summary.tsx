@@ -6,19 +6,12 @@ interface DateEntry {
   unavailable: number;
 }
 
+import { formatDateShort } from "@/lib/format-utils";
+
 interface DateSummaryProps {
   dates: DateEntry[];
   totalMembers: number;
   votedMemberCount: number;
-}
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("id-ID", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
 }
 
 export function DateSummary({
@@ -44,7 +37,7 @@ export function DateSummary({
           return (
             <div key={d.id} className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-foreground/70">
-                {formatDate(d.date)}
+                {formatDateShort(d.date)}
               </span>
 
               {/* Stacked bar */}

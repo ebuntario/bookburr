@@ -21,6 +21,7 @@ import {
 } from "@/lib/constants";
 import type { SessionShape } from "@/lib/constants";
 import type { Tx } from "./helpers";
+import { isValidDateString } from "@/lib/date-utils";
 
 interface CreateSessionInput {
   name: string;
@@ -50,15 +51,8 @@ interface CreateSessionError {
   error: string;
 }
 
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_DATES = 30;
 const MAX_RETRIES = 3;
-
-function isValidDate(d: string): boolean {
-  if (!DATE_PATTERN.test(d)) return false;
-  const parsed = new Date(d + "T00:00:00");
-  return !isNaN(parsed.getTime());
-}
 
 function getTomorrow(): string {
   const d = new Date();
@@ -85,7 +79,7 @@ function validateCreateSessionInput(
     return { ok: false, error: "Session shape nggak valid" };
   }
   if (input.sessionShape === SESSION_SHAPE.date_known) {
-    if (!input.confirmedDate || !isValidDate(input.confirmedDate)) {
+    if (!input.confirmedDate || !isValidDateString(input.confirmedDate)) {
       return { ok: false, error: "Tanggal wajib diisi untuk date_known" };
     }
   }
@@ -95,7 +89,7 @@ function validateCreateSessionInput(
     }
   }
   const seededCount = input.seededDates
-    ? [...new Set(input.seededDates)].filter(isValidDate).length
+    ? [...new Set(input.seededDates)].filter(isValidDateString).length
     : 0;
   if (seededCount > MAX_DATES) {
     return { ok: false, error: `Maksimal ${MAX_DATES} tanggal` };
@@ -111,15 +105,15 @@ function normalizeDateRange(input: CreateSessionInput): {
 } {
   return {
     dateRangeStart:
-      input.dateRangeStart && isValidDate(input.dateRangeStart)
+      input.dateRangeStart && isValidDateString(input.dateRangeStart)
         ? input.dateRangeStart
         : getTomorrow(),
     dateRangeEnd:
-      input.dateRangeEnd && isValidDate(input.dateRangeEnd)
+      input.dateRangeEnd && isValidDateString(input.dateRangeEnd)
         ? input.dateRangeEnd
         : EID_2026,
     seededDates: input.seededDates
-      ? [...new Set(input.seededDates)].filter(isValidDate)
+      ? [...new Set(input.seededDates)].filter(isValidDateString)
       : [],
     officeLocation:
       input.mode === SESSION_MODE.work && input.officeLocation

@@ -6,6 +6,7 @@ import { updateDateVotes } from "@/lib/actions/date-votes";
 import { voteBarTransition, successPulse, durations } from "@/lib/motion-variants";
 import { PREFERENCE_LEVEL } from "@/lib/constants";
 import type { PreferenceLevel } from "@/lib/constants";
+import { formatDateNoYear } from "@/lib/format-utils";
 import { DateScoreBadge } from "./date-score-badge";
 
 const PREFERENCE_LEVELS: PreferenceLevel[] = [
@@ -34,14 +35,6 @@ const PILL_CONFIG: Record<
     unselected: "border-foreground/20 text-foreground/60",
   },
 };
-
-function formatDate(dateStr: string): string {
-  return new Date(`${dateStr}T00:00:00`).toLocaleDateString("id-ID", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-}
 
 interface DateWithVotes {
   id: string;
@@ -169,7 +162,7 @@ function DateRow({
     <div className="flex flex-col gap-3 rounded-2xl border border-foreground/10 bg-white px-4 py-3">
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium text-foreground leading-tight">
-          {formatDate(date.date)}
+          {formatDateNoYear(date.date)}
         </p>
         {isBestDate && <DateScoreBadge />}
       </div>

@@ -26,6 +26,7 @@ import {
 } from "./_components/dashboard-helpers";
 import type { SessionStatus, SessionShape } from "@/lib/constants";
 import { SESSION_SHAPE } from "@/lib/constants";
+import { formatDateNoYear } from "@/lib/format-utils";
 
 function extractHostName(
   members: { userId: string; name: string | null; email: string | null }[],
@@ -137,11 +138,7 @@ export default async function SessionDashboardPage({
           <div className="rounded-2xl border border-foreground/10 bg-white px-5 py-4">
             <p className="text-xs font-medium text-foreground/40">Tanggal fix</p>
             <p className="font-heading text-lg font-medium">
-              {new Date(confirmedDate.date + "T00:00:00").toLocaleDateString("id-ID", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-              })}
+              {formatDateNoYear(confirmedDate.date)}
             </p>
           </div>
         )

@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Button } from "@heroui/react";
 import { CalendarGrid, formatYMD } from "@/components/calendar-grid";
 import { EID_2026 } from "@/lib/constants";
+import { formatDateNoYear } from "@/lib/format-utils";
 
 interface StepConfirmedDateProps {
   value: string | null;
@@ -46,11 +47,7 @@ export function StepConfirmedDate({
 
         {value && (
           <p className="text-center text-sm font-medium text-primary">
-            {new Date(value + "T00:00:00").toLocaleDateString("id-ID", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })}
+            {formatDateNoYear(value)}
           </p>
         )}
       </div>
