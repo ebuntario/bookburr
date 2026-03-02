@@ -1,12 +1,11 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { MARITAL_STATUS } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
-import type { ActionResult } from "./helpers";
+import { requireAuth, mapActionError, type ActionResult } from "./helpers";
 
 export async function updateProfile(input: {
   name?: string;
@@ -14,9 +13,12 @@ export async function updateProfile(input: {
   dietaryPreferences?: string[];
   defaultCuisinePreferences?: string[];
 }): Promise<ActionResult> {
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return { ok: false, error: "unauthorized" };
+  let userId: string;
+  try {
+    userId = await requireAuth();
+  } catch (err) {
+    return mapActionError(err, { UNAUTHORIZED: "unauthorized" });
+  }
 
   const {
     name,

@@ -2,33 +2,22 @@
 
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { venues, sessionMembers } from "@/lib/db/schema";
+import { venues } from "@/lib/db/schema";
 import { fetchSocialLinkMetadata } from "@/lib/social-embed";
 import { logError } from "@/lib/logger";
-import type { ActionResult } from "./helpers";
+import { requireAuth, requireMember, type ActionResult } from "./helpers";
 
 export async function refreshVenueMetadata(params: {
   venueId: string;
   sessionId: string;
 }): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Harus login dulu" };
-
-  // Verify membership
-  const [member] = await db
-    .select({ id: sessionMembers.id })
-    .from(sessionMembers)
-    .where(
-      and(
-        eq(sessionMembers.sessionId, params.sessionId),
-        eq(sessionMembers.userId, session.user.id),
-      ),
-    )
-    .limit(1);
-
-  if (!member) return { ok: false, error: "Lu bukan anggota session ini" };
+  try {
+    const userId = await requireAuth();
+    await requireMember(params.sessionId, userId);
+  } catch {
+    return { ok: false, error: "Harus login dulu / bukan anggota" };
+  }
 
   // Fetch venue — only refresh if metadata is still empty
   const [venue] = await db

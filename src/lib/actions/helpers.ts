@@ -30,6 +30,24 @@ export function mapActionError(
   throw err;
 }
 
+export async function requireMember(
+  sessionId: string,
+  userId: string,
+): Promise<string> {
+  const [member] = await db
+    .select({ id: sessionMembers.id })
+    .from(sessionMembers)
+    .where(
+      and(
+        eq(sessionMembers.sessionId, sessionId),
+        eq(sessionMembers.userId, userId),
+      ),
+    )
+    .limit(1);
+  if (!member) throw new Error("NOT_MEMBER");
+  return member.id;
+}
+
 export async function lockSessionForUpdate(
   tx: Tx,
   sessionId: string,

@@ -3,7 +3,6 @@
 import { nanoid } from "nanoid";
 import { eq, and, isNull, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   venues,
@@ -19,7 +18,7 @@ import { logError } from "@/lib/logger";
 import { detectPlatform, fetchSocialLinkMetadata } from "@/lib/social-embed";
 import { calculateCentroid, calculateVenueScore } from "@/lib/algorithms/scoring";
 import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
-import type { ActionResult } from "./helpers";
+import { requireAuth, requireMember, type ActionResult } from "./helpers";
 
 // ── discoverVenues helpers ──────────────────────────────────────────────────
 
@@ -134,22 +133,14 @@ export async function suggestVenue(params: {
   location?: { lat: number; lng: number } | null;
   socialLinkUrl?: string | null;
 }): Promise<ActionResult> {
-  const authSession = await auth();
-  const userId = authSession?.user?.id;
-  if (!userId) return { ok: false, error: "Harus login dulu" };
-
-  const [member] = await db
-    .select({ id: sessionMembers.id })
-    .from(sessionMembers)
-    .where(
-      and(
-        eq(sessionMembers.sessionId, params.sessionId),
-        eq(sessionMembers.userId, userId),
-      ),
-    )
-    .limit(1);
-
-  if (!member) return { ok: false, error: "Lu bukan anggota session ini" };
+  let userId: string;
+  let memberId: string;
+  try {
+    userId = await requireAuth();
+    memberId = await requireMember(params.sessionId, userId);
+  } catch {
+    return { ok: false, error: "Harus login dulu / bukan anggota" };
+  }
 
   // Security: reject non-https URLs to prevent XSS via javascript: or data: schemes
   if (params.socialLinkUrl && !params.socialLinkUrl.startsWith("https://")) {
@@ -184,7 +175,7 @@ export async function suggestVenue(params: {
     name: params.name,
     googlePlaceId: params.googlePlaceId ?? null,
     location: params.location ?? null,
-    suggestedByMemberId: member.id,
+    suggestedByMemberId: memberId,
     socialLinkUrl: params.socialLinkUrl ?? null,
     socialLinkPlatform,
     socialLinkMetadata,
@@ -194,7 +185,7 @@ export async function suggestVenue(params: {
   await db.insert(activityFeed).values({
     id: nanoid(),
     sessionId: params.sessionId,
-    memberId: member.id,
+    memberId,
     type: ACTIVITY_TYPE.suggested_venue,
     metadata: { venueName: params.name },
   });
@@ -266,9 +257,12 @@ async function insertDiscoveredVenues(
 }
 
 export async function discoverVenues(sessionId: string): Promise<ActionResult & { count?: number; skipped?: boolean }> {
-  const authSession = await auth();
-  const userId = authSession?.user?.id;
-  if (!userId) return { ok: false, error: "Harus login dulu" };
+  let userId: string;
+  try {
+    userId = await requireAuth();
+  } catch {
+    return { ok: false, error: "Harus login dulu" };
+  }
 
   const validation = await validateDiscoverSession(sessionId, userId);
   if ("error" in validation) return { ok: false, error: validation.error as string };
@@ -316,27 +310,18 @@ export async function reactToVenue(params: {
   venueId: string;
   emoji: string;
 }): Promise<ActionResult> {
-  const authSession = await auth();
-  const userId = authSession?.user?.id;
-  if (!userId) return { ok: false, error: "Harus login dulu" };
+  let memberId: string;
+  try {
+    const userId = await requireAuth();
+    memberId = await requireMember(params.sessionId, userId);
+  } catch {
+    return { ok: false, error: "Harus login dulu / bukan anggota" };
+  }
 
   const validEmojis = Object.values(VENUE_EMOJI) as string[];
   if (!validEmojis.includes(params.emoji)) {
     return { ok: false, error: "Emoji ga valid" };
   }
-
-  const [member] = await db
-    .select({ id: sessionMembers.id })
-    .from(sessionMembers)
-    .where(
-      and(
-        eq(sessionMembers.sessionId, params.sessionId),
-        eq(sessionMembers.userId, userId),
-      ),
-    )
-    .limit(1);
-
-  if (!member) return { ok: false, error: "Lu bukan anggota session ini" };
 
   // Check if venue belongs to this session
   const [venue] = await db
@@ -356,7 +341,7 @@ export async function reactToVenue(params: {
     .where(
       and(
         eq(venueReactions.venueId, params.venueId),
-        eq(venueReactions.memberId, member.id),
+        eq(venueReactions.memberId, memberId),
         eq(venueReactions.emoji, params.emoji),
       ),
     )
@@ -368,7 +353,7 @@ export async function reactToVenue(params: {
     await db.insert(venueReactions).values({
       id: nanoid(),
       venueId: params.venueId,
-      memberId: member.id,
+      memberId: memberId,
       emoji: params.emoji,
     });
   }
@@ -382,9 +367,12 @@ export async function reactToVenue(params: {
 
 export async function retryDiscoverVenues(sessionId: string): Promise<ActionResult & { count?: number }> {
   // Delete existing system venues first, then re-discover
-  const authSession = await auth();
-  const userId = authSession?.user?.id;
-  if (!userId) return { ok: false, error: "Harus login dulu" };
+  let userId: string;
+  try {
+    userId = await requireAuth();
+  } catch {
+    return { ok: false, error: "Harus login dulu" };
+  }
 
   const [session] = await db
     .select({ hostId: bukberSessions.hostId })
@@ -417,9 +405,13 @@ export async function voteForVenue(params: {
   venueId?: string | null;
   isTerserah?: boolean;
 }): Promise<ActionResult> {
-  const authSession = await auth();
-  const userId = authSession?.user?.id;
-  if (!userId) return { ok: false, error: "Harus login dulu" };
+  let memberId: string;
+  try {
+    const userId = await requireAuth();
+    memberId = await requireMember(params.sessionId, userId);
+  } catch {
+    return { ok: false, error: "Harus login dulu / bukan anggota" };
+  }
 
   const [session] = await db
     .select({ status: bukberSessions.status })
@@ -431,19 +423,6 @@ export async function voteForVenue(params: {
   if (session.status !== SESSION_STATUS.voting) {
     return { ok: false, error: "Session belum di fase voting" };
   }
-
-  const [member] = await db
-    .select({ id: sessionMembers.id })
-    .from(sessionMembers)
-    .where(
-      and(
-        eq(sessionMembers.sessionId, params.sessionId),
-        eq(sessionMembers.userId, userId),
-      ),
-    )
-    .limit(1);
-
-  if (!member) return { ok: false, error: "Lu bukan anggota session ini" };
 
   const isTerserah = params.isTerserah ?? false;
   const venueId = isTerserah ? null : (params.venueId ?? null);
@@ -469,7 +448,7 @@ export async function voteForVenue(params: {
       id: nanoid(),
       sessionId: params.sessionId,
       venueId,
-      memberId: member.id,
+      memberId,
       isTerserah,
     })
     .onConflictDoUpdate({

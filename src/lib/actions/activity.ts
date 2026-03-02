@@ -1,11 +1,14 @@
 "use server";
 
-import { auth } from "@/lib/auth";
 import { getActivityFeed } from "@/lib/queries/dashboard";
+import { requireAuth } from "./helpers";
 
 export async function loadMoreActivity(sessionId: string, cursor: string) {
-  const session = await auth();
-  if (!session?.user?.id) return [];
+  try {
+    await requireAuth();
+  } catch {
+    return [];
+  }
 
   const cursorDate = new Date(cursor);
   return getActivityFeed(sessionId, 10, cursorDate);
