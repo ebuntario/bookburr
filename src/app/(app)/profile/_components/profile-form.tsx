@@ -193,7 +193,7 @@ export function ProfileForm({
           items={CUISINE_OPTIONS}
           selected={cuisine}
           onToggle={(v) => setCuisine(toggleItem(cuisine, v))}
-          colorClass="border-danger bg-danger/15 text-danger"
+          colorClass="border-danger bg-danger-soft text-danger"
         />
         <p className="text-xs text-foreground/40">
           Untuk mencocokkan venue dengan selera kamu
