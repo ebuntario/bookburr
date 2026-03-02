@@ -204,3 +204,60 @@ describe("createSession — retry on invite code collision", () => {
     ).rejects.toThrow("duplicate");
   });
 });
+
+describe("createSession — venue_known shape", () => {
+  beforeEach(() => mockAuthUser());
+
+  it("succeeds with presetVenueName", async () => {
+    const tx = makeMockTx();
+    vi.mocked(db.transaction).mockImplementation(async (cb) => cb(tx as unknown as any));
+    const result = await createSession({
+      ...validInput,
+      sessionShape: "venue_known",
+      presetVenueName: "Restoran Padang",
+    });
+    expect(result).toMatchObject({ ok: true });
+    // insert should be called for: session, member, venue, activity = 4 times
+    expect(tx.insert).toHaveBeenCalled();
+  });
+
+  it("stores venue with address", async () => {
+    const tx = makeMockTx();
+    vi.mocked(db.transaction).mockImplementation(async (cb) => cb(tx as unknown as any));
+    const result = await createSession({
+      ...validInput,
+      sessionShape: "venue_known",
+      presetVenueName: "Restoran Padang",
+      presetVenueAddress: "Jl. Sudirman No. 5",
+    });
+    expect(result).toMatchObject({ ok: true });
+  });
+});
+
+describe("createSession — date_known shape", () => {
+  beforeEach(() => mockAuthUser());
+
+  it("succeeds with confirmedDate", async () => {
+    const tx = makeMockTx();
+    vi.mocked(db.transaction).mockImplementation(async (cb) => cb(tx as unknown as any));
+    const result = await createSession({
+      ...validInput,
+      sessionShape: "date_known",
+      confirmedDate: "2026-03-15",
+      seededDates: [],
+    });
+    expect(result).toMatchObject({ ok: true });
+    // Should insert date option + update session with confirmedDateOptionId
+    expect(tx.insert).toHaveBeenCalled();
+    expect(tx.update).toHaveBeenCalled();
+  });
+
+  it("returns error for date_known with invalid confirmedDate", async () => {
+    const result = await createSession({
+      ...validInput,
+      sessionShape: "date_known",
+      confirmedDate: "not-a-date",
+    });
+    expect(result).toEqual({ ok: false, error: "Tanggal wajib diisi untuk date_known" });
+  });
+});

@@ -325,4 +325,73 @@ describe("confirmSession", () => {
       expect(result).toEqual({ ok: true });
     });
   });
+
+  describe("date_known shape", () => {
+    it("overrides dateOptionId with stored confirmedDateOptionId for date_known shape", async () => {
+      mockAuthUser();
+      vi.mocked(db.transaction).mockImplementation(async (cb) => {
+        let selectCount = 0;
+        const tx = {
+          execute: vi.fn().mockResolvedValue({
+            rows: [{ id: "s1", status: "voting", host_id: "host-1", session_shape: "date_known" }],
+          }),
+          select: vi.fn().mockImplementation(() => ({
+            from: vi.fn().mockReturnThis(),
+            where: vi.fn().mockReturnThis(),
+            limit: vi.fn().mockImplementation(() => {
+              selectCount++;
+              // 1st=confirmedDateOptionId query, 2nd=venue, 3rd=date, 4th=hostMember
+              if (selectCount === 1) return Promise.resolve([{ confirmedDateOptionId: "stored-d1" }]);
+              return Promise.resolve([{ id: "found" }]);
+            }),
+          })),
+          update: vi.fn().mockReturnValue({
+            set: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([]),
+            }),
+          }),
+          insert: vi.fn().mockReturnValue({ values: vi.fn().mockResolvedValue([]) }),
+        };
+        return cb(tx as unknown as any);
+      });
+      const result = await confirmSession({
+        sessionId: "s1",
+        venueId: "v1",
+        dateOptionId: "d-ignored",
+      });
+      expect(result).toEqual({ ok: true });
+    });
+  });
+
+  describe("collecting → discovering (date_known skips viable date check)", () => {
+    it("skips viable date count check for date_known shape", async () => {
+      mockAuthUser();
+      vi.mocked(db.transaction).mockImplementation(async (cb) => {
+        const tx = makeTxForAdvance({
+          status: "collecting",
+          memberCount: 3,
+          sessionShape: "date_known",
+        });
+        return cb(tx as unknown as any);
+      });
+      const result = await advanceSessionStatus("s1");
+      expect(result).toEqual({ ok: true });
+    });
+  });
+
+  describe("venue_known shape transition", () => {
+    it("venue_known skips discovering and goes collecting → voting", async () => {
+      mockAuthUser();
+      vi.mocked(db.transaction).mockImplementation(async (cb) => {
+        const tx = makeTxForAdvance({
+          status: "collecting",
+          memberCount: 3,
+          sessionShape: "venue_known",
+        });
+        return cb(tx as unknown as any);
+      });
+      const result = await advanceSessionStatus("s1");
+      expect(result).toEqual({ ok: true });
+    });
+  });
 });
