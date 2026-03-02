@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "uq_date_options_session_date" ON "date_options" USING btree ("session_id","date");

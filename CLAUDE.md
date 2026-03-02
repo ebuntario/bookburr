@@ -308,8 +308,6 @@ All work is tracked in **Linear** under the **BookBurr** team. Before starting a
 Commit message format:
 ```
 BOO-XX: Short description of what was done
-
-Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ```
 
 ### Schema-First Database Migrations
