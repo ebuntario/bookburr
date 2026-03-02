@@ -124,6 +124,8 @@ function DateRow({
   myVote,
   isSuccess,
   isBestDate,
+  isProvisionalBest,
+  showTallies,
   canEdit,
   submitting,
   onVote,
@@ -132,6 +134,8 @@ function DateRow({
   myVote: PreferenceLevel | null;
   isSuccess: boolean;
   isBestDate: boolean;
+  isProvisionalBest: boolean;
+  showTallies: boolean;
   canEdit: boolean;
   submitting: boolean;
   onVote: (dateId: string, level: PreferenceLevel) => void;
@@ -144,16 +148,20 @@ function DateRow({
         <p className="text-sm font-medium text-foreground leading-tight">
           {formatDateNoYear(date.date)}
         </p>
-        {isBestDate && <DateScoreBadge />}
+        {isBestDate && <DateScoreBadge provisional={isProvisionalBest} />}
       </div>
 
-      <VoteBar
-        stronglyPrefer={date.stronglyPrefer}
-        canDo={date.canDo}
-        unavailable={date.unavailable}
-      />
+      {showTallies ? (
+        <VoteBar
+          stronglyPrefer={date.stronglyPrefer}
+          canDo={date.canDo}
+          unavailable={date.unavailable}
+        />
+      ) : (
+        <div className="h-2 w-full rounded-full bg-foreground/10" />
+      )}
 
-      {total > 0 && (
+      {showTallies && total > 0 && (
         <p className="text-xs text-foreground/50">
           <span className="text-primary">{date.stronglyPrefer} bisa banget</span>
           {" · "}
@@ -255,8 +263,11 @@ export function DateVotingResults({
     canEdit ? a.date.localeCompare(b.date) : b.dateScore - a.dateScore,
   );
 
-  const threshold50 =
-    totalMembers > 0 && votedMemberCount / totalMembers >= 0.5;
+  const isCollecting = status === SESSION_STATUS.collecting;
+  const showTallies = !isCollecting;
+  const threshold80 =
+    totalMembers > 0 && votedMemberCount / totalMembers >= 0.8;
+  const allVoted = votedMemberCount >= totalMembers;
 
   const handleVote = async (dateId: string, level: PreferenceLevel) => {
     if (!canEdit || submitting) return;
@@ -331,7 +342,9 @@ export function DateVotingResults({
             date={d}
             myVote={localVotes[d.id]}
             isSuccess={successDateId === d.id}
-            isBestDate={threshold50 && i === 0}
+            isBestDate={!isCollecting && threshold80 && i === 0}
+            isProvisionalBest={!allVoted}
+            showTallies={showTallies}
             canEdit={canEdit}
             submitting={submitting}
             onVote={handleVote}
