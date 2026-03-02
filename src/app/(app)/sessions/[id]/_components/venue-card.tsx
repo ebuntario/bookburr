@@ -3,6 +3,7 @@ import { SocialEmbedPreview } from "./social-embed-preview";
 import { EmojiReactionBar } from "./emoji-reaction-bar";
 import { VenueVoteButton } from "./venue-vote-button";
 import type { SocialLinkMetadata } from "@/types";
+import { SESSION_STATUS } from "@/lib/constants";
 
 interface VenueReaction {
   count: number;
@@ -66,8 +67,8 @@ export function VenueCard({
 }: VenueCardProps) {
   const meta = socialLinkMetadata as SocialLinkMetadata | null;
   const isBestPick = rank === 0;
-  const isVotingPhase = status === "voting";
-  const canReact = status === "discovering" || status === "voting";
+  const isVotingPhase = status === SESSION_STATUS.voting;
+  const canReact = status === SESSION_STATUS.discovering || status === SESSION_STATUS.voting;
 
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-foreground/10 bg-white px-4 py-3.5">

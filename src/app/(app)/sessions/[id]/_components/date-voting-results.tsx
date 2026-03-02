@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { updateDateVotes } from "@/lib/actions/date-votes";
 import { voteBarTransition, successPulse, durations } from "@/lib/motion-variants";
-import { PREFERENCE_LEVEL } from "@/lib/constants";
+import { PREFERENCE_LEVEL, SESSION_STATUS } from "@/lib/constants";
 import type { PreferenceLevel } from "@/lib/constants";
 import { formatDateNoYear } from "@/lib/format-utils";
 import { DateScoreBadge } from "./date-score-badge";
@@ -257,7 +257,7 @@ export function DateVotingResults({
     () => initBannerDismissed(sessionId),
   );
 
-  const showRevisitBanner = status === "discovering" && !bannerDismissed;
+  const showRevisitBanner = status === SESSION_STATUS.discovering && !bannerDismissed;
 
   const dismissBanner = () => {
     setBannerDismissed(true);
@@ -268,7 +268,7 @@ export function DateVotingResults({
     }
   };
 
-  const canEdit = status === "collecting" || status === "discovering";
+  const canEdit = status === SESSION_STATUS.collecting || status === SESSION_STATUS.discovering;
 
   const sorted = [...initialDates].sort((a, b) =>
     canEdit ? a.date.localeCompare(b.date) : b.dateScore - a.dateScore,

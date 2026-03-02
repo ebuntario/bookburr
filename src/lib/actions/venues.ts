@@ -13,7 +13,7 @@ import {
   bukberSessions,
   activityFeed,
 } from "@/lib/db/schema";
-import { ACTIVITY_TYPE, VENUE_EMOJI } from "@/lib/constants";
+import { ACTIVITY_TYPE, VENUE_EMOJI, SESSION_STATUS } from "@/lib/constants";
 import { env } from "@/lib/env";
 import { logError } from "@/lib/logger";
 import { detectPlatform, fetchSocialLinkMetadata } from "@/lib/social-embed";
@@ -163,7 +163,7 @@ export async function suggestVenue(params: {
     .limit(1);
 
   if (!session) return { ok: false, error: "Session ga ditemukan" };
-  if (session.status === "confirmed" || session.status === "completed") {
+  if (session.status === SESSION_STATUS.confirmed || session.status === SESSION_STATUS.completed) {
     return { ok: false, error: "Session udah selesai, ga bisa suggest venue" };
   }
 
@@ -218,7 +218,7 @@ async function validateDiscoverSession(
 
   if (!session) return { error: "Session ga ditemukan" } as const;
   if (session.hostId !== userId) return { error: "Cuma host yang bisa" } as const;
-  if (session.status !== "discovering") return { error: "Session belum di fase discovering" } as const;
+  if (session.status !== SESSION_STATUS.discovering) return { error: "Session belum di fase discovering" } as const;
   return { session } as const;
 }
 
@@ -428,7 +428,7 @@ export async function voteForVenue(params: {
     .limit(1);
 
   if (!session) return { ok: false, error: "Session ga ditemukan" };
-  if (session.status !== "voting") {
+  if (session.status !== SESSION_STATUS.voting) {
     return { ok: false, error: "Session belum di fase voting" };
   }
 

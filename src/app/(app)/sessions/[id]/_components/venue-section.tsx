@@ -1,4 +1,5 @@
 import type { SessionStatus } from "@/lib/constants";
+import { SESSION_STATUS } from "@/lib/constants";
 import { VenueList } from "./venue-list";
 import { SuggestVenueFab } from "./suggest-venue-fab";
 
@@ -39,12 +40,12 @@ export function VenueSection({
   isTerserah,
 }: VenueSectionProps) {
   const showVenues =
-    status === "discovering" ||
-    status === "voting" ||
-    status === "confirmed" ||
-    status === "completed";
+    status === SESSION_STATUS.discovering ||
+    status === SESSION_STATUS.voting ||
+    status === SESSION_STATUS.confirmed ||
+    status === SESSION_STATUS.completed;
 
-  const canSuggest = status === "discovering" || status === "voting";
+  const canSuggest = status === SESSION_STATUS.discovering || status === SESSION_STATUS.voting;
 
   if (!showVenues) {
     // Collecting phase
@@ -68,7 +69,7 @@ export function VenueSection({
     );
   }
 
-  if (status === "discovering" && venues.length === 0) {
+  if (status === SESSION_STATUS.discovering && venues.length === 0) {
     return (
       <div className="flex flex-col gap-2">
         <h3 className="text-sm font-medium text-foreground/60">Venue</h3>

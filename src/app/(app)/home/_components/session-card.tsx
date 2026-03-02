@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Card } from "@heroui/react";
 import type { SessionStatus } from "@/lib/constants";
+import { SESSION_SHAPE } from "@/lib/constants";
 import { STATUS_CONFIG } from "@/lib/ui-config";
 import { ModeIcon } from "@/components/mode-icon";
 
@@ -72,7 +73,7 @@ export function SessionCard({
           </span>
           <span className="text-foreground/20">·</span>
           <span className="text-sm text-foreground/50">{dateDisplay}</span>
-          {sessionShape && sessionShape !== "need_both" && (
+          {sessionShape && sessionShape !== SESSION_SHAPE.need_both && (
             <>
               <span className="text-foreground/20">·</span>
               <span className="text-xs text-primary/70">

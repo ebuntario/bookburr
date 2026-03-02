@@ -78,7 +78,7 @@ export default async function SessionDashboardPage({
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://bookburr.com";
   const shareUrl = `${baseUrl}/sessions/${sessionId}/join`;
   const status = sessionData.session.status;
-  const sessionShape = (sessionData.session.sessionShape ?? "need_both") as SessionShape;
+  const sessionShape = (sessionData.session.sessionShape ?? SESSION_SHAPE.need_both) as SessionShape;
   const hostName = extractHostName(sessionData.members, sessionData.session.hostId);
   const dateRange = computeDateRange(datesData.dates);
 

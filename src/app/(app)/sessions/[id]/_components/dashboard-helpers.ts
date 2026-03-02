@@ -1,3 +1,5 @@
+import { SESSION_STATUS } from "@/lib/constants";
+
 interface Member {
   id: string;
   userId: string;
@@ -21,27 +23,27 @@ export function computeProgressData(
 ) {
   const totalMembers = members.length;
   const progressTotal =
-    status === "collecting" || status === "discovering"
+    status === SESSION_STATUS.collecting || status === SESSION_STATUS.discovering
       ? expectedSize && expectedSize > totalMembers
         ? expectedSize
         : totalMembers
       : totalMembers;
 
   const completedMemberIds = new Set<string>();
-  if (status === "collecting" || status === "discovering") {
+  if (status === SESSION_STATUS.collecting || status === SESSION_STATUS.discovering) {
     members.forEach((m) => {
       if (dateVotedMemberIds.has(m.id)) completedMemberIds.add(m.id);
     });
-  } else if (status !== "voting") {
+  } else if (status !== SESSION_STATUS.voting) {
     // confirmed/completed: all joined members are "completed"
     members.forEach((m) => completedMemberIds.add(m.id));
   }
   // voting: completedMemberIds stays empty (anonymous voting)
 
   const completedCount =
-    status === "voting"
+    status === SESSION_STATUS.voting
       ? venueVotedCount
-      : status === "collecting" || status === "discovering"
+      : status === SESSION_STATUS.collecting || status === SESSION_STATUS.discovering
         ? completedMemberIds.size
         : totalMembers;
 
@@ -54,10 +56,10 @@ export function computePendingMembers(
   venueVotedCount: number,
   status: string,
 ) {
-  if (status === "collecting" || status === "discovering") {
+  if (status === SESSION_STATUS.collecting || status === SESSION_STATUS.discovering) {
     return members.filter((m) => !completedMemberIds.has(m.id));
   }
-  if (status === "voting") {
+  if (status === SESSION_STATUS.voting) {
     return members.slice(0, members.length - venueVotedCount);
   }
   return [];

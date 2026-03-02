@@ -9,7 +9,7 @@ import {
   dateOptions,
   dateVotes,
 } from "@/lib/db/schema";
-import { SESSION_STATUS_TRANSITIONS, SHAPE_STATUS_TRANSITIONS, ACTIVITY_TYPE, SESSION_SHAPE } from "@/lib/constants";
+import { SESSION_STATUS, SESSION_STATUS_TRANSITIONS, SHAPE_STATUS_TRANSITIONS, ACTIVITY_TYPE, SESSION_SHAPE } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 import { broadcastSessionEvent } from "@/lib/supabase/broadcast";
 import { sendCalendarInvitesForSession } from "@/lib/email/calendar-invite";
@@ -29,7 +29,7 @@ async function validateAdvancePrerequisites(
   sessionId: string,
   sessionShape: string,
 ): Promise<void> {
-  if (status === "collecting") {
+  if (status === SESSION_STATUS.collecting) {
     const [{ memberCount }] = await tx
       .select({ memberCount: count() })
       .from(sessionMembers)
@@ -55,7 +55,7 @@ async function validateAdvancePrerequisites(
   }
 
   // venue_known: skip venue check for discovering (it skips discovering entirely via transition map)
-  if (status === "discovering" && sessionShape !== SESSION_SHAPE.venue_known) {
+  if (status === SESSION_STATUS.discovering && sessionShape !== SESSION_SHAPE.venue_known) {
     const [{ venueCount }] = await tx
       .select({ venueCount: count() })
       .from(venues)
@@ -163,7 +163,7 @@ export async function confirmSession(input: {
 
     await db.transaction(async (tx) => {
       const row = await lockSessionForUpdate(tx, sessionId, userId);
-      if (row.status !== "voting") throw new Error("WRONG_STATUS");
+      if (row.status !== SESSION_STATUS.voting) throw new Error("WRONG_STATUS");
 
       // For venue_known: venueId should already be the preset venue
       // For date_known: dateOptionId should already be set at creation
@@ -184,7 +184,7 @@ export async function confirmSession(input: {
       await tx
         .update(bukberSessions)
         .set({
-          status: "confirmed",
+          status: SESSION_STATUS.confirmed,
           confirmedVenueId: venueId,
           confirmedDateOptionId: dateOptionId,
         })

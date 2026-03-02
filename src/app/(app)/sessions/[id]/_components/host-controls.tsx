@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { tapScale } from "@/lib/motion-variants";
+import { SESSION_STATUS, SESSION_SHAPE } from "@/lib/constants";
 import { advanceSessionStatus } from "@/lib/actions/session-status";
 import { discoverVenues, retryDiscoverVenues } from "@/lib/actions/venues";
 import { HostCollectingCTA } from "./host-collecting-cta";
@@ -45,7 +46,7 @@ export function HostControls({
   sessionId,
   sessionName,
   status,
-  sessionShape = "need_both",
+  sessionShape = SESSION_SHAPE.need_both,
   memberCount,
   venueCount,
   dates,
@@ -57,7 +58,7 @@ export function HostControls({
   const [error, setError] = useState<string | null>(null);
   const [discoveryFailed, setDiscoveryFailed] = useState(false);
 
-  if (status === "completed") return null;
+  if (status === SESSION_STATUS.completed) return null;
 
   const handleAdvance = async () => {
     setLoading(true);
@@ -69,7 +70,7 @@ export function HostControls({
     } else {
       router.refresh();
       // Only trigger venue discovery for shapes that need it
-      if (status === "collecting" && sessionShape !== "venue_known") {
+      if (status === SESSION_STATUS.collecting && sessionShape !== SESSION_SHAPE.venue_known) {
         discoverVenues(sessionId).then((r) => {
           if (!r.ok) setDiscoveryFailed(true);
         });
@@ -120,11 +121,11 @@ export function HostControls({
     );
   };
 
-  if (status === "collecting") {
+  if (status === SESSION_STATUS.collecting) {
     // For date_known, hasViableDates check is irrelevant
-    const effectiveHasViableDates = sessionShape === "date_known" ? true : hasViableDates;
+    const effectiveHasViableDates = sessionShape === SESSION_SHAPE.date_known ? true : hasViableDates;
     // For venue_known, the button label changes since we skip discovering
-    const advanceLabel = sessionShape === "venue_known"
+    const advanceLabel = sessionShape === SESSION_SHAPE.venue_known
       ? "Mulai Voting!"
       : "Cari Tempat Bukber!";
     return (
@@ -139,7 +140,7 @@ export function HostControls({
   }
 
   // venue_known sessions skip discovering entirely (transition map handles this)
-  if (status === "discovering") {
+  if (status === SESSION_STATUS.discovering) {
     return (
       <HostDiscoveringCTA
         discoveryFailed={discoveryFailed}
@@ -151,7 +152,7 @@ export function HostControls({
     );
   }
 
-  if (status === "voting") {
+  if (status === SESSION_STATUS.voting) {
     return (
       <HostVotingPanel
         sessionId={sessionId}
@@ -164,7 +165,7 @@ export function HostControls({
     );
   }
 
-  if (status === "confirmed") {
+  if (status === SESSION_STATUS.confirmed) {
     return <HostConfirmedCTA onAdvance={handleAdvance} renderCTA={renderCTA} />;
   }
 
