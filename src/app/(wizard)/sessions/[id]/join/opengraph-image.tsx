@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getSessionOgData } from "@/lib/queries/sessions";
+import { getSessionPublicData } from "@/lib/queries/sessions";
 
 export const alt = "Join Bukber — BookBurr";
 export const size = { width: 1200, height: 630 };
@@ -25,7 +25,7 @@ export default async function OGImage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const og = await getSessionOgData(id);
+  const og = await getSessionPublicData(id);
 
   if (!og) {
     return new ImageResponse(

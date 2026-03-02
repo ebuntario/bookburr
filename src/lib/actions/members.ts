@@ -218,10 +218,7 @@ export async function joinSession(
         .limit(1);
 
       if (!bukber) throw new Error("SESSION_NOT_FOUND");
-      if (
-        bukber.status !== SESSION_STATUS.collecting &&
-        bukber.status !== SESSION_STATUS.discovering
-      ) {
+      if (bukber.status === SESSION_STATUS.completed) {
         throw new Error("SESSION_CLOSED");
       }
 

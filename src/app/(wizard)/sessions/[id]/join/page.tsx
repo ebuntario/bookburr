@@ -4,11 +4,12 @@ import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import {
   getSessionWithDates,
-  getSessionOgData,
+  getSessionPublicData,
   getMemberByUserAndSession,
   getUserConfirmedDates,
 } from "@/lib/queries/sessions";
 import { JoinWizard } from "./_components/join-wizard";
+import { SessionPreview } from "./_components/session-preview";
 import type { SessionShape } from "@/lib/constants";
 
 function formatDateRange(earliest: string | null, latest: string | null) {
@@ -28,7 +29,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const og = await getSessionOgData(id);
+  const og = await getSessionPublicData(id);
   if (!og) return { title: "Join Bukber — BookBurr" };
 
   const dateStr = formatDateRange(og.earliestDate, og.latestDate);
@@ -65,8 +66,15 @@ export default async function JoinPage({
 }) {
   const [session, { id: sessionId }] = await Promise.all([auth(), params]);
   const userId = session?.user?.id;
-  if (!userId) redirect("/login");
 
+  // Unauthenticated: show session preview instead of redirecting to login
+  if (!userId) {
+    const preview = await getSessionPublicData(sessionId);
+    if (!preview) notFound();
+    return <SessionPreview sessionId={sessionId} data={preview} />;
+  }
+
+  // Authenticated: existing wizard flow
   const [result, existingMember, confirmedDates] = await Promise.all([
     getSessionWithDates(sessionId),
     getMemberByUserAndSession(userId, sessionId),
@@ -75,10 +83,7 @@ export default async function JoinPage({
 
   if (!result) notFound();
   if (existingMember) redirect(`/sessions/${sessionId}`);
-  if (
-    result.session.status === "confirmed" ||
-    result.session.status === "completed"
-  ) {
+  if (result.session.status === "completed") {
     redirect(`/sessions/${sessionId}`);
   }
 

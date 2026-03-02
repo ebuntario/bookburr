@@ -159,9 +159,9 @@ describe("joinSession — session checks", () => {
     expect(result).toEqual({ ok: false, error: "Bukber nggak ditemukan" });
   });
 
-  it("returns error when session is closed (voting)", async () => {
+  it("returns error when session is completed", async () => {
     const tx = makeJoinTx({
-      session: [{ status: "voting", datesLocked: false, dateRangeStart: null, dateRangeEnd: null }],
+      session: [{ status: "completed", datesLocked: false, dateRangeStart: null, dateRangeEnd: null }],
     });
     mockTx(tx);
     const result = await joinSession(validInput);
